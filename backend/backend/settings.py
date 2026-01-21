@@ -37,9 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'api.apps.ApiConfig',
+    'accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -82,6 +87,7 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+AUTH_USER_MODEL = 'accounts.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -116,6 +122,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# CORS - allow frontend (for development)
+CORS_ALLOW_ALL_ORIGINS = True
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -124,8 +133,9 @@ DATABASES = {
         "PASSWORD": "PhyL4b!2026",
         "HOST": "aws-1-ap-south-1.pooler.supabase.com",
         "PORT": "6543",
+        'DISABLE_SERVER_SIDE_CURSORS': True,
         "OPTIONS": {
-            "sslmode": "require",
+            'connect_timeout': 10,
         },
     }
 }

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhyLab - Physics Laboratory Inventory System</title>
+  <link rel="stylesheet" href="Phylab_theme_vars.css">
+  <link rel="stylesheet" href="Phylab_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    (function() {
+      if (window.emailjs) {
+        emailjs.init("lJ6EFXKyc4N6yIyEG");
+      }
+    })();
+  </script>
+  <style>
+    /* Simple centered modal used for login success/failure messages */
+    .phylab-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      /* place modal slightly higher than center */
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 10vh;
+      background: rgba(0,0,0,0.35);
+      z-index: 9999;
+    }
+    .phylab-modal-content {
+      background: #fff;
+      padding: 18px 22px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      min-width: 260px;
+      text-align: center;
+      font-family: inherit;
+      font-size: 16px;
+    }
+    .phylab-modal.success .phylab-modal-content { border-left: 6px solid #2ecc71; }
+    .phylab-modal.error .phylab-modal-content { border-left: 6px solid #e74c3c; }
+    /* Inline form error styling */
+    .form-error {
+      display: none;
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .input-error {
+      outline: none;
+      border-color: #e74c3c !important;
+      box-shadow: 0 0 0 3px rgba(231,76,60,0.08);
+    }
+  </style>
+</head>
+<body class="wholescreen">
+  
+  <div id="login-section" class="bg_login-form">
+    <div class="second_bg_login-form">
+
+      <div class="header-login-form">
+        <h1 class="header1">PhyLab</h1>
+        <p class="sub-header">Physics Laboratory Inventory System</p>
+      </div>
+
+      <div class="input-username">
+        <label for="username" class="username-label">Email</label>
+        <input type="text" id="username" class="username-input" name="username" required>
+      </div>
+
+      <div class="input-password">
+        <label for="password" class="password-label">Password</label>
+        <input type="password" id="password_login" class="password-input" name="password" required>
+      </div>  
+
+      <div class="checkbox-button">    
+        <div class="checkbox-button-rm1">
+          <input type="checkbox" id="remember" class="remember-check" name="remember">
+          <label for="remember" class="remember-label">Remember me</label>
+        </div>
+        <button class="admin-button" onclick="openAdminModal()">Admin Login</button>
+      </div>
+
+      <p id="loginError" class="form-error" role="alert"></p>
+      <button class="login" onclick="handleLogin()">Login</button>
+
+      <div class="register-container-login">
+        <label class="register-label">
+            Don't have an account? 
+            <span class="register-button-link" onclick="switchView('register')">Register</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="register-section" class="bg_register-form" style="display: none;">
+    <div class="second_bg_register-form">
+
+      <div class="header-register-form">
+        <h1 class="header1">Create Account</h1>
+        <p class="sub-header">Join the Physics Laboratory Inventory System</p>
+      </div>
+
+      <form id="registerForm">
+        <div class="input-group">
+          <label for="fullname" class="input-label">Full Name</label>
+          <input type="text" id="fullname" class="form-input" placeholder="John Doe" required>
+        </div>
+
+        <div class="input-group">
+          <label for="id_number" class="input-label">Student / Employee ID</label>
+          <input type="text" id="id_number" class="form-input" placeholder="Student / Employee ID" title="ID number" maxlength="20" required>
+        </div>
+
+        <div class="input-group">
+          <label for="email" class="input-label">Email Address</label>
+          <input type="email" id="email" class="form-input" placeholder="example@univ.edu" required>
+        </div>
+
+        <div class="input-group">
+          <label for="password" class="input-label">Password</label>
+          <input type="password" id="password_reg" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="register-btn">Register</button>
+      </form>
+
+      <div class="login-link-container">
+        <p class="login-text">Already have an account? 
+          <span class="login-span" onclick="switchView('login')">Login here</span>
+        </p>
+      </div>
+
+    </div>
+  </div>
+  <!-- Modal used for brief notifications (login success/failure) -->
+  <div id="phylab-modal" class="phylab-modal" role="dialog" aria-live="polite">
+    <div class="phylab-modal-content">
+      <p id="phylab-modal-message"></p>
+    </div>
+  </div>
+
+  <!-- Admin access modal (replaces prompt) -->
+  <div id="adminModal" class="phylab-modal" role="dialog" aria-live="polite" style="display:none;">
+    <div class="phylab-modal-content">
+      <h3 style="margin:0 0 8px 0; font-size:18px;">Admin Access</h3>
+      <p style="margin:0 0 12px 0; color:var(--color-text-light);">Enter the admin access key to continue.</p>
+      <input id="adminKeyInput" type="password" placeholder="Access key" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; box-sizing:border-box;">
+      <p id="adminKeyError" class="form-error" style="margin-top:8px"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+        <button class="secondary-btn" id="adminCancelBtn">Cancel</button>
+        <button class="primary-btn" id="adminSubmitBtn">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    // Global modal helper reused by login and registration flows
+    function showPhylabModal(message, isSuccess = true, callback) {
+      const modal = document.getElementById('phylab-modal');
+      const msgEl = document.getElementById('phylab-modal-message');
+      if (!modal || !msgEl) {
+        // If modal markup is missing (unexpected), create a lightweight inline modal instead
+        try {
+          const dynamic = document.createElement('div');
+          dynamic.id = 'phylab-modal';
+          dynamic.className = 'phylab-modal';
+          dynamic.style.display = 'flex';
+          dynamic.innerHTML = `<div class="phylab-modal-content ${isSuccess ? 'success' : 'error'}"><p id="phylab-modal-message">${message}</p></div>`;
+          document.body.appendChild(dynamic);
+          setTimeout(() => { dynamic.style.display = 'none'; document.body.removeChild(dynamic); if (typeof callback === 'function') callback(); }, 2000);
+        } catch (e) {
+          console.warn('phylab modal missing and dynamic creation failed:', e);
+        }
+        return;
+      }
+      msgEl.textContent = message;
+      modal.classList.remove('success', 'error');
+      modal.classList.add(isSuccess ? 'success' : 'error');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.style.display = 'none';
+        if (typeof callback === 'function') callback();
+      }, 2000);
+    }
+
+    // EmailJS helpers for login page (sanitize + safe send)
+    function sanitizeEmail(raw) {
+      if (!raw || typeof raw !== 'string') return '';
+      const s = raw.trim();
+      const m = s.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+      return m ? m[0] : '';
+    }
+
+    function safeSendEmail(serviceId, templateId, templateParams) {
+      return new Promise((resolve, reject) => {
+        if (!window.emailjs || typeof emailjs.send !== 'function') return reject(new Error('EmailJS not available'));
+        const params = Object.assign({}, templateParams);
+        if (params.to_email) params.to_email = sanitizeEmail(params.to_email);
+        if (!params.to_email && params.to_name && params.to_name.includes('@')) params.to_email = sanitizeEmail(params.to_name);
+        if (!params.to_email) return reject(new Error('Invalid recipient email'));
+        console.log('EmailJS send (login):', { to_email: params.to_email, to_name: params.to_name });
+        emailjs.send(serviceId, templateId, params).then(resolve).catch(reject);
+      });
+    }
+
+    // Auto-format / sanitize ID input (permissive: allow alphanumeric, dash, space)
+    (function attachIdFormatter() {
+      const idInput = document.getElementById('id_number');
+      if (!idInput) return;
+
+      function sanitize(raw) {
+        // allow letters, digits, spaces and dashes; limit to 20 chars
+        return (raw || '').replace(/[^A-Za-z0-9\-\s]/g, '').slice(0, 20);
+      }
+
+      idInput.addEventListener('input', () => {
+        const v = idInput.value;
+        idInput.value = sanitize(v);
+        try { idInput.setSelectionRange(idInput.value.length, idInput.value.length); } catch (err) {}
+      });
+
+      idInput.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text') || '';
+        idInput.value = sanitize(paste);
+        try { idInput.setSelectionRange(idInput.value.length, idInput.value.length); } catch (err) {}
+      });
+    })();
+class UserProfile {
+  constructor(fullname, idNumber, email, password) {
+    this.fullname = fullname;
+    this.idNumber = idNumber;
+    this.email = email;
+    this.password = password; 
+    this.dateRegistered = new Date().toLocaleDateString(); 
+  }
+
+  getProfileSummary() {
+    return `${this.fullname} (${this.idNumber})`;
+  }
+}
+
+
+    const getUsers = () => JSON.parse(localStorage.getItem('phylab_users')) || [];
+
+
+    function switchView(viewName) {
+      const loginSection = document.getElementById('login-section');
+      const registerSection = document.getElementById('register-section');
+
+      if (viewName === 'register') {
+        loginSection.style.display = 'none';
+        registerSection.style.display = 'flex';
+      } else {
+        registerSection.style.display = 'none';
+        loginSection.style.display = 'flex';
+      }
+    }
+
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const users = getUsers(); 
+    
+  
+    const fullname = document.getElementById('fullname').value;
+    const idNumber = document.getElementById('id_number').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password_reg').value;
+
+  // Generic ID validation: allow 4-20 characters (letters, digits, spaces, dashes)
+  const idRegex = /^[A-Za-z0-9\-\s]{4,20}$/;
+  if (!idRegex.test(idNumber)) {
+    showPhylabModal('ID must be 4–20 characters (letters, digits, spaces, dashes allowed)', false);
+    return;
+  }
+
+  // normalize stored ID: trim and uppercase for case-insensitive comparison
+  const normalizedId = idNumber.replace(/\s+/g, '').toUpperCase();
+
+ 
+    const isDuplicate = users.some(user => {
+      const storedIdRaw = (user.idNumber || user.id_number || '').toString();
+      const storedIdNormalized = storedIdRaw.replace(/\s+/g, '').toUpperCase();
+      const emailMatch = (user.email || '').toLowerCase() === (email || '').toLowerCase();
+      return emailMatch || (storedIdNormalized && storedIdNormalized === normalizedId);
+    });
+
+    if (isDuplicate) {
+      showPhylabModal('A user with this ID Number or Email already exists.', false);
+      return;
+    }
+
+    const newUser = new UserProfile(fullname, normalizedId, email, password);
+
+
+    users.push(newUser);
+    localStorage.setItem('phylab_users', JSON.stringify(users));
+
+    showPhylabModal(`Registration Successful for ${newUser.getProfileSummary()}!`, true);
+
+    // Send confirmation email via EmailJS using the project's service
+    // This uses the same service id used in the admin page: `service_p1lab`.
+    // Create a template in EmailJS dashboard with id `template_register_success`
+    // and include variables: `user_name`, `user_email`, `message`.
+      try {
+        if (window.emailjs) {
+          // Basic client-side validation and logging to help diagnose 'recipients address is empty'
+          const recipient = (email || '').trim();
+          console.log('Registration email recipient:', recipient);
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+          if (!recipient || !emailRegex.test(recipient)) {
+            console.error('Invalid or empty recipient email; skipping EmailJS send.', recipient);
+          } else {
+            const serviceID = 'service_t43eph7';
+            const templateID = 'template_dvz13eg'; // ensure this exact template exists in EmailJS
+            const templateParams = {
+              to_name: fullname,
+              to_email: recipient,
+              user_name: fullname,
+              user_email: recipient,
+              company_url: 'https://phylab-official.netlify.app/',
+              logo_url: 'https://phylab-official.netlify.app/Phylab.png',
+              company_email: 'phylabsofficial@gmail.com',
+              message: `Welcome ${fullname}! Your account (${idNumber}) was registered successfully.`
+            };
+
+            console.log('EmailJS templateParams:', { to_email: templateParams.to_email, to_name: templateParams.to_name, subject: templateParams.subject || 'registration' });
+            // use a safe send wrapper if available
+            if (typeof safeSendEmail === 'function') {
+              safeSendEmail(serviceID, templateID, templateParams)
+                .then(function(response) { console.log('Registration email sent'); })
+                .catch(function(error) { console.error('Failed to send registration email', error); });
+            } else {
+              emailjs.send(serviceID, templateID, templateParams)
+                .then(function(response) { console.log('Registration email sent', response.status, response.text); })
+                .catch(function(error) { console.error('Failed to send registration email', error); });
+            }
+          }
+        } else {
+          console.warn('EmailJS not available; skipping registration email.');
+        }
+      } catch (err) {
+        console.error('Error while sending registration email', err);
+      }
+    this.reset();
+    switchView('login'); 
+});
+
+
+    function handleLogin() {
+      const idInput = document.getElementById('username').value;
+      const passInput = document.getElementById('password_login').value;
+      const users = getUsers();
+
+      // allow login with email or ID. Normalize input to compare.
+      const rawInput = (idInput || '').trim();
+      const lowerInput = rawInput.toLowerCase();
+      const normalizedInput = rawInput.replace(/\s+/g, '').toUpperCase();
+
+      const authenticatedUser = users.find(user => {
+        const userEmail = (user.email || '').toLowerCase();
+        if (userEmail && userEmail === lowerInput && user.password === passInput) return true;
+
+        const storedIdRaw = (user.idNumber || user.id_number || '').toString();
+        const storedNormalized = storedIdRaw.replace(/\s+/g, '').toUpperCase();
+        if (storedNormalized && storedNormalized === normalizedInput && user.password === passInput) return true;
+
+        return false;
+      });
+      const clearLoginError = () => {
+        const err = document.getElementById('loginError');
+        if (err) { err.textContent = ''; err.style.display = 'none'; }
+        document.getElementById('username').classList.remove('input-error');
+        document.getElementById('password_login').classList.remove('input-error');
+      };
+
+      const showLoginError = (msg) => {
+        const err = document.getElementById('loginError');
+        if (err) { err.textContent = msg; err.style.display = 'block'; }
+        document.getElementById('username').classList.add('input-error');
+        document.getElementById('password_login').classList.add('input-error');
+        try { document.getElementById('username').focus(); } catch(e){}
+      };
+
+      if (authenticatedUser) {
+        clearLoginError();
+        sessionStorage.setItem('current_user', JSON.stringify(authenticatedUser));
+        showPhylabModal(`Welcome back, ${authenticatedUser.fullname}!`, true, function() {
+          window.location.href = 'PhyLab_user_page.html';
+        });
+      } else {
+        // show inline error instead of alert/modal
+        showLoginError('Invalid ID Number/Email or Password.');
+      }
+    }
+
+
+    function checkAdminAccess() {
+      // kept for backward compatibility: open modal
+      openAdminModal();
+    }
+
+    // Admin modal helpers
+    const ADMIN_KEY = "PhyL4b!2026";
+    function openAdminModal() {
+      const modal = document.getElementById('adminModal');
+      const err = document.getElementById('adminKeyError');
+      const input = document.getElementById('adminKeyInput');
+      if (!modal) return;
+      if (err) { err.textContent = ''; err.style.display = 'none'; }
+      if (input) { input.classList.remove('input-error'); input.value = ''; }
+      modal.style.display = 'flex';
+      setTimeout(() => { if (input) input.focus(); }, 50);
+    }
+
+    function closeAdminModal() {
+      const modal = document.getElementById('adminModal');
+      const input = document.getElementById('adminKeyInput');
+      if (modal) modal.style.display = 'none';
+      if (input) { input.value = ''; input.classList.remove('input-error'); }
+    }
+
+    function submitAdminKey() {
+      const input = document.getElementById('adminKeyInput');
+      const err = document.getElementById('adminKeyError');
+      const value = input ? input.value : '';
+      if (value === ADMIN_KEY) {
+        closeAdminModal();
+        window.location.href = 'PhyLab_admin_page.html';
+      } else {
+        if (err) { err.textContent = 'Access Denied: Unauthorized Personnel.'; err.style.display = 'block'; }
+        if (input) input.classList.add('input-error');
+      }
+    }
+
+    // wire admin modal buttons and Enter key
+    (function attachAdminModalHandlers() {
+      const submitBtn = document.getElementById('adminSubmitBtn');
+      const cancelBtn = document.getElementById('adminCancelBtn');
+      const input = document.getElementById('adminKeyInput');
+      if (submitBtn) submitBtn.addEventListener('click', submitAdminKey);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeAdminModal);
+      if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAdminKey(); });
+    })();
+    
+    // Clear inline error when user edits inputs
+    (function attachLoginInputClear() {
+      const uname = document.getElementById('username');
+      const pwd = document.getElementById('password_login');
+      const clear = () => {
+        const err = document.getElementById('loginError');
+        if (err) { err.textContent = ''; err.style.display = 'none'; }
+        if (uname) uname.classList.remove('input-error');
+        if (pwd) pwd.classList.remove('input-error');
+      };
+      if (uname) uname.addEventListener('input', clear);
+      if (pwd) pwd.addEventListener('input', clear);
+    })();
+  </script>
+</body>
+</html>

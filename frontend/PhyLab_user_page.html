@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phylab - User Page</title>
+  <link rel="stylesheet" href="Phylab_theme_vars.css">
+  <link rel="stylesheet" href="PhyLab_user_page_style.css">
+  <script src="inventory_data.js"></script>
+</head>
+<body class="wholescreen">
+  <div class="admin-header">
+    <div class="header-title">
+      <h1 class="title">PhyLab</h1>
+    </div>
+
+    <!-- Hamburger menu button (mobile only) -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
+    <!-- Navigation items (collapsible on mobile) -->
+    <div class="nav-items" id="navItems">
+      <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+      </div>
+      <div class="logout">
+        <div class="user-profile" onclick="toggleProfile(true)" aria-label="Open profile" title="Profile">
+          <svg class="user-profile-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M399 384.2C376.9 345.8 335.4 320 288 320l-64 0c-47.4 0-88.9 25.8-111 64.2 35.2 39.2 86.2 63.8 143 63.8s107.8-24.7 143-63.8zM0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0zm256 16a72 72 0 1 0 0-144 72 72 0 1 0 0 144z"/></svg>
+        </div>
+        <button class="logout-button" onclick="window.location.href='PhyLab_login.html'">Logout</button>
+      </div>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="main-content">
+        <div class="welcome-hero-section">
+          <div class="welcome-hero-overlay"></div>
+          <div class="welcome-hero-content">
+            <h1 class="welcome-hero-title">Welcome to PhyLab!</h1>
+            <p class="welcome-hero-subtitle">Your one-stop solution for managing physics laboratory equipment and materials.</p>
+            <div class="welcome-hero-features">
+              <div class="hero-feature">
+                <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208z"/></svg>
+                <span>Find Equipment</span>
+              </div>
+              <div class="hero-feature">
+                <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M0 24C0 10.7 10.7 0 24 0L69.5 0c22 0 41.5 12.8 50.6 32l411 0c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3l-288.5 0 5.4 28.5c2.8 14.9 16.1 25.6 31.4 25.6l265.1 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-265.1 0c-45.9 0-84.8-32.2-94.2-77L12.8 52.6C7 39.5 0 24 0 24z"/></svg>
+                <span>Borrow Items</span>
+              </div>
+              <div class="hero-feature">
+                <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>
+                <span>Track Returns</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  
+  <div class="available-inventory">
+    <h2 class="available-inventory-header">Available Inventory</h2>
+    <!-- Toolbar: search + category filters -->
+    <div class="inventory-toolbar">
+      <div class="toolbar-search">
+        <svg class="toolbar-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="userInventorySearch" class="toolbar-search-input" type="search" placeholder="Search equipment, tools, or items..." aria-label="Search inventory">
+      </div>
+      <div class="toolbar-filters">
+        <button class="filter-btn active" data-filter="all">All Items</button>
+        <button class="filter-btn" data-filter="apparatus">Apparatus</button>
+        <button class="filter-btn" data-filter="tools">Tools</button>
+        <button class="filter-btn" data-filter="equipment">Equipment</button>
+        <button class="filter-btn" data-filter="consumable">Consumables</button>
+      </div>
+    </div>
+
+    <div class="inventory-list-wrapper">
+      <div class="inventory-section" id="inventoryContainer">
+        <!-- Cards are dynamically loaded from admin inventory -->
+        <div class="loading-inventory">
+          <div class="loading-spinner"></div>
+          <p>Loading inventory...</p>
+        </div>
+      </div>
+    </div>
+  </div> <!-- close available-inventory -->
+
+  </div> <!-- close main-content -->
+
+    <aside class="my-requests content-right">
+      <h2 class="available-inventory-header">Request History</h2>
+      <div id="myRequestsContainer">
+        <div style="padding:20px; color:#666;">Loading requests...</div>
+      </div>
+    </aside>
+
+</div> <!-- close admin-body -->
+
+
+  <!-- Floating borrow toggle button (shows current selected count) -->
+  <button id="borrowToggleButton" class="borrow-toggle-button" aria-label="Open borrow panel">
+    <span class="borrow-count-badge" id="borrow-count">0</span>
+    Borrow
+  </button>
+
+  <div class="request-form">
+  <div id="borrowModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-btn" onclick="toggleModal(false)">&times;</span>
+        <h2>Borrow Request Form</h2>
+        
+        <div class="modal-body">
+          <p style="color: var(--color-primary); font-weight: bold;">Selected Items</p>
+            <div id="selectedItemsContainer">
+          </div>
+
+<form id="borrowForm">
+    <label>Your Full Name</label>
+    <input type="text" id="user-fullname" placeholder="Enter your name" required>
+
+    <label>Student ID</label>
+    <input type="text" id="user-id" placeholder="Enter your ID" required>
+
+    <label>Teacher's Name</label>
+    <select id="teacher-name" required>
+      <option value="">-- Select teacher --</option>
+     
+      <!-- Add options here; will be supplied later -->
+    </select>
+
+    <label>Purpose of Borrowing</label>
+    <textarea id="purpose-text" rows="3" required></textarea>
+
+    <div class="date-container">
+        <div>
+            <label>Borrow Date</label>
+            <input type="date" id="borrow-date" required>
+        </div>
+        <div>
+            <label>Return Date</label>
+            <input type="date" id="return-date" required>
+        </div>
+    </div>
+
+    <button type="submit" class="submit-btn">Submit Request</button>
+</form>
+          </div>
+        </div>
+      </div>
+    </div>      
+    
+
+<div id="profile-modal" class="profile-modal">
+    <div class="profile-card">
+        <span class="close-profile" onclick="toggleProfile(false)">&times;</span>
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <h2 id="display-fullname">User Name</h2>
+            <p id="display-role">Student</p>
+        </div>
+        <div class="profile-info">
+            <div class="info-item"><strong>ID Number:</strong> <span id="display-id">---</span></div>
+            <div class="info-item"><strong>Email:</strong> <span id="display-email">---</span></div>
+        </div>
+        
+        <button class="review-btn" onclick="openReviewModal()" style="margin-top: 15px; background: var(--color-primary); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%;">
+            Submit a Review
+        </button>
+
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+</div>
+
+<div id="review-modal" class="profile-modal" style="display: none; z-index: 3000;">
+    <div class="profile-card" style="width: 400px; max-width: 90%;">
+        <h3>Submit Item Feedback</h3>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Provide details on equipment condition.</p>
+        
+        <div style="text-align: left; margin-bottom: 12px;">
+            <label style="font-size: 0.8rem; font-weight: bold; color: #444;">Item Name:</label>
+            <input type="text" id="review-item-name" placeholder="e.g., Ammeter, Bunsen Burner" 
+                   style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-top: 5px; box-sizing: border-box;">
+        </div>
+
+        <div style="text-align: left; margin-bottom: 12px;">
+            <label style="font-size: 0.8rem; font-weight: bold; color: #444;">Upload Photo:</label>
+            <input type="file" id="review-image" accept="image/*" 
+                   style="width: 100%; font-size: 0.8rem; margin-top: 5px;">
+        </div>
+
+        <textarea id="review-comment" placeholder="Describe the issue or condition..." 
+                  style="width: 100%; height: 80px; margin-bottom: 15px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit;"></textarea>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeReviewModal()" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer;">Cancel</button>
+            <button onclick="submitReview()" style="flex: 1; padding: 10px; border-radius: 5px; border: none; background: var(--color-primary); color: white; cursor: pointer;">Submit</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    // ===== HAMBURGER MENU TOGGLE =====
+    (function initHamburgerMenu() {
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const navItems = document.getElementById('navItems');
+      if (!hamburgerBtn || !navItems) return;
+
+      hamburgerBtn.addEventListener('click', function() {
+        const isOpen = navItems.classList.toggle('open');
+        hamburgerBtn.classList.toggle('open', isOpen);
+        hamburgerBtn.setAttribute('aria-expanded', isOpen);
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!hamburgerBtn.contains(e.target) && !navItems.contains(e.target)) {
+          navItems.classList.remove('open');
+          hamburgerBtn.classList.remove('open');
+          hamburgerBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close menu when window resizes to desktop
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 800) {
+          navItems.classList.remove('open');
+          hamburgerBtn.classList.remove('open');
+          hamburgerBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+
+    let cartItems = [];
+    const searchInput = document.getElementById('searchInput');
+    const categoryButtons = document.querySelectorAll('.category-button');
+    const container = document.getElementById("selectedItemsContainer");
+    const borrowModal = document.getElementById('borrowModal');
+
+ 
+    window.addEventListener('DOMContentLoaded', () => {
+        syncStockDisplay(); 
+        updateVisualCart(); 
+    });
+
+
+    function syncStockDisplay() {
+        // Query cards dynamically to include dynamically loaded cards
+        const allCards = document.querySelectorAll('.inventory-section-card');
+        allCards.forEach(card => {
+            const stockElement = card.querySelector('.stock-display');
+            if (!stockElement) return;
+
+            
+            const itemKey = stockElement.getAttribute('data-item') || card.getAttribute('data-item');
+            
+           
+            const savedStock = localStorage.getItem(`stock_${itemKey}`);
+            
+          
+            if (savedStock !== null) {
+                const currentStock = parseInt(savedStock);
+                stockElement.innerText = currentStock;
+
+               
+                const borrowBtn = card.querySelector('.inventory-button-borrow');
+                if (borrowBtn) {
+                    if (currentStock <= 0) {
+                        // Check if button has SVG icon, preserve it
+                        const svgIcon = borrowBtn.querySelector('svg');
+                        if (svgIcon) {
+                            borrowBtn.innerHTML = '';
+                            borrowBtn.appendChild(svgIcon);
+                            borrowBtn.appendChild(document.createTextNode(' Out of Stock'));
+                        } else {
+                            borrowBtn.innerText = "Out of Stock";
+                        }
+                        borrowBtn.style.backgroundColor = "#ccc";
+                        borrowBtn.style.cursor = "not-allowed";
+                        borrowBtn.disabled = true;
+                        card.style.opacity = "0.7";
+                    } else {
+                        const svgIcon = borrowBtn.querySelector('svg');
+                        if (svgIcon) {
+                            borrowBtn.innerHTML = '';
+                            borrowBtn.appendChild(svgIcon);
+                            borrowBtn.appendChild(document.createTextNode(' Borrow'));
+                        } else {
+                            borrowBtn.innerText = "Borrow";
+                        }
+                        borrowBtn.style.backgroundColor = "var(--color-primary)";
+                        borrowBtn.style.cursor = "pointer";
+                        borrowBtn.disabled = false;
+                        card.style.opacity = "1";
+                    }
+                }
+            }
+        });
+    }
+
+
+    window.addEventListener('storage', (event) => {
+        if (event.key && event.key.startsWith('stock_')) {
+            syncStockDisplay();
+        }
+    });
+
+  
+    // Note: filterInventory for static cards is no longer used
+    // Dynamic filtering is handled in the loadInventoryFromAdmin IIFE
+    function filterInventory() {
+        const searchText = searchInput.value.toLowerCase();
+        const activeBtn = document.querySelector('.category-button.active');
+        const activeCategory = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+
+        const allCards = document.querySelectorAll('.inventory-section-card');
+        allCards.forEach(card => {
+            const itemNameEl = card.querySelector('.inventory-item-name');
+            if (!itemNameEl) return;
+            const itemName = itemNameEl.innerText.toLowerCase();
+            const itemCategory = card.getAttribute('data-category');
+            
+            const matchesSearch = itemName.includes(searchText);
+            const matchesCategory = (activeCategory === 'all' || itemCategory === activeCategory);
+            
+          
+            card.style.display = (matchesSearch && matchesCategory) ? "flex" : "none";
+        });
+    }
+
+    searchInput.addEventListener('input', filterInventory);
+    
+    categoryButtons.forEach(btn => {
+        btn.addEventListener("click", function() {
+            document.querySelector(".category-button.active")?.classList.remove("active");
+            this.classList.add("active");
+            filterInventory();
+        });
+    });
+
+    // Note: Static card event listeners removed - all handled by dynamic loading
+
+
+    function updateVisualCart() {
+        container.innerHTML = ""; 
+        if (cartItems.length === 0) {
+            container.innerHTML = "<p style='text-align:center; padding:10px; color:#666;'>No items selected.</p>";
+        updateBorrowButtonCount();
+        return;
+        }
+
+        cartItems.forEach((item, index) => {
+            const itemHTML = `
+                <div class="selected-item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
+                  <div style="display: flex; align-items: center;">
+                    <img src="${item.image}" style="width: 50px; height: 50px; border-radius: 4px; margin-right: 15px; object-fit: cover;">
+                    <div>
+                        <div style="font-weight: 500;">${item.name}</div>
+                        <div style="font-size: 0.85rem; color: var(--color-primary); font-weight: bold;">Qty: ${item.quantity}</div>
+                    </div>
+                  </div>
+                  <button type="button" class="remove-item-btn" data-index="${index}" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</button>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', itemHTML);
+        });
+        updateBorrowButtonCount();
+    }
+
+
+    container.addEventListener("click", function(event) {
+        if (event.target.classList.contains("remove-item-btn")) {
+            const index = event.target.getAttribute('data-index');
+            const itemToRemove = cartItems[index];
+            const itemKey = itemToRemove.itemKey;
+
+       
+            let currentStock = parseInt(localStorage.getItem('stock_' + itemKey)) || 0;
+            currentStock += 1;
+            localStorage.setItem('stock_' + itemKey, currentStock);
+            syncStockDisplay(); 
+
+      
+            if (itemToRemove.quantity > 1) {
+                itemToRemove.quantity -= 1;
+            } else {
+                cartItems.splice(index, 1);
+            }
+            
+            updateVisualCart();
+            updateBorrowButtonCount();
+        }
+    });
+
+
+    function checkAndOpenForm() {
+      // Always open the borrow modal (even if no items selected)
+      toggleModal(true);
+    }
+
+    function toggleModal(show) {
+      if (show) {
+        borrowModal.classList.add('show');
+        borrowModal.style.display = 'flex';
+        if (borrowToggleButton) borrowToggleButton.style.display = 'none';
+
+        // Prefill user info from session storage when opening
+        try {
+          const sessionUser = JSON.parse(sessionStorage.getItem('current_user')) || {};
+          const nameEl = document.getElementById('user-fullname');
+          const idEl = document.getElementById('user-id');
+          if (nameEl) {
+            nameEl.value = sessionUser.fullname || sessionUser.name || nameEl.value || '';
+          }
+          if (idEl) {
+            idEl.value = sessionUser.idNumber || sessionUser.id || idEl.value || '';
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      } else {
+        borrowModal.classList.remove('show');
+        borrowModal.style.display = 'none';
+        if (borrowToggleButton) borrowToggleButton.style.display = 'flex';
+      }
+    }
+
+    // Ensure mobile nav menu is closed when modal opens and add Escape key to close modal
+    (function(){
+      const navItems = document.getElementById('navItems');
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const originalToggleModal = toggleModal;
+      // Wrap toggleModal to also close nav when opening
+      window.toggleModal = function(show){
+        if (show) {
+          // close mobile nav if open so modal is accessible
+          try {
+            if (navItems && navItems.classList.contains('open')) {
+              navItems.classList.remove('open');
+            }
+            if (hamburgerBtn && hamburgerBtn.classList.contains('open')) {
+              hamburgerBtn.classList.remove('open');
+              hamburgerBtn.setAttribute('aria-expanded', 'false');
+            }
+          } catch(e) {}
+        }
+        return originalToggleModal(show);
+      };
+
+      // Close modal with Escape key for accessibility
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          try { toggleModal(false); } catch(err) {}
+        }
+      });
+    })();
+
+    // Helper to populate teacher dropdown; call this with an array of strings
+    function populateTeacherList(teachers) {
+      const sel = document.getElementById('teacher-name');
+      if (!sel) return;
+      // remove existing options except the placeholder
+      sel.innerHTML = '<option value="">-- Select teacher --</option>';
+      if (!Array.isArray(teachers)) return;
+      teachers.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    }
+
+    // Populate the Teacher's Name dropdown with the provided list
+    populateTeacherList([
+      'Aganan, Abegail G',
+      'Agripa, Diana Jean M.',
+      'Alcantara, Helen D.',
+      'Almodiente, Marie Ann E.',
+      'Antiquiera, Marites S.',
+      'Balbastro, Anna Loraine C.',
+      'Boado, Rosalyn M.',
+      'Clet, Lea С.',
+      'De Vera, Christelle A.',
+      'Dilidili, Laarni Jane M.',
+      'Frial, Lenie C.',
+      'Hita, Noemi M.',
+      'Irene, Liezelle H.',
+      'Lagamayo, John Paul B.',
+      'Lauigan, Liezl S.',
+      'Lejano, Marilou S.',
+      'Mola, Mary Joy P.',
+      'Mola, Nardo Bernardo C.',
+      'Montoya, Ma. Cristina R.',
+      'Mullet, Dana Meriz Dane R. Cuesta',
+      'Munar, Judy Ann O.',
+      'Noay, John Christian Orestes H.',
+      'Opalla, Juvy Lyn G.',
+      'Ornacho, Dominic E.',
+      'Parilla, Kevin O.',
+      'Penales, Rommel D.',
+      'Ramirez, Ramil L. Ii',
+      'Robiso, Limuel B.',
+      'Sari, Jayvee T.',
+      'Tronco, Juncarl G.',
+      'Vergara, Trizia Faye D.',
+      'Vibal, Romwel',
+      'Pestaño, Karen B.'
+    ]);
+
+    // Borrow button count and wiring
+    const borrowToggleButton = document.getElementById('borrowToggleButton');
+    const borrowCountEl = document.getElementById('borrow-count');
+
+    function updateBorrowButtonCount() {
+      const totalQty = cartItems.reduce((s,i)=>s+i.quantity,0);
+      borrowCountEl.innerText = totalQty;
+      if (totalQty === 0) {
+        borrowCountEl.style.opacity = '0.6';
+      } else {
+        borrowCountEl.style.opacity = '1';
+      }
+    }
+
+    borrowToggleButton.addEventListener('click', function(){
+      checkAndOpenForm();
+    });
+
+    // ensure count shows correctly on load
+    window.addEventListener('DOMContentLoaded', updateBorrowButtonCount);
+
+    // Load user's request history and display it
+    function loadUserRequests() {
+      const container = document.getElementById('myRequestsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      let sessionUser = {};
+      try { sessionUser = JSON.parse(sessionStorage.getItem('current_user')) || {}; } catch(e){}
+      const userEmail = sessionUser.email || '';
+      const userId = sessionUser.idNumber || sessionUser.id || '';
+
+      const queue = JSON.parse(localStorage.getItem('phyLab_RequestQueue')) || [];
+      const history = JSON.parse(localStorage.getItem('phyLab_History')) || [];
+      // robust timestamp parsing: support numeric ms, numeric strings, or ISO/locale strings
+      function parseTime(val){
+        if (!val && val !== 0) return 0;
+        if (typeof val === 'number') return val;
+        const asNum = Number(val);
+        if (!isNaN(asNum)) return asNum;
+        const dt = Date.parse(val);
+        return isNaN(dt) ? 0 : dt;
+      }
+      const all = queue.concat(history).sort((a,b)=> parseTime(b.timestamp) - parseTime(a.timestamp));
+
+      const userRequests = all.filter(r => {
+        if (!r) return false;
+        if (userEmail && r.email && r.email === userEmail) return true;
+        if (userId && r.studentID && String(r.studentID) === String(userId)) return true;
+        if (sessionUser.fullname && r.studentName && r.studentName === sessionUser.fullname) return true;
+        return false;
+      });
+
+      if (userRequests.length === 0) {
+        container.innerHTML = '<div style="padding:20px; color:#666;">You have no requests yet.</div>';
+        return;
+      }
+
+      userRequests.forEach(req => {
+        const card = document.createElement('div');
+        card.className = 'request-card';
+        const status = (req.status || 'pending').toLowerCase();
+
+        // compact items: show up to 3 items inline, then indicate more
+        const items = req.items || [];
+        const visible = items.slice(0,3).map(it => `${it.name} × ${it.quantity}`);
+        const moreCount = Math.max(0, items.length - visible.length);
+        const itemsHtml = visible.join(', ') + (moreCount ? ` <span class="more-items">+${moreCount} more</span>` : '');
+
+        const metaHtml = `
+          <div class="request-meta">
+            <div class="request-meta-left">
+              <div class="request-id">${req.id || ''}</div>
+              <div class="request-timestamp">${req.timestamp || ''}</div>
+            </div>
+            <span class="request-status ${status}">${status.toUpperCase()}</span>
+          </div>`;
+
+        card.innerHTML = `
+          <div class="request-info">
+            <div class="request-top">
+              <div class="request-user">${req.studentName || req.email || 'You'}</div>
+              <div class="request-dates">Borrow: ${req.borrowDate || 'N/A'} • Return: ${req.returnDate || 'N/A'}</div>
+            </div>
+            <div class="request-items">${itemsHtml}</div>
+          </div>
+          ${metaHtml}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadUserRequests);
+
+    // Animate an image flying to the borrow button
+    function animateAddToBorrow(src, sourceImgEl) {
+      const startRect = sourceImgEl ? sourceImgEl.getBoundingClientRect() : {left: window.innerWidth/2, top: window.innerHeight/2, width:60, height:60};
+      const endBtn = document.getElementById('borrowToggleButton');
+      if (!endBtn) return;
+      let endRect = endBtn.getBoundingClientRect();
+      // if the floating button is hidden (modal open) fallback to the visible modal-content
+      const btnStyle = window.getComputedStyle(endBtn);
+      if (!endRect.width || !endRect.height || btnStyle.display === 'none' || btnStyle.visibility === 'hidden') {
+        const modalContent = borrowModal ? borrowModal.querySelector('.modal-content') : null;
+        if (modalContent) {
+          endRect = modalContent.getBoundingClientRect();
+        } else {
+          // fallback to bottom-right of viewport
+          endRect = { left: window.innerWidth - 60, top: window.innerHeight - 60, width: 48, height: 48 };
+        }
+      }
+
+      const flying = document.createElement('img');
+      flying.src = src;
+      flying.className = 'flying-img';
+      flying.style.left = startRect.left + 'px';
+      flying.style.top = startRect.top + 'px';
+      flying.style.width = startRect.width + 'px';
+      flying.style.height = startRect.height + 'px';
+      flying.style.opacity = '1';
+      flying.style.transformOrigin = 'center center';
+      // short initial transition for pop-out
+      flying.style.transition = 'transform 220ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease';
+      document.body.appendChild(flying);
+
+      // compute translation to center of button
+      const startCenterX = startRect.left + startRect.width/2;
+      const startCenterY = startRect.top + startRect.height/2;
+      const endCenterX = endRect.left + endRect.width/2;
+      const endCenterY = endRect.top + endRect.height/2;
+      const deltaX = endCenterX - startCenterX;
+      const deltaY = endCenterY - startCenterY;
+
+      // Force layout then animate
+      // 1) pop out / scale up slightly and move up a bit
+      requestAnimationFrame(() => {
+        flying.style.transform = `translate(0px, -30px) scale(1.6)`;
+      });
+
+      // 2) after pop animation, fly to button along a curved path using Web Animations API
+      setTimeout(() => {
+        const midX = deltaX * 0.5;
+        const midY = deltaY * 0.5 - Math.max(60, Math.abs(deltaX) * 0.12); // lift the midpoint for curve
+        const kf = [
+          { transform: `translate(0px, -30px) scale(1.6)`, opacity: 1 },
+          { transform: `translate(${midX}px, ${midY}px) scale(0.9)`, opacity: 0.9, offset: 0.5 },
+          { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.28)`, opacity: 0.6 }
+        ];
+
+        const anim = flying.animate(kf, {
+          duration: 680,
+          easing: 'cubic-bezier(.22,.9,.4,1)',
+          fill: 'forwards'
+        });
+
+        anim.onfinish = () => {
+          // small pulse on button
+          endBtn.classList.add('borrow-pulse');
+          setTimeout(()=> endBtn.classList.remove('borrow-pulse'), 420);
+          // fade out and remove flying image
+          flying.animate([{opacity: 0.6}, {opacity: 0}], {duration: 260, fill: 'forwards'});
+          setTimeout(()=> { try{ document.body.removeChild(flying);}catch(e){} }, 300);
+        };
+      }, 220);
+    }
+
+  
+    // helper: show a centered modal popup with an OK button
+    function generateShortId() {
+      // Short, reasonably-unique ID: R + mix of timestamp base36 and random chars
+      const t = Date.now().toString(36).slice(-4);
+      const r = Math.random().toString(36).slice(2,5);
+      return ('R' + (t + r)).toUpperCase();
+    }
+
+    function showPopup(message, options = {}) {
+      // options: { onClose: fn, items: Array, logoSrc: string }
+      const overlay = document.createElement('div');
+      overlay.className = 'center-popup-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      const box = document.createElement('div');
+      box.className = 'center-popup';
+
+      // logo: use typographic text by default; fall back to image if requested
+      const useTextLogo = options.useTextLogo !== false; // default true
+      let logoEl = null;
+      if (useTextLogo) {
+        logoEl = document.createElement('div');
+        logoEl.className = 'center-popup-logo-text';
+        logoEl.setAttribute('aria-hidden', 'true');
+        logoEl.textContent = options.logoText || 'PhyLab';
+      } else {
+        const logoSrc = options.logoSrc || 'Phylab.png';
+        const logoImg = document.createElement('img');
+        logoImg.className = 'center-popup-logo';
+        logoImg.src = logoSrc;
+        logoImg.alt = 'PhyLab';
+        logoEl = logoImg;
+      }
+
+      // optional title (bigger) then message; optional detail image
+      // show logo first, then detail image (if any), then title and message
+      box.appendChild(logoEl);
+
+      if (options.detailImage) {
+        const detailImg = document.createElement('img');
+        detailImg.className = 'center-popup-detail-image';
+        detailImg.src = options.detailImage;
+        detailImg.alt = options.title ? options.title + ' image' : 'Item image';
+        box.appendChild(detailImg);
+      }
+
+      if (options.title) {
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'center-popup-title';
+        titleEl.textContent = options.title;
+        box.appendChild(titleEl);
+      }
+
+      const msg = document.createElement('p');
+      msg.className = 'center-popup-message';
+      msg.textContent = message || '';
+      box.appendChild(msg);
+
+      // items list (if provided)
+      // If isSpecList is true, just show item names without quantity
+      if (Array.isArray(options.items) && options.items.length) {
+        const list = document.createElement('ul');
+        list.className = 'center-popup-items';
+        options.items.forEach(it => {
+          const li = document.createElement('li');
+          const name = it.name || it.itemName || it.title || 'Item';
+          // Only show quantity if isSpecList is false/undefined and quantity exists
+          if (options.isSpecList) {
+            li.textContent = name;
+          } else {
+            const qty = it.quantity != null ? it.quantity : (it.qty != null ? it.qty : null);
+            li.textContent = qty != null ? `${name} × ${qty}` : name;
+          }
+          list.appendChild(li);
+        });
+        box.appendChild(list);
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'center-popup-ok';
+      btn.type = 'button';
+      btn.textContent = 'OK';
+
+      btn.addEventListener('click', () => {
+        try { document.body.removeChild(overlay); } catch (e) {}
+        if (typeof options.onClose === 'function') options.onClose();
+      });
+
+      box.appendChild(btn);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      // focus the button for accessibility
+      btn.focus();
+    }
+
+// Note: Details buttons are now added dynamically in loadInventoryFromAdmin()
+
+    document.getElementById('borrowForm').addEventListener('submit', function(e) {
+      e.preventDefault(); 
+
+      const teacherName = document.getElementById('teacher-name').value;
+      const purpose = document.getElementById('purpose-text').value;
+      const borrowDate = document.getElementById('borrow-date').value;
+      const returnDate = document.getElementById('return-date').value;
+      const inputName = document.getElementById('user-fullname').value;
+      const inputID = document.getElementById('user-id').value;
+
+      let sessionUser = {};
+      try {
+        sessionUser = JSON.parse(sessionStorage.getItem('current_user')) || {};
+      } catch(e) { console.log("No session user found"); }
+
+      const newRequest = {
+        id: generateShortId(),
+        studentName: sessionUser.fullname || inputName,
+        studentID: sessionUser.idNumber || inputID,
+        email: sessionUser.email || "no-email@univ.edu",
+        teacherName: teacherName,
+        purpose: purpose,
+        borrowDate: borrowDate,
+        returnDate: returnDate,
+        items: JSON.parse(JSON.stringify(cartItems)), 
+        status: 'pending', 
+        timestamp: new Date().toLocaleString()
+      };
+
+      const allRequests = JSON.parse(localStorage.getItem('phyLab_RequestQueue')) || [];
+      allRequests.push(newRequest);
+      localStorage.setItem('phyLab_RequestQueue', JSON.stringify(allRequests));
+
+      // pass a copy of the items to the popup so clearing the cart doesn't affect it
+      const itemsCopy = JSON.parse(JSON.stringify(cartItems || []));
+      showPopup("Request Submitted Successfully!", { items: itemsCopy, logoSrc: 'Phylab.png', onClose: () => {} });
+
+      this.reset();
+      cartItems = [];
+      updateVisualCart();
+      toggleModal(false);
+      // refresh user's request list
+      if (typeof loadUserRequests === 'function') loadUserRequests();
+    });
+
+
+    function toggleProfile(show) {
+        const modal = document.getElementById('profile-modal');
+        if (show) {
+            const userData = JSON.parse(sessionStorage.getItem('current_user'));
+            if (userData) {
+                document.getElementById('display-fullname').innerText = userData.fullname || "N/A";
+                document.getElementById('display-id').innerText = userData.idNumber || userData.id_number || "N/A";
+                document.getElementById('display-email').innerText = userData.email || "N/A";
+                document.getElementById('display-role').innerText = userData.role || "Student";
+            }
+            modal.style.display = 'flex';
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+
+    function handleLogout() {
+        sessionStorage.removeItem('current_user');
+        window.location.href = 'PhyLab_login.html';
+    }
+
+
+    window.onclick = function(event) {
+        const pModal = document.getElementById('profile-modal');
+        const bModal = document.getElementById('borrowModal');
+        const rModal = document.getElementById('review-modal');
+        if (event.target == pModal) toggleProfile(false);
+        if (event.target == bModal) toggleModal(false);
+        if (event.target == rModal) closeReviewModal();
+    }
+
+    function openReviewModal() {
+        document.getElementById('profile-modal').style.display = 'none';
+        document.getElementById('review-modal').style.display = 'flex';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('review-modal').style.display = 'none';
+        document.getElementById('profile-modal').style.display = 'flex';
+    }
+
+    function submitReview() {
+        const nameInput = document.getElementById('review-item-name');
+        const commentInput = document.getElementById('review-comment');
+        const imageInput = document.getElementById('review-image');
+
+        if (!nameInput || !commentInput) return;
+        
+        const itemName = nameInput.value;
+        const comment = commentInput.value;
+        const imageFile = imageInput.files[0];
+        const userData = JSON.parse(sessionStorage.getItem('current_user'));
+
+        if (!itemName.trim()) {
+          showPopup('Please enter the item name.');
+          return;
+        }
+
+        const saveToLocalStorage = (imageBase64 = "") => {
+            const reviewData = {
+                id: Date.now().toString(),
+                userName: userData ? userData.fullname : "Anonymous Student",
+                itemName: itemName,
+                comment: comment.trim(), 
+                itemImage: imageBase64,
+                timestamp: new Date().toLocaleString()
+            };
+
+         
+            let reviews = JSON.parse(localStorage.getItem('phyLab_UserReviews')) || [];
+            reviews.push(reviewData);
+            localStorage.setItem('phyLab_UserReviews', JSON.stringify(reviews));
+
+            showPopup('Feedback submitted to Admin!', {
+              onClose: function() {
+                nameInput.value = '';
+                commentInput.value = '';
+                imageInput.value = '';
+                closeReviewModal();
+              }
+            });
+        };
+
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onloadend = () => saveToLocalStorage(reader.result);
+            reader.readAsDataURL(imageFile);
+        } else {
+            saveToLocalStorage(""); 
+        }
+    }
+</script>
+
+    </script>
+
+    <script>
+      // ===== DYNAMIC INVENTORY LOADING FROM ADMIN =====
+      (function(){
+        const container = document.getElementById('inventoryContainer');
+        const searchInput = document.getElementById('userInventorySearch');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let activeCategory = 'all';
+
+        // Load inventory from hardcoded data + localStorage changes
+        function loadInventoryFromAdmin() {
+          const adminInventory = getInventory(); // Uses function from inventory_data.js
+          
+          if (adminInventory.length === 0) {
+            container.innerHTML = `
+              <div class="loading-inventory" style="grid-column: 1/-1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6c757d" stroke-width="1.5">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+                <p style="margin-top:16px;">No inventory available.</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = '';
+          
+          adminInventory.forEach(item => {
+            const stockValue = localStorage.getItem(`stock_${item.itemKey}`) || item.stock || '0';
+            const details = JSON.parse(localStorage.getItem(`item_details_${item.itemKey}`)) || {};
+            const isOutOfStock = parseInt(stockValue) <= 0;
+
+            const card = document.createElement('div');
+            card.className = 'inventory-section-card';
+            card.setAttribute('data-category', item.category || 'equipment');
+            card.setAttribute('data-item', item.itemKey);
+
+            // Create a placeholder SVG as data URI
+            const placeholderSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%25' y='45%25' fill='%23999' font-family='sans-serif' font-size='14' text-anchor='middle'%3ENo Image%3C/text%3E%3Ctext x='50%25' y='55%25' fill='%23999' font-family='sans-serif' font-size='12' text-anchor='middle'%3EAvailable%3C/text%3E%3C/svg%3E`;
+            
+            // Handle image source - ensure it's valid
+            const imageSrc = item.image && item.image.trim() ? item.image : placeholderSvg;
+            
+            // Get cabinet value - prefer saved details, fall back to item.cabinet
+            let cabinetDisplay = details.cabinet || item.cabinet || 'N/A';
+            if (typeof cabinetDisplay === 'string' && cabinetDisplay.toLowerCase().startsWith('cabinet ')) {
+              cabinetDisplay = cabinetDisplay; // Keep as-is like "Cabinet 1"
+            }
+            
+            // Get description text - truncate if too long for card display
+            const descText = details.description || item.description || 'Physics laboratory equipment.';
+            const shortDesc = descText.length > 80 ? descText.substring(0, 80) + '...' : descText;
+            
+            card.innerHTML = `
+              <button class="details-info-btn" title="View details" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>
+              </button>
+              <img class="inventory-image" src="${imageSrc}" alt="${item.name}" onerror="this.onerror=null; this.src='${placeholderSvg}';">
+              <div class="inventory-item-text">
+                <h3 class="inventory-item-name">${item.name}</h3>
+                <p class="inventory-item-desc">${shortDesc}</p>
+                <p class="inventory-item-cabinet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> ${cabinetDisplay}</p>
+                <div class="inventory-stock-button">
+                  <p class="inventory-item-stock">In Stock: <span class="stock-display" data-item="${item.itemKey}">${stockValue}</span></p>
+                  <button class="inventory-button-borrow" ${isOutOfStock ? 'disabled style="background:#ccc; cursor:not-allowed;"' : ''}>
+                    <svg class="plus-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z"/></svg>
+                    ${isOutOfStock ? 'Out of Stock' : 'Borrow'}
+                  </button>
+                </div>
+              </div>
+            `;
+            
+            // Store item data for the details popup
+            card.dataset.itemImage = imageSrc;
+            card.dataset.itemDescription = details.description || item.description || 'Physics laboratory equipment.';
+            card.dataset.itemType = details.type || item.type || 'General';
+            card.dataset.itemUse = details.use || item.use || 'Laboratory experiments';
+            card.dataset.itemCabinet = cabinetDisplay;
+
+            if (isOutOfStock) {
+              card.style.opacity = '0.7';
+            }
+
+            container.appendChild(card);
+          });
+
+          // Attach event listeners to new cards
+          attachCardListeners();
+          filterCards();
+        }
+
+        // Attach click listeners to cards
+        function attachCardListeners() {
+          document.querySelectorAll('.inventory-section-card').forEach(card => {
+            // Details info button - opens popup modal
+            const detailsBtn = card.querySelector('.details-info-btn');
+            if (detailsBtn) {
+              detailsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const name = card.querySelector('.inventory-item-name')?.textContent || 'Item';
+                const description = card.dataset.itemDescription || 'Physics laboratory equipment.';
+                const type = card.dataset.itemType || 'General';
+                const use = card.dataset.itemUse || 'Laboratory experiments';
+                const cabinet = card.dataset.itemCabinet || 'N/A';
+                const imgSrc = card.dataset.itemImage || card.querySelector('.inventory-image')?.src || '';
+                
+                // Build specs array for the popup
+                const specs = [
+                  { name: `Type: ${type}` },
+                  { name: `Use: ${use}` },
+                  { name: `Location: ${cabinet}` }
+                ];
+                
+                showPopup(description, {
+                  title: name,
+                  items: specs,
+                  useTextLogo: true,
+                  detailImage: imgSrc,
+                  isSpecList: true
+                });
+              });
+            }
+
+            // Borrow button
+            const borrowBtn = card.querySelector('.inventory-button-borrow');
+            if (borrowBtn) {
+              borrowBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (borrowBtn.disabled) return;
+                
+                const itemName = card.querySelector('.inventory-item-name').textContent;
+                const stockElement = card.querySelector('.stock-display');
+                const itemKey = stockElement?.getAttribute('data-item') || card.getAttribute('data-item');
+                let currentStock = parseInt(stockElement?.textContent) || 0;
+
+                if (currentStock <= 0) {
+                  alert(`Sorry, ${itemName} is out of stock.`);
+                  return;
+                }
+
+                // Decrease stock
+                currentStock -= 1;
+                localStorage.setItem('stock_' + itemKey, currentStock);
+                if (stockElement) stockElement.textContent = currentStock;
+                
+                // Update borrow button state if out of stock
+                if (currentStock <= 0) {
+                  borrowBtn.textContent = 'Out of Stock';
+                  borrowBtn.disabled = true;
+                  borrowBtn.style.background = '#ccc';
+                  borrowBtn.style.cursor = 'not-allowed';
+                  card.style.opacity = '0.7';
+                }
+
+                // Get image from card data or img element
+                const itemImage = card.dataset.itemImage || card.querySelector('.inventory-image')?.src || '';
+                const itemDesc = card.dataset.itemDescription || 'Physics laboratory equipment.';
+
+                // Add to cart (using global cartItems from main script)
+                const existingItem = cartItems.find(item => item.name === itemName);
+                if (existingItem) {
+                  existingItem.quantity += 1;
+                } else {
+                  cartItems.push({
+                    name: itemName,
+                    itemKey: itemKey,
+                    image: itemImage,
+                    description: itemDesc,
+                    quantity: 1
+                  });
+                }
+
+                // Animate flying image
+                try {
+                  const imgEl = card.querySelector('.inventory-image');
+                  if (typeof animateAddToBorrow === 'function') {
+                    animateAddToBorrow(imgEl ? imgEl.src : itemImage, imgEl);
+                  }
+                } catch(err) { /* ignore animation errors */ }
+
+                // Update visual cart
+                if (typeof updateVisualCart === 'function') {
+                  updateVisualCart();
+                }
+              });
+            }
+          });
+        }
+
+        // Filter cards by search and category
+        function filterCards() {
+          const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+          const cards = document.querySelectorAll('.inventory-section-card');
+          
+          cards.forEach(card => {
+            const name = (card.querySelector('.inventory-item-name')?.textContent || '').toLowerCase();
+            const key = (card.dataset.item || '').toLowerCase();
+            const cat = (card.dataset.category || '').toLowerCase();
+            const matchCategory = (activeCategory === 'all') || (cat === activeCategory);
+            const matchQuery = !q || name.includes(q) || key.includes(q);
+            card.style.display = (matchCategory && matchQuery) ? '' : 'none';
+          });
+        }
+
+        // Filter button handlers
+        filterButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeCategory = btn.dataset.filter || 'all';
+            filterCards();
+          });
+        });
+
+        // Search input handler
+        if (searchInput) {
+          let debounceTimer = null;
+          searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(filterCards, 200);
+          });
+        }
+
+        // Listen for storage changes to auto-update
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'phyLab_AdminInventory' || (e.key && e.key.startsWith('stock_'))) {
+            loadInventoryFromAdmin();
+          }
+        });
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', loadInventoryFromAdmin);
+        // Also run now in case DOM is already loaded
+        if (document.readyState !== 'loading') {
+          loadInventoryFromAdmin();
+        }
+      })();
+    </script>
+
+    </body>
+    </html>

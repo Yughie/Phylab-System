@@ -426,13 +426,32 @@
 
             if (res.status === 201) {
               const data = await res.json();
-              showPhylabModal(
-                `Registration successful. Welcome ${fullname}!`,
-                true,
-                () => {
-                  switchView("login");
-                },
-              );
+              // If backend returned a token and user info, auto-login and redirect
+              if (data.token) {
+                const userObj = {
+                  id: data.id,
+                  email: data.email,
+                  fullname: data.full_name || data.fullname || "",
+                  idNumber: data.id_number || data.idNumber || "",
+                };
+                sessionStorage.setItem("auth_token", data.token);
+                sessionStorage.setItem("current_user", JSON.stringify(userObj));
+                showPhylabModal(
+                  `Registration successful. Welcome ${userObj.fullname}!`,
+                  true,
+                  () => {
+                    window.location.href = "PhyLab_user_page.html";
+                  },
+                );
+              } else {
+                showPhylabModal(
+                  `Registration successful. Welcome ${fullname}!`,
+                  true,
+                  () => {
+                    switchView("login");
+                  },
+                );
+              }
               this.reset();
             } else {
               const err = await res.json().catch(() => ({}));
@@ -458,85 +477,94 @@
           }
         });
 
-      function handleLogin() {
-        const idInput = document.getElementById("username").value;
+      async function handleLogin() {
+        const idInput = document.getElementById("username").value.trim();
         const passInput = document.getElementById("password_login").value;
-        const users = getUsers();
 
-        // allow login with email or ID. Normalize input to compare.
-        const rawInput = (idInput || "").trim();
-        const lowerInput = rawInput.toLowerCase();
-        const normalizedInput = rawInput.replace(/\s+/g, "").toUpperCase();
+        const submitBtn = document.querySelector(".login");
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Signing in...";
+        }
 
-        const authenticatedUser = users.find((user) => {
-          const userEmail = (user.email || "").toLowerCase();
-          if (
-            userEmail &&
-            userEmail === lowerInput &&
-            user.password === passInput
-          )
-            return true;
+        try {
+          const payload = { email: idInput, password: passInput };
+          const res = await fetch("http://127.0.0.1:8000/api/login/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
 
-          const storedIdRaw = (
-            user.idNumber ||
-            user.id_number ||
-            ""
-          ).toString();
-          const storedNormalized = storedIdRaw
-            .replace(/\s+/g, "")
-            .toUpperCase();
-          if (
-            storedNormalized &&
-            storedNormalized === normalizedInput &&
-            user.password === passInput
-          )
-            return true;
+          if (res.ok) {
+            const data = await res.json();
+            // store token for subsequent requests
+            if (data.token) sessionStorage.setItem("auth_token", data.token);
 
-          return false;
-        });
-        const clearLoginError = () => {
-          const err = document.getElementById("loginError");
-          if (err) {
-            err.textContent = "";
-            err.style.display = "none";
-          }
-          document.getElementById("username").classList.remove("input-error");
-          document
-            .getElementById("password_login")
-            .classList.remove("input-error");
-        };
+            // build basic user object
+            const userObj = {
+              id: data.id,
+              email: data.email,
+              fullname: data.full_name || data.fullname || "",
+              idNumber: data.id_number || data.idNumber || "",
+            };
 
-        const showLoginError = (msg) => {
-          const err = document.getElementById("loginError");
-          if (err) {
-            err.textContent = msg;
-            err.style.display = "block";
-          }
-          document.getElementById("username").classList.add("input-error");
-          document
-            .getElementById("password_login")
-            .classList.add("input-error");
-          try {
-            document.getElementById("username").focus();
-          } catch (e) {}
-        };
+            // If fullname missing, fetch user detail using token
+            if (
+              (!userObj.fullname || userObj.fullname.trim() === "") &&
+              data.token
+            ) {
+              try {
+                const detailRes = await fetch(
+                  `http://127.0.0.1:8000/api/users/${data.id}/`,
+                  {
+                    headers: { Authorization: "Token " + data.token },
+                  },
+                );
+                if (detailRes.ok) {
+                  const detail = await detailRes.json();
+                  userObj.fullname =
+                    detail.full_name ||
+                    detail.fullName ||
+                    detail.fullname ||
+                    userObj.fullname;
+                  userObj.idNumber =
+                    detail.id_number || detail.idNumber || userObj.idNumber;
+                }
+              } catch (e) {
+                console.warn("Could not fetch user details after login", e);
+              }
+            }
 
-        if (authenticatedUser) {
-          clearLoginError();
-          sessionStorage.setItem(
-            "current_user",
-            JSON.stringify(authenticatedUser),
-          );
-          showPhylabModal(
-            `Welcome back, ${authenticatedUser.fullname}!`,
-            true,
-            function () {
+            sessionStorage.setItem("current_user", JSON.stringify(userObj));
+            showPhylabModal(`Welcome back!`, true, () => {
               window.location.href = "PhyLab_user_page.html";
-            },
-          );
-        } else {
-          // show inline error instead of alert/modal
-          showLoginError("Invalid ID Number/Email or Password.");
+            });
+          } else {
+            const err = await res.json().catch(() => ({}));
+            const msg =
+              err.detail ||
+              Object.entries(err)
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`)
+                .join(" | ") ||
+              "Invalid credentials.";
+            const loginErr = document.getElementById("loginError");
+            if (loginErr) {
+              loginErr.textContent = msg;
+              loginErr.style.display = "block";
+            }
+            document.getElementById("username").classList.add("input-error");
+            document
+              .getElementById("password_login")
+              .classList.add("input-error");
+          }
+        } catch (e) {
+          console.error("Login network error", e);
+          showPhylabModal("Network error: could not reach server.", false);
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Login";
+          }
         }
       }
 

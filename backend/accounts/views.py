@@ -36,7 +36,15 @@ class RegisterView(APIView):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({'id': user.id, 'email': user.email}, status=status.HTTP_201_CREATED)
+            # create token so client can auto-login
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'id': user.id,
+                'email': user.email,
+                'full_name': getattr(user, 'full_name', '') or user.get_full_name(),
+                'id_number': getattr(user, 'id_number', ''),
+                'token': token.key,
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -45,3 +53,46 @@ class GetAllStudents(APIView):
         students = User.objects.filter(is_student=True)
         serializer = UserSerializer(students, many=True)
         return Response(serializer.data)
+
+
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        email = request.data.get('email') or request.data.get('username')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return Response({'detail': 'Email and password required.'}, status=400)
+
+        # Try authenticate using email as username (ModelBackend uses USERNAME_FIELD)
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            # fallback: some backends accept email kwarg
+            user = authenticate(request, email=email, password=password)
+
+        if user is None:
+            # fallback: try matching by id_number and verify password
+            try:
+                candidate = User.objects.filter(id_number__iexact=email).first()
+                if candidate and candidate.check_password(password):
+                    user = candidate
+            except Exception:
+                user = None
+
+        if user is None:
+            return Response({'detail': 'Invalid credentials.'}, status=400)
+
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'id': user.id,
+            'email': user.email,
+            'full_name': getattr(user, 'full_name', '') or user.get_full_name(),
+            'id_number': getattr(user, 'id_number', '')
+        })

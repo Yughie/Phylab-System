@@ -41,6 +41,7 @@
 
       // Map backend fields into frontend-friendly shape
       _inventoryCache = (data || []).map((item) => ({
+        id: item.id || item.pk || null,
         itemKey: item.item_key || item.itemKey || String(item.id || ""),
         name: item.name || "",
         category: item.category || "",

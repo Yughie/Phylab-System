@@ -5,7 +5,7 @@ from .models import InventoryItem
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.conf import settings
 import os
 
@@ -23,7 +23,7 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     # Allow public GET/POST for now (frontend will post updates)
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_context(self):
         # Ensure serializer can build absolute image URLs

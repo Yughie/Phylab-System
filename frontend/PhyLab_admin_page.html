@@ -549,7 +549,7 @@
     }
 
       // Item Edit Modal handlers
-      function openItemEditModal(itemKey) {
+      function openItemEditModal(itemKey, itemId) {
         const modal = document.getElementById('itemEditModal');
         const nameEl = document.getElementById('editItemName');
         const typeEl = document.getElementById('editItemType');
@@ -581,6 +581,7 @@
         descEl.value = saved.description || cardDesc;
 
         modal.dataset.editingItem = itemKey;
+        if (itemId) modal.dataset.editingItemId = itemId;
         modal.classList.add('show');
       }
 
@@ -589,12 +590,14 @@
         if (!modal) return;
         modal.classList.remove('show');
         delete modal.dataset.editingItem;
+        delete modal.dataset.editingItemId;
       }
 
-      function saveItemDetails() {
+      async function saveItemDetails() {
         const modal = document.getElementById('itemEditModal');
         if (!modal) return;
         const itemKey = modal.dataset.editingItem;
+        const itemId = modal.dataset.editingItemId;
         if (!itemKey) {
           if (typeof showNotification === 'function') showNotification('No item selected to save.', 'error');
           return;
@@ -607,6 +610,33 @@
         const description = document.getElementById('editItemDescription').value.trim();
 
         const payload = { name, type, use, cabinet, description, updatedAt: new Date().toISOString() };
+
+        // Try to persist to backend if we have an item id; fall back to localStorage
+        let backendSucceeded = false;
+        if (itemId) {
+          const urls = [
+            '/api/inventory/' + itemId + '/',
+            'http://127.0.0.1:8000/api/inventory/' + itemId + '/'
+          ];
+
+          for (let u of urls) {
+            try {
+              const resp = await fetch(u, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, use, cabinet, description, name })
+              });
+              if (resp && resp.ok) {
+                backendSucceeded = true;
+                break;
+              }
+            } catch (e) {
+              // try next
+            }
+          }
+        }
+
+        // If backend failed or no id, persist to localStorage as before
         localStorage.setItem('item_details_' + itemKey, JSON.stringify(payload));
 
         // Update the card's data attributes with new values
@@ -618,15 +648,21 @@
           card.setAttribute('data-description', description);
         }
 
+        closeItemEditModal();
+        if (backendSucceeded) {
+          if (typeof showNotification === 'function') showNotification('Item details saved to server.', 'approved');
+        } else {
+          if (typeof showNotification === 'function') showNotification('Item details saved locally (offline fallback).', 'warning');
+        }
+
         // Refresh card display for this item
         const input = document.querySelector('.stock-input[data-item="' + itemKey + '"]');
         if (input) updateStockDisplay(input);
 
-        closeItemEditModal();
-        if (typeof showNotification === 'function') showNotification('Item details saved.', 'success');
-        
-        saveInventoryToLocalStorage(); // Update inventory for user page sync
+        saveInventoryToLocalStorage(); // update inventory cache for user page sync (may be a noop)
       }
+
+      
     
     function getRemarkTypeLabel(type) {
         const labels = {
@@ -773,11 +809,11 @@
         const stock = (item.stock !== undefined && item.stock !== null) ? item.stock : 0;
 
         const cardHtml = `
-          <div class="inventory-card" data-category="${escapeHtml(category)}" data-cabinet="${escapeHtml(cabinet)}" data-type="${escapeHtml(type)}" data-use="${escapeHtml(use)}" data-description="${escapeHtml(description)}">
+          <div class="inventory-card" data-id="${escapeHtml(item.id || '')}" data-category="${escapeHtml(category)}" data-cabinet="${escapeHtml(cabinet)}" data-type="${escapeHtml(type)}" data-use="${escapeHtml(use)}" data-description="${escapeHtml(description)}">
             <img class="inventory-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}">
             <div class="inventory-details">
               <span class="item-name">${escapeHtml(name)}</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('${escapeJs(itemKey)}')">Edit Details</button>
+              <button class="edit-details-btn" onclick="openItemEditModal('${escapeJs(itemKey)}','${escapeJs(item.id || '')}')">Edit Details</button>
               <div class="stock-control">
                 <label>Stock</label>
                 <input type="number" class="stock-input" data-item="${escapeHtml(itemKey)}" value="${escapeHtml(stock)}" placeholder="No." oninput="saveStock(this)">

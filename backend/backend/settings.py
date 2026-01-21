@@ -11,9 +11,25 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+try:
+    from dotenv import load_dotenv
+except Exception:
+    load_dotenv = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env from backend or repository root if present so settings can read environment values
+if load_dotenv:
+    env_candidates = [BASE_DIR / '.env', BASE_DIR.parent / '.env']
+    for env_path in env_candidates:
+        try:
+            if env_path.exists():
+                load_dotenv(env_path)
+                break
+        except Exception:
+            pass
 
 
 # Quick-start development settings - unsuitable for production

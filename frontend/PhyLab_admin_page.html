@@ -16,6 +16,8 @@
   })();
 </script>
   <script src="inventory_data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="supabase_fetch.js"></script>
   <link rel="stylesheet" href="Phylab_theme_vars.css">
   <link rel="stylesheet" href="PhyLab_admin_page_style.css">
 </head>
@@ -178,773 +180,7 @@
         </div>
         </div>
         <div class="inventory-grid">
-
-          <!-- CABINET 1 -->
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 1" data-type="Science Kit" data-use="Mechanics experiments" data-description="Complete science kit for mechanics experiments set 001.">
-            <img class="inventory-img" src="Cabinets/Cabinet 1/SCIKIT-MECHANICS_ CASE 001.png" alt="Sci Kit Mechanics 001">
-            <div class="inventory-details">
-              <span class="item-name">Sci Kit Mechanics 001</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('sci_kit_mechanics_001')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="sci_kit_mechanics_001" value="30" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 2 -->
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 2" data-type="Science Kit" data-use="Mechanics experiments" data-description="Complete science kit for mechanics experiments set 002.">
-            <img class="inventory-img" src="Cabinets/Cabinet 2/Sci Kit Mechanics 002.webp" alt="Sci Kit Mechanics 002">
-            <div class="inventory-details">
-              <span class="item-name">Sci Kit Mechanics 002</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('sci_kit_mechanics_002')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="sci_kit_mechanics_002" value="30" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 4 -->
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 4" data-type="Science Kit" data-use="Mechanics experiments" data-description="Complete science kit for mechanics experiments set 003.">
-            <img class="inventory-img" src="Cabinets/Cabinet 4/SCIKIT- MECHANICS_ CASE 003.png" alt="Sci Kit Mechanics 003">
-            <div class="inventory-details">
-              <span class="item-name">Sci Kit Mechanics 003</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('sci_kit_mechanics_003')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="sci_kit_mechanics_003" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 6 -->
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Capacitor" data-use="Charge storage" data-description="Capacitor for electrical experiments and charge storage demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/CAPACITOR SET.jpeg" alt="Capacitor">
-            <div class="inventory-details">
-              <span class="item-name">Capacitor</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('capacitor')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="capacitor" value="2" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 6" data-type="Transformer" data-use="Step-up/step-down voltage" data-description="BLR Develop Transformer for AC voltage experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/BLR DEVELOP TRASNFORMER.jpeg" alt="BLR Develop Transformer">
-            <div class="inventory-details">
-              <span class="item-name">BLR Develop Transformer</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('blr_transformer')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="blr_transformer" value="25" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 6" data-type="Light Source" data-use="Optics experiments" data-description="BLR Develop Light Source for optics and illumination experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/BLR DEVELOP LIGHT SOURCE.jpeg" alt="BLR Develop Light Source">
-            <div class="inventory-details">
-              <span class="item-name">BLR Develop Light Source</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('blr_light_source')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="blr_light_source" value="20" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Prism" data-use="Light refraction" data-description="Glass prism for light dispersion and refraction experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/GLASS PRISM.jpeg" alt="Glass Prism">
-            <div class="inventory-details">
-              <span class="item-name">Glass Prism</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('glass_prism')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="glass_prism" value="10" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Lens" data-use="Light divergence" data-description="Concave lens for diverging light experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/Concave lense.jpeg" alt="Concave Lens">
-            <div class="inventory-details">
-              <span class="item-name">Concave Lens</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('concave_lens')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="concave_lens" value="12" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Lens" data-use="Light convergence" data-description="Convex lens for converging light experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/CONVEX LENS.jpeg" alt="Convex Lens">
-            <div class="inventory-details">
-              <span class="item-name">Convex Lens</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('convex_lens')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="convex_lens" value="10" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Capacitor Set" data-use="Capacitance experiments" data-description="Set of capacitors for various electrical experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/CAPACITOR SET.jpeg" alt="Capacitor Set">
-            <div class="inventory-details">
-              <span class="item-name">Capacitor Set</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('capacitor_set')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="capacitor_set" value="2" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Friction Board" data-use="Friction experiments" data-description="Fictional board apparatus for friction and motion experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/FICTIONAL BOARD APPARATUS.jpeg" alt="Fictional Board Apparatus">
-            <div class="inventory-details">
-              <span class="item-name">Fictional Board Apparatus</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('fictional_board')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="fictional_board" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 6" data-type="Digital Scale" data-use="Mass measurement" data-description="KM Digital Scale for precise mass measurements.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/KM DIGITAL SCALE.jpeg" alt="KM Digital Scale">
-            <div class="inventory-details">
-              <span class="item-name">KM Digital Scale</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('km_digital_scale')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="km_digital_scale" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Coil" data-use="Magnetism experiments" data-description="Magnetizing and Demagnetizing Coil for magnetic field experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/MAGNETIZING & DEMANDING COIL.jpeg" alt="Magnetizing and Demagnetizing Coil">
-            <div class="inventory-details">
-              <span class="item-name">Magnetizing and Demagnetizing Coil</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('mag_coil')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="mag_coil" value="11" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Motor Model" data-use="Electromagnetic demos" data-description="Motor generation model for electromagnetic induction experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/MOTOR GENERATION MODEL.jpeg" alt="Motor Generation Model">
-            <div class="inventory-details">
-              <span class="item-name">Motor Generation Model</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('motor_model')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="motor_model" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Resistor" data-use="Circuit experiments" data-description="Resistors for circuit building and Ohm's law experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/Resistor.jpeg" alt="Resistor">
-            <div class="inventory-details">
-              <span class="item-name">Resistor</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('resistor')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="resistor" value="4" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 6" data-type="Power Supply" data-use="Variable DC output" data-description="Variable Power Supply for adjustable voltage experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/VARIABLE POWER SUPPLY.jpeg" alt="Variable Power Supply">
-            <div class="inventory-details">
-              <span class="item-name">Variable Power Supply</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('variable_ps')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="variable_ps" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 6" data-type="Projectile Motion" data-use="Kinematics experiments" data-description="Projectile motion apparatus for trajectory experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/Projectile Motion.jpeg" alt="Projectile Motion">
-            <div class="inventory-details">
-              <span class="item-name">Projectile Motion</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('projectile_motion')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="projectile_motion" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 6" data-type="Slinky" data-use="Wave demonstrations" data-description="Metal slinky for wave motion demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 6/METAL SLINKY.jpeg" alt="Metal Slinky">
-            <div class="inventory-details">
-              <span class="item-name">Metal Slinky</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('metal_slinky')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="metal_slinky" value="18" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 7 -->
-          <div class="inventory-card" data-category="consumable" data-cabinet="Cabinet 7" data-type="Battery" data-use="Power source" data-description="Eveready 1.5V dry cell batteries for experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Eveready 1.5 Volts.jpg" alt="Eveready 1.5 Volts">
-            <div class="inventory-details">
-              <span class="item-name">Eveready 1.5 Volts</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('eveready_1_5v')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="eveready_1_5v" value="100" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="consumable" data-cabinet="Cabinet 7" data-type="Gloves" data-use="Lab safety" data-description="Surgical gloves for safe handling during experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/SURGICAL GLOVES.jpeg" alt="Surgical Gloves">
-            <div class="inventory-details">
-              <span class="item-name">Surgical Gloves</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('surgical_gloves')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="surgical_gloves" value="45" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="consumable" data-cabinet="Cabinet 7" data-type="Battery" data-use="Power source" data-description="Eveready 9V batteries for higher voltage experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Eveready 9 Volts.jpg" alt="Eveready 9 Volts">
-            <div class="inventory-details">
-              <span class="item-name">Eveready 9 Volts</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('eveready_9v')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="eveready_9v" value="15" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="consumable" data-cabinet="Cabinet 7" data-type="Battery" data-use="Power cells" data-description="Carbon batteries for low-power experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Carbon Battery.jpg" alt="Carbon Battery">
-            <div class="inventory-details">
-              <span class="item-name">Carbon Battery</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('carbon_battery')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="carbon_battery" value="25" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 7" data-type="Bulb" data-use="Light source" data-description="Clear bulb 60 watts for circuit and lighting experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Clear Bulb.jpg" alt="Clear Bulb 60 Watts">
-            <div class="inventory-details">
-              <span class="item-name">Clear Bulb 60 Watts</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('clear_bulb_60w')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="clear_bulb_60w" value="28" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 7" data-type="Compass" data-use="Direction finding" data-description="Compass for magnetic field and navigation experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Compass.jpg" alt="Compass">
-            <div class="inventory-details">
-              <span class="item-name">Compass</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('compass')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="compass" value="70" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 7" data-type="Protractor" data-use="Angle measurement" data-description="Protractor for measuring angles in experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Protractor_.jpg" alt="Protractor">
-            <div class="inventory-details">
-              <span class="item-name">Protractor</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('protractor')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="protractor" value="60" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 7" data-type="Lamp" data-use="Illumination" data-description="Desk lamp with heavy base for stable illumination.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Desk Lamp.jpg" alt="Desk Lamp Heavy Base">
-            <div class="inventory-details">
-              <span class="item-name">Desk Lamp Heavy Base</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('desk_lamp')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="desk_lamp" value="29" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 7" data-type="Power Supply" data-use="Variable DC output" data-description="Variable Power Supply boxes for classroom distribution.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Variable Power Supply.jpg" alt="Variable Power Supply Boxes">
-            <div class="inventory-details">
-              <span class="item-name">Variable Power Supply (Boxes)</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('variable_ps_boxes')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="variable_ps_boxes" value="18" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 7" data-type="Thermal Apparatus" data-use="Thermal expansion demo" data-description="Ring and Ball apparatus for thermal expansion experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 7/Ring and Ball Aparatus_.jpg" alt="Ring and Ball Apparatus">
-            <div class="inventory-details">
-              <span class="item-name">Ring and Ball Apparatus</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('ring_ball')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="ring_ball" value="30" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 8 -->
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="Magnifier" data-use="Observation" data-description="Hand magnifying glass for close-up observation.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Magnifying glass.png" alt="Magnifying Glass">
-            <div class="inventory-details">
-              <span class="item-name">Magnifying Glass</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('magnifying_glass')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="magnifying_glass" value="30" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Prism" data-use="Light refraction" data-description="Prism for light dispersion experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Prism.png" alt="Prism">
-            <div class="inventory-details">
-              <span class="item-name">Prism</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('prism')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="prism" value="8" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="String" data-use="General lab use" data-description="String ball for various lab setups.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/String ball.png" alt="String Ball">
-            <div class="inventory-details">
-              <span class="item-name">String Ball</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('string_ball')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="string_ball" value="16" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="consumable" data-cabinet="Cabinet 8" data-type="Cleaning Supply" data-use="Optics cleaning" data-description="Cleaning lens tissue for optics maintenance.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Cleaning lens tissue.jpeg" alt="Cleaning Lens Tissue">
-            <div class="inventory-details">
-              <span class="item-name">Cleaning Lens Tissue</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('lens_tissue')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="lens_tissue" value="56" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Spring" data-use="Oscillation experiments" data-description="Suspended spring for Hooke's law experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Suspended Spring.jpeg" alt="Suspended Spring">
-            <div class="inventory-details">
-              <span class="item-name">Suspended Spring</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('suspended_spring')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="suspended_spring" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="Flask" data-use="Chemistry experiments" data-description="Florence flask for heating and chemistry experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Florence flask.png" alt="Florence Flask">
-            <div class="inventory-details">
-              <span class="item-name">Florence Flask</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('florence_flask')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="florence_flask" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Refraction Tank" data-use="Optics experiments" data-description="Refraction tank for light path demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Refraction tank.png" alt="Refraction Tank">
-            <div class="inventory-details">
-              <span class="item-name">Refraction Tank</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('refraction_tank')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="refraction_tank" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Prism" data-use="Light refraction" data-description="Additional prism set for demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Prism(1).png" alt="Prism Extra">
-            <div class="inventory-details">
-              <span class="item-name">Prism (Extra)</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('prism_extra')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="prism_extra" value="29" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Rheostat" data-use="Resistance control" data-description="Rheostat for variable resistance in circuits.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Rheostat .png" alt="Rheostat">
-            <div class="inventory-details">
-              <span class="item-name">Rheostat</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('rheostat')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="rheostat" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="Mirror Set" data-use="Optics experiments" data-description="Mirror set for reflection experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Mirror set.png" alt="Mirror Set">
-            <div class="inventory-details">
-              <span class="item-name">Mirror Set</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('mirror_set')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="mirror_set" value="26" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 8" data-type="Electric Meter" data-use="Electrical measurement" data-description="Electric meter for measuring electrical quantities.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Electric meter.png" alt="Electric Meter">
-            <div class="inventory-details">
-              <span class="item-name">Electric Meter</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('electric_meter')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="electric_meter" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="Lens Set" data-use="Optics teaching" data-description="Acrylic basic lens set for student experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Acrylic Basic Lens Set.png" alt="Acrylic Basic Lens Set">
-            <div class="inventory-details">
-              <span class="item-name">Acrylic Basic Lens Set</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('acrylic_lens_set')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="acrylic_lens_set" value="33" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 8" data-type="Speaker" data-use="Sound experiments" data-description="Loud speaker for acoustics demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Loud speaker.jpeg" alt="Loud Speaker">
-            <div class="inventory-details">
-              <span class="item-name">Loud Speaker</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('loud_speaker')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="loud_speaker" value="4" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 8" data-type="Protractor Set" data-use="Angle measurement" data-description="Set of 5 protractors for classroom use.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Protractor.png" alt="Protractor 5pcs">
-            <div class="inventory-details">
-              <span class="item-name">Protractor (5pcs)</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('protractor_5pcs')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="protractor_5pcs" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 8" data-type="Optical Bench" data-use="Optics experiments" data-description="Universal optical bench accessories set.">
-            <img class="inventory-img" src="Cabinets/Cabinet 8/Set Universal Optical Bench Accessories.png" alt="Optical Bench Accessories">
-            <div class="inventory-details">
-              <span class="item-name">Set Universal Optical Bench Accessories</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('optical_bench')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="optical_bench" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 9 -->
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Voltmeter" data-use="Voltage measurement" data-description="Voltmeter for measuring electrical potential.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/VOLTMETER.png" alt="Voltmeter">
-            <div class="inventory-details">
-              <span class="item-name">Voltmeter</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('voltmeter')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="voltmeter" value="34" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Galvanometer" data-use="Current detection" data-description="Galvanometer for detecting small currents.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/GALVANOMETER.png" alt="Galvanometer">
-            <div class="inventory-details">
-              <span class="item-name">Galvanometer</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('galvanometer')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="galvanometer" value="19" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Ammeter" data-use="Current measurement" data-description="Ammeter for measuring electric current.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/AMMETER.png" alt="Ammeter">
-            <div class="inventory-details">
-              <span class="item-name">Ammeter</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('ammeter')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="ammeter" value="37" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Model" data-use="Astronomy demo" data-description="Solar system simulator for astronomy demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/Solar System Silmulator.png" alt="Solar System Simulator">
-            <div class="inventory-details">
-              <span class="item-name">Solar System Simulator</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('solar_simulator')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="solar_simulator" value="2" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Electrolyser" data-use="Electrolysis experiments" data-description="Water electrolyser for decomposition experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/Water electrolyser_.jpg" alt="Water Electrolyser">
-            <div class="inventory-details">
-              <span class="item-name">Water Electrolyser</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('electrolyser')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="electrolyser" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 9" data-type="Meter Stick" data-use="Length measurement" data-description="Meter stick for measuring length.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/METER STICK.png" alt="Meter Stick">
-            <div class="inventory-details">
-              <span class="item-name">Meter Stick</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('meter_stick')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="meter_stick" value="25" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 9" data-type="Rubber Band Board" data-use="Wave experiments" data-description="Rubber band board for wave and elasticity experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/RUBBERBAND BOARD.png" alt="Rubber Band Board">
-            <div class="inventory-details">
-              <span class="item-name">Rubber Band Board</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('rubber_band_board')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="rubber_band_board" value="24" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 9" data-type="Inertia Apparatus" data-use="Newton's laws demo" data-description="Inertia force experiment apparatus.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/INERTIA FORCE EXPERIMENTS_.jpg" alt="Inertia Force Experiment">
-            <div class="inventory-details">
-              <span class="item-name">Inertia Force Experiment</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('inertia_force')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="inertia_force" value="3" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 9" data-type="Globe" data-use="Geography/Astronomy" data-description="Globe for earth and planetary demonstrations.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/Globe_.jpg" alt="Globe">
-            <div class="inventory-details">
-              <span class="item-name">Globe</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('globe')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="globe" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 9" data-type="Weather Model" data-use="Meteorology demo" data-description="Professor Weather model for weather experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 9/PROFESSOR WEATHER_.jpg" alt="Professor Weather">
-            <div class="inventory-details">
-              <span class="item-name">Professor Weather</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('professor_weather')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="professor_weather" value="1" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <!-- CABINET 10 -->
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 10" data-type="Spring Scale" data-use="Force measurement" data-description="Spring scale for measuring force and weight.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Spring Scale.png" alt="Spring Scale">
-            <div class="inventory-details">
-              <span class="item-name">Spring Scale</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('spring_scale')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="spring_scale" value="6" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 10" data-type="Weighing Scale" data-use="Mass measurement" data-description="Weighing scale for mass measurement.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Weighing Scale_.png" alt="Weighing Scale">
-            <div class="inventory-details">
-              <span class="item-name">Weighing Scale</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('weighing_scale')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="weighing_scale" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Free Fall Set" data-use="Kinematics experiments" data-description="CSE Free Fall Set-Up Apparatus for gravity experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/CSE FREE FALL SET APPARATUS.jpg" alt="CSE Free Fall Set-Up Apparatus">
-            <div class="inventory-details">
-              <span class="item-name">CSE Free Fall Set-Up Apparatus</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('free_fall')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="free_fall" value="2" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Inclined Plane" data-use="Mechanics experiments" data-description="Inclined plane apparatus for motion experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Inclined Plan Apparatus_.png" alt="Inclined Plane Apparatus">
-            <div class="inventory-details">
-              <span class="item-name">Inclined Plane Apparatus</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('inclined_plane')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="inclined_plane" value="2" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Temperature Sensor" data-use="Temperature measurement" data-description="Support rod and temperature sensor for experiments.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Support Rod.png" alt="Support Rod and Temperature Sensor">
-            <div class="inventory-details">
-              <span class="item-name">Support Rod and Temperature Sensor</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('temp_sensor')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="temp_sensor" value="6" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="equipment" data-cabinet="Cabinet 10" data-type="Calculator" data-use="Calculations" data-description="Texas Instrument calculators for classroom use.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Texas Instrument Calculations.png" alt="Texas Instrument Calculators">
-            <div class="inventory-details">
-              <span class="item-name">Texas Instrument Calculators</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('ti_calculator')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="ti_calculator" value="23" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Electronic Kit" data-use="Electronics experiments" data-description="Electronic kit for circuit building projects.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Electronic Kit.png" alt="Electronic Kit">
-            <div class="inventory-details">
-              <span class="item-name">Electronic Kit</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('electronic_kit')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="electronic_kit" value="26" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="tools" data-cabinet="Cabinet 10" data-type="Wash Bottle" data-use="Lab rinsing" data-description="Wash bottle for rinsing and fluid dispensing.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Wash Bottle.png" alt="Wash Bottle">
-            <div class="inventory-details">
-              <span class="item-name">Wash Bottle</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('wash_bottle')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="wash_bottle" value="9" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Balance" data-use="Mass measurement" data-description="Double beam balance for accurate mass comparison.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Double Beam Balance_.jpg" alt="Double Beam Balance">
-            <div class="inventory-details">
-              <span class="item-name">Double Beam Balance</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('double_beam_balance')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="double_beam_balance" value="4" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-
-          <div class="inventory-card" data-category="apparatus" data-cabinet="Cabinet 10" data-type="Balance" data-use="Mass measurement" data-description="Triple beam balance for laboratory mass measurements.">
-            <img class="inventory-img" src="Cabinets/Cabinet 10/Triple Beam Balance_.jpg" alt="Triple Beam Balance">
-            <div class="inventory-details">
-              <span class="item-name">Triple Beam Balance</span>
-              <button class="edit-details-btn" onclick="openItemEditModal('triple_beam')">Edit Details</button>
-              <div class="stock-control">
-                <label>Stock</label>
-                <input type="number" class="stock-input" data-item="triple_beam" value="5" placeholder="No." oninput="saveStock(this)">
-              </div>
-            </div>
-          </div>
-        </div>
-        </section>
-
+          <!-- Inventory cards are rendered dynamically by `renderInventoryGrid()` -->
       <!-- Reviews Page -->
       <section class="page-section" data-page="reviews">
         <div class="page-header">
@@ -1493,22 +729,79 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        ensureInventoryLoaded(); // Initialize from hardcoded data if needed
+        // Prefer backend-provided inventory; `refreshInventoryFromBackend` is defined in `supabase_fetch.js`.
+        if (typeof refreshInventoryFromBackend === 'function') {
+            refreshInventoryFromBackend().catch(() => {});
+        }
+        renderInventoryGrid(); // populate DOM from whatever `getInventory()` returns
         loadStockFromMemory();
         loadDashboardStats();
         loadDashboardBorrowers();
       initLiveChart();      
       loadCabinetFromMemory();
-      saveInventoryToLocalStorage(); // Sync inventory to localStorage for user page
     });
 
-    // Ensure inventory is loaded from hardcoded data on first run
+    // Ensure inventory loaded: prefer backend fetch; no client-side defaults
     function ensureInventoryLoaded() {
-      const existingInventory = localStorage.getItem('phyLab_AdminInventory');
-      if (!existingInventory) {
-        // First time loading - save default inventory
-        saveInventory(DEFAULT_INVENTORY);
+      if (typeof refreshInventoryFromBackend === 'function') {
+        // attempt to refresh cache from backend; callers will render from getInventory()
+        refreshInventoryFromBackend().catch(() => {});
       }
+      // otherwise, do nothing — getInventory() may return an empty array
+    }
+
+    // Render the inventory grid from storage (getInventory -> localStorage or defaults)
+    function renderInventoryGrid() {
+      const inventory = (typeof getInventory === 'function') ? getInventory() : (JSON.parse(localStorage.getItem('phyLab_AdminInventory') || '[]'));
+      const grid = document.querySelector('.inventory-grid');
+      if (!grid) return;
+
+      grid.innerHTML = '';
+
+      // debug: log how many items we're about to render
+      try { console.debug('renderInventoryGrid: rendering', (inventory && inventory.length) ? inventory.length : 0, 'items'); } catch (e) {}
+
+      inventory.forEach(item => {
+        const itemKey = item.itemKey || item.item_key || String(item.name).toLowerCase().replace(/\s+/g, '_');
+        const imgSrc = item.image || '';
+        const name = item.name || '';
+        const category = item.category || '';
+        const cabinet = item.cabinet || '';
+        const type = item.type || '';
+        const use = item.use || '';
+        const description = item.description || '';
+        const stock = (item.stock !== undefined && item.stock !== null) ? item.stock : 0;
+
+        const cardHtml = `
+          <div class="inventory-card" data-category="${escapeHtml(category)}" data-cabinet="${escapeHtml(cabinet)}" data-type="${escapeHtml(type)}" data-use="${escapeHtml(use)}" data-description="${escapeHtml(description)}">
+            <img class="inventory-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}">
+            <div class="inventory-details">
+              <span class="item-name">${escapeHtml(name)}</span>
+              <button class="edit-details-btn" onclick="openItemEditModal('${escapeJs(itemKey)}')">Edit Details</button>
+              <div class="stock-control">
+                <label>Stock</label>
+                <input type="number" class="stock-input" data-item="${escapeHtml(itemKey)}" value="${escapeHtml(stock)}" placeholder="No." oninput="saveStock(this)">
+              </div>
+            </div>
+          </div>`;
+
+        grid.insertAdjacentHTML('beforeend', cardHtml);
+      });
+
+      // After adding cards, initialize stock displays and cabinet data
+      loadCabinetFromMemory();
+      loadStockFromMemory();
+    }
+
+    // small helpers to avoid XSS when inserting from stored data
+    function escapeHtml(s) {
+      if (s === undefined || s === null) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function escapeJs(s) {
+      if (s === undefined || s === null) return '';
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
     // Save all inventory cards to localStorage for user page to fetch

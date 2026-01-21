@@ -6,11 +6,43 @@
     <title>PhyLab - Physics Laboratory Inventory System</title>
     <link rel="stylesheet" href="Phylab_theme_vars.css" />
     <link rel="stylesheet" href="Phylab_style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+      onload="emailjs && emailjs.init('lJ6EFXKyc4N6yIyEG')"
+    ></script>
     <script>
       (function () {
-        if (window.emailjs) {
-          emailjs.init("lJ6EFXKyc4N6yIyEG");
+        function initEmailJS() {
+          if (window.emailjs && typeof emailjs.init === "function") {
+            try {
+              emailjs.init("lJ6EFXKyc4N6yIyEG");
+              window._emailjsReady = true;
+            } catch (e) {
+              console.warn("emailjs.init failed:", e);
+            }
+          } else {
+            window._emailjsReady = false;
+            var t = setInterval(function () {
+              if (window.emailjs && typeof emailjs.init === "function") {
+                try {
+                  emailjs.init("lJ6EFXKyc4N6yIyEG");
+                  window._emailjsReady = true;
+                } catch (e) {
+                  console.warn("emailjs.init failed:", e);
+                }
+                clearInterval(t);
+              }
+            }, 250);
+          }
+        }
+
+        if (
+          document.readyState === "complete" ||
+          document.readyState === "interactive"
+        ) {
+          initEmailJS();
+        } else {
+          document.addEventListener("DOMContentLoaded", initEmailJS);
         }
       })();
     </script>
@@ -310,6 +342,10 @@
         });
       }
 
+      // Configure these with your EmailJS Service & Template IDs
+      const EMAILJS_SERVICE_ID = "your_service_id";
+      const EMAILJS_TEMPLATE_ID = "your_template_id";
+
       // Auto-format / sanitize ID input (permissive: allow alphanumeric, dash, space)
       (function attachIdFormatter() {
         const idInput = document.getElementById("id_number");
@@ -453,6 +489,19 @@
                 );
               }
               this.reset();
+              // Attempt to send a welcome email (non-blocking). Configure IDs above.
+              try {
+                const params = {
+                  to_email: email,
+                  to_name: fullname,
+                  user_id: (data && data.id) || "",
+                };
+                safeSendEmail(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+                  .then(() => console.log("Welcome email sent"))
+                  .catch((e) => console.warn("Welcome email not sent", e));
+              } catch (e) {
+                console.warn("Welcome email setup failed", e);
+              }
             } else {
               const err = await res.json().catch(() => ({}));
               let msg = "Registration failed.";

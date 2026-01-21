@@ -6,7 +6,7 @@
   <title>Phylab - User Page</title>
   <link rel="stylesheet" href="Phylab_theme_vars.css">
   <link rel="stylesheet" href="PhyLab_user_page_style.css">
-  <script src="inventory_data.js"></script>
+  <script src="supabase_fetch.js"></script>
 </head>
 <body class="wholescreen">
   <div class="admin-header">
@@ -1149,11 +1149,22 @@
           }
         });
 
-        // Initialize on DOM ready
-        document.addEventListener('DOMContentLoaded', loadInventoryFromAdmin);
+        // Initialize on DOM ready — ensure we fetch backend inventory first
+        async function initUserInventory() {
+          if (typeof refreshInventoryFromBackend === 'function') {
+            try {
+              await refreshInventoryFromBackend();
+            } catch (e) {
+              console.warn('refreshInventoryFromBackend failed', e);
+            }
+          }
+          loadInventoryFromAdmin();
+        }
+
+        document.addEventListener('DOMContentLoaded', initUserInventory);
         // Also run now in case DOM is already loaded
         if (document.readyState !== 'loading') {
-          loadInventoryFromAdmin();
+          initUserInventory();
         }
       })();
     </script>

@@ -874,7 +874,7 @@
       saveInventory(inventoryArray); // Uses function from inventory_data.js
     }
 
-    function saveStock(inputElement) {
+    async function saveStock(inputElement) {
       const itemName = inputElement.getAttribute('data-item');
       let value = parseInt(inputElement.value, 10);
       if (isNaN(value) || value < 0) value = 0;
@@ -900,8 +900,61 @@
       // Clamp current to not exceed original
       if (value > original) value = original;
 
+      // Try to persist change to backend using card data-id (use set_stock action), fall back to set_stock_by_key
+      let backendSucceeded = false;
+      try {
+        const card = inputElement.closest('.inventory-card');
+        const itemId = card ? card.getAttribute('data-id') : null;
+
+        if (itemId) {
+          const urls = ['/api/inventory/' + itemId + '/set_stock/', 'http://127.0.0.1:8000/api/inventory/' + itemId + '/set_stock/'];
+          for (let u of urls) {
+            try {
+              const resp = await fetch(u, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock: value })
+              });
+              if (resp && resp.ok) {
+                backendSucceeded = true;
+                break;
+              }
+            } catch (e) {
+              // try next url
+            }
+          }
+        } else {
+          // fallback: call set_stock_by_key endpoint using itemKey
+          const urls = ['/api/inventory/set_stock_by_key/', 'http://127.0.0.1:8000/api/inventory/set_stock_by_key/'];
+          for (let u of urls) {
+            try {
+              const resp = await fetch(u, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_key: itemName, stock: value })
+              });
+              if (resp && resp.ok) {
+                backendSucceeded = true;
+                break;
+              }
+            } catch (e) {
+              // try next
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Persist locally regardless so UI stays in sync (server is authoritative when available)
       localStorage.setItem('stock_' + itemName, String(value));
       updateStockDisplay(inputElement);
+      if (backendSucceeded) {
+        if (typeof showNotification === 'function') showNotification('Stock saved to server.', 'approved');
+      } else {
+        if (typeof showNotification === 'function') showNotification('Stock saved locally (offline fallback).', 'warning');
+      }
+
       saveInventoryToLocalStorage(); // Update inventory for user page sync
     }
 
@@ -1070,10 +1123,43 @@
           showNotification('Please enter a valid number', 'error');
           return;
         }
-        localStorage.setItem(originalKey, String(parseInt(v)));
-        showNotification('Original stock updated', 'success');
-        // refresh display using the hidden stock input
-        updateStockDisplay(stockInput);
+        const newVal = String(parseInt(v));
+
+        // Try to persist to backend using set_stock action
+        (async function() {
+          let backendSucceeded = false;
+          try {
+            const card = stockInput.closest('.inventory-card');
+            const itemId = card ? card.getAttribute('data-id') : null;
+            if (itemId) {
+              const urls = ['/api/inventory/' + itemId + '/set_stock/', 'http://127.0.0.1:8000/api/inventory/' + itemId + '/set_stock/'];
+              for (let u of urls) {
+                try {
+                  const resp = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stock: parseInt(newVal) }) });
+                  if (resp && resp.ok) { backendSucceeded = true; break; }
+                } catch (e) { }
+              }
+            } else {
+              const urls = ['/api/inventory/set_stock_by_key/', 'http://127.0.0.1:8000/api/inventory/set_stock_by_key/'];
+              for (let u of urls) {
+                try {
+                  const resp = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item_key: itemName, stock: parseInt(newVal) }) });
+                  if (resp && resp.ok) { backendSucceeded = true; break; }
+                } catch (e) { }
+              }
+            }
+          } catch (e) { }
+
+          // Persist locally regardless so UI stays in sync
+          localStorage.setItem(originalKey, newVal);
+          if (backendSucceeded) {
+            showNotification('Original stock updated on server', 'approved');
+          } else {
+            showNotification('Original stock updated locally (offline fallback)', 'warning');
+          }
+          // refresh display using the hidden stock input
+          updateStockDisplay(stockInput);
+        })();
       };
       container.querySelector('.original-cancel').onclick = function() {
         updateStockDisplay(stockInput);

@@ -126,6 +126,10 @@ STATIC_URL = 'static/'
 # CORS - allow frontend (for development)
 CORS_ALLOW_ALL_ORIGINS = True
 
+# Media files (uploaded images)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

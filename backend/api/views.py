@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, InventoryItemSerializer
-from .serializers import UserReviewSerializer
-from .models import InventoryItem, UserReview
+from .serializers import UserReviewSerializer, BorrowRequestSerializer
+from .models import InventoryItem, UserReview, BorrowRequest, BorrowRequestItem
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -151,7 +151,7 @@ class SupabaseConfigView(APIView):
 
 class UserReviewViewSet(viewsets.ModelViewSet):
     """Endpoint for user-submitted reviews/feedback. Supports image upload."""
-    queryset = UserReview.objects.all().order_by('-created_at')
+    queryset = UserReview.objects.filter(is_resolved=False).order_by('-created_at')
     serializer_class = UserReviewSerializer
     permission_classes = [AllowAny]
     # For development ease: disable default SessionAuthentication so CSRF isn't required
@@ -167,7 +167,71 @@ class UserReviewViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @action(detail=True, methods=['post'])
+    def resolve(self, request, pk=None):
+        """Mark a review as resolved."""
+        from django.utils import timezone
+        review = self.get_object()
+        review.is_resolved = True
+        review.resolved_at = timezone.now()
+        review.save()
+        return Response({'status': 'resolved', 'id': review.id})
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context.update({"request": self.request})
         return context
+
+
+class BorrowRequestViewSet(viewsets.ModelViewSet):
+    """Endpoint for borrow requests. Students can create, admins can approve/reject."""
+    queryset = BorrowRequest.objects.all().order_by('-created_at')
+    serializer_class = BorrowRequestSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
+    def get_queryset(self):
+        """Filter by status or student_id if provided."""
+        queryset = super().get_queryset()
+        status_filter = self.request.query_params.get('status', None)
+        student_id = self.request.query_params.get('student_id', None)
+        
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        if student_id:
+            queryset = queryset.filter(student_id=student_id)
+        
+        return queryset
+    
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Approve a borrow request and change status to 'borrowed'."""
+        borrow_request = self.get_object()
+        borrow_request.status = 'borrowed'
+        borrow_request.save()
+        return Response({'status': 'approved', 'request_id': borrow_request.request_id})
+    
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Reject a borrow request."""
+        borrow_request = self.get_object()
+        borrow_request.status = 'rejected'
+        
+        # Optionally capture remark from admin
+        remark = request.data.get('remark', '')
+        remark_type = request.data.get('remark_type', '')
+        if remark:
+            borrow_request.admin_remark = remark
+        if remark_type:
+            borrow_request.remark_type = remark_type
+        
+        borrow_request.save()
+        return Response({'status': 'rejected', 'request_id': borrow_request.request_id})
+    
+    @action(detail=True, methods=['post'])
+    def mark_returned(self, request, pk=None):
+        """Mark a borrowed item as returned."""
+        borrow_request = self.get_object()
+        borrow_request.status = 'returned'
+        borrow_request.save()
+        return Response({'status': 'returned', 'request_id': borrow_request.request_id})

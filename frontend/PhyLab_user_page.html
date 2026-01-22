@@ -722,7 +722,7 @@
       window.addEventListener("DOMContentLoaded", updateBorrowButtonCount);
 
       // Load user's request history and display it
-      function loadUserRequests() {
+      async function loadUserRequests() {
         const container = document.getElementById("myRequestsContainer");
         if (!container) return;
         container.innerHTML = "";
@@ -734,36 +734,89 @@
         const userEmail = sessionUser.email || "";
         const userId = sessionUser.idNumber || sessionUser.id || "";
 
-        const queue =
-          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-        const history =
-          JSON.parse(localStorage.getItem("phyLab_History")) || [];
-        // robust timestamp parsing: support numeric ms, numeric strings, or ISO/locale strings
-        function parseTime(val) {
-          if (!val && val !== 0) return 0;
-          if (typeof val === "number") return val;
-          const asNum = Number(val);
-          if (!isNaN(asNum)) return asNum;
-          const dt = Date.parse(val);
-          return isNaN(dt) ? 0 : dt;
-        }
-        const all = queue
-          .concat(history)
-          .sort((a, b) => parseTime(b.timestamp) - parseTime(a.timestamp));
+        let userRequests = [];
 
-        const userRequests = all.filter((r) => {
-          if (!r) return false;
-          if (userEmail && r.email && r.email === userEmail) return true;
-          if (userId && r.studentID && String(r.studentID) === String(userId))
-            return true;
-          if (
-            sessionUser.fullname &&
-            r.studentName &&
-            r.studentName === sessionUser.fullname
-          )
-            return true;
-          return false;
-        });
+        // Try to fetch from backend first
+        try {
+          const urls = [
+            `http://127.0.0.1:8000/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
+            `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
+          ];
+
+          for (let url of urls) {
+            try {
+              const resp = await fetch(url, { method: "GET", mode: "cors" });
+              if (resp && resp.ok) {
+                const data = await resp.json();
+                if (Array.isArray(data)) {
+                  // Normalize backend data to match frontend format
+                  userRequests = data.map((req) => ({
+                    id: req.request_id,
+                    studentName: req.student_name,
+                    studentID: req.student_id,
+                    email: req.email,
+                    teacherName: req.teacher_name,
+                    purpose: req.purpose,
+                    borrowDate: req.borrow_date,
+                    returnDate: req.return_date,
+                    items: req.items.map((item) => ({
+                      name: item.item_name,
+                      quantity: item.quantity,
+                      itemKey: item.item_key,
+                    })),
+                    status: req.status,
+                    timestamp: req.created_at,
+                  }));
+                  console.log(
+                    "Loaded",
+                    userRequests.length,
+                    "requests from backend",
+                  );
+                  break;
+                }
+              }
+            } catch (err) {
+              console.warn("Failed to fetch from", url, err);
+            }
+          }
+        } catch (err) {
+          console.warn("Error fetching borrow requests from backend:", err);
+        }
+
+        // Fallback to localStorage if backend unavailable
+        if (userRequests.length === 0) {
+          const queue =
+            JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+          const history =
+            JSON.parse(localStorage.getItem("phyLab_History")) || [];
+
+          // robust timestamp parsing: support numeric ms, numeric strings, or ISO/locale strings
+          function parseTime(val) {
+            if (!val && val !== 0) return 0;
+            if (typeof val === "number") return val;
+            const asNum = Number(val);
+            if (!isNaN(asNum)) return asNum;
+            const dt = Date.parse(val);
+            return isNaN(dt) ? 0 : dt;
+          }
+          const all = queue
+            .concat(history)
+            .sort((a, b) => parseTime(b.timestamp) - parseTime(a.timestamp));
+
+          userRequests = all.filter((r) => {
+            if (!r) return false;
+            if (userEmail && r.email && r.email === userEmail) return true;
+            if (userId && r.studentID && String(r.studentID) === String(userId))
+              return true;
+            if (
+              sessionUser.fullname &&
+              r.studentName &&
+              r.studentName === sessionUser.fullname
+            )
+              return true;
+            return false;
+          });
+        }
 
         if (userRequests.length === 0) {
           container.innerHTML =
@@ -1237,7 +1290,7 @@
 
       document
         .getElementById("borrowForm")
-        .addEventListener("submit", function (e) {
+        .addEventListener("submit", async function (e) {
           e.preventDefault();
 
           const teacherName = document.getElementById("teacher-name").value;
@@ -1255,42 +1308,93 @@
             console.log("No session user found");
           }
 
-          const newRequest = {
-            id: generateShortId(),
-            studentName: sessionUser.fullname || inputName,
-            studentID: sessionUser.idNumber || inputID,
+          const requestData = {
+            request_id: generateShortId(),
+            student_name: sessionUser.fullname || inputName,
+            student_id: sessionUser.idNumber || inputID,
             email: sessionUser.email || "no-email@univ.edu",
-            teacherName: teacherName,
+            teacher_name: teacherName,
             purpose: purpose,
-            borrowDate: borrowDate,
-            returnDate: returnDate,
-            items: JSON.parse(JSON.stringify(cartItems)),
+            borrow_date: borrowDate,
+            return_date: returnDate,
+            items: cartItems.map((item) => ({
+              item_name: item.name,
+              item_key: item.itemKey || null,
+              quantity: item.quantity,
+              item_image: item.image || null,
+            })),
             status: "pending",
-            timestamp: new Date().toLocaleString(),
           };
 
-          const allRequests =
-            JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-          allRequests.push(newRequest);
-          localStorage.setItem(
-            "phyLab_RequestQueue",
-            JSON.stringify(allRequests),
-          );
+          try {
+            // POST to backend API
+            const urls = [
+              "http://127.0.0.1:8000/api/borrow-requests/",
+              "/api/borrow-requests/",
+            ];
+            let success = false;
 
-          // pass a copy of the items to the popup so clearing the cart doesn't affect it
-          const itemsCopy = JSON.parse(JSON.stringify(cartItems || []));
-          showPopup("Request Submitted Successfully!", {
-            items: itemsCopy,
-            logoSrc: "Phylab.png",
-            onClose: () => {},
-          });
+            for (let url of urls) {
+              try {
+                const resp = await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(requestData),
+                  mode: "cors",
+                });
 
-          this.reset();
-          cartItems = [];
-          updateVisualCart();
-          toggleModal(false);
-          // refresh user's request list
-          if (typeof loadUserRequests === "function") loadUserRequests();
+                if (resp && resp.ok) {
+                  success = true;
+                  console.log("Borrow request submitted to backend");
+                  break;
+                }
+              } catch (err) {
+                console.warn("Failed to submit to", url, err);
+              }
+            }
+
+            if (!success) {
+              // Fallback to localStorage if backend unavailable
+              console.warn("Backend unavailable, saving to localStorage");
+              const allRequests =
+                JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+              allRequests.push({
+                id: requestData.request_id,
+                studentName: requestData.student_name,
+                studentID: requestData.student_id,
+                email: requestData.email,
+                teacherName: requestData.teacher_name,
+                purpose: requestData.purpose,
+                borrowDate: requestData.borrow_date,
+                returnDate: requestData.return_date,
+                items: JSON.parse(JSON.stringify(cartItems)),
+                status: "pending",
+                timestamp: new Date().toLocaleString(),
+              });
+              localStorage.setItem(
+                "phyLab_RequestQueue",
+                JSON.stringify(allRequests),
+              );
+            }
+
+            // pass a copy of the items to the popup so clearing the cart doesn't affect it
+            const itemsCopy = JSON.parse(JSON.stringify(cartItems || []));
+            showPopup("Request Submitted Successfully!", {
+              items: itemsCopy,
+              logoSrc: "Phylab.png",
+              onClose: () => {},
+            });
+
+            this.reset();
+            cartItems = [];
+            updateVisualCart();
+            toggleModal(false);
+            // refresh user's request list
+            if (typeof loadUserRequests === "function") loadUserRequests();
+          } catch (err) {
+            console.error("Error submitting borrow request:", err);
+            showPopup("Error submitting request. Please try again.");
+          }
         });
 
       function toggleProfile(show) {

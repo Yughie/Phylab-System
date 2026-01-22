@@ -2536,9 +2536,7 @@
           const userName = rev.submitted_by_name || rev.userName || "Anonymous";
           const timestamp = rev.created_at || rev.timestamp || "";
           const comment = rev.comment || "";
-          const originalIndex = Array.isArray(reviews)
-            ? reviews.length - 1 - i
-            : i;
+          const reviewId = rev.id;
           html += `
           <div class="review-card">
             <img class="review-card-img" src="${imgSrc}" alt="${itemName}">
@@ -2551,7 +2549,7 @@
               <p class="review-comment">"${comment && comment.trim() ? comment : "No comment"}"</p>
             </div>
             <div class="review-card-actions">
-              <button onclick="resolveReview(${originalIndex})" class="resolve-review-btn" aria-label="Resolve review">Resolve</button>
+              <button onclick="resolveReview(${reviewId})" class="resolve-review-btn" aria-label="Resolve review">Resolve</button>
             </div>
           </div>
           `;
@@ -2575,18 +2573,42 @@
           showNotification(`${revs.length} review(s) loaded`, "success");
       }
 
-      function resolveReview(index) {
-        let reviews =
-          JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
-
+      async function resolveReview(reviewId) {
         showConfirm(
           "Resolve Review",
           "Mark this review as resolved?",
-          function () {
-            reviews.splice(index, 1);
-            localStorage.setItem("phyLab_UserReviews", JSON.stringify(reviews));
-            displayUserReviews();
-            showNotification("Review resolved.", "success");
+          async function () {
+            try {
+              const urls = [
+                `http://127.0.0.1:8000/api/reviews/${reviewId}/resolve/`,
+                `/api/reviews/${reviewId}/resolve/`,
+              ];
+              let success = false;
+              for (let url of urls) {
+                try {
+                  const resp = await fetch(url, {
+                    method: "POST",
+                    mode: "cors",
+                  });
+                  if (resp && resp.ok) {
+                    success = true;
+                    break;
+                  }
+                } catch (e) {
+                  console.warn("Resolve request failed for", url, e);
+                }
+              }
+              if (success) {
+                showNotification("Review resolved.", "success");
+                displayUserReviews();
+                loadDashboardStats();
+              } else {
+                showNotification("Failed to resolve review.", "error");
+              }
+            } catch (err) {
+              console.error("Error resolving review:", err);
+              showNotification("Error resolving review.", "error");
+            }
           },
         );
       }

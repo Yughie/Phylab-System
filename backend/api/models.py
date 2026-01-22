@@ -31,10 +31,64 @@ class UserReview(models.Model):
 	submitted_by_name = models.CharField(max_length=255, blank=True, null=True)
 	submitted_by_email = models.CharField(max_length=255, blank=True, null=True)
 
+	is_resolved = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
+	resolved_at = models.DateTimeField(null=True, blank=True)
 
 	class Meta:
 		ordering = ['-created_at']
 
 	def __str__(self):
 		return f"Review {self.id} - {self.item_name} by {self.submitted_by_name or 'anonymous'}"
+
+
+class BorrowRequest(models.Model):
+	"""Stores borrowing requests from students."""
+	STATUS_CHOICES = [
+		('pending', 'Pending'),
+		('approved', 'Approved'),
+		('rejected', 'Rejected'),
+		('borrowed', 'Borrowed'),
+		('returned', 'Returned'),
+	]
+	
+	request_id = models.CharField(max_length=50, unique=True, db_index=True)
+	student_name = models.CharField(max_length=255)
+	student_id = models.CharField(max_length=100)
+	email = models.EmailField()
+	teacher_name = models.CharField(max_length=255)
+	purpose = models.TextField()
+	borrow_date = models.DateField()
+	return_date = models.DateField()
+	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+	
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+	
+	# Optional remark from admin when approving/rejecting
+	admin_remark = models.TextField(blank=True, null=True)
+	remark_type = models.CharField(max_length=50, blank=True, null=True)
+	
+	class Meta:
+		ordering = ['-created_at']
+		indexes = [
+			models.Index(fields=['status', '-created_at']),
+			models.Index(fields=['student_id', '-created_at']),
+		]
+	
+	def __str__(self):
+		return f"Request {self.request_id} - {self.student_name} ({self.status})"
+
+
+class BorrowRequestItem(models.Model):
+	"""Individual items in a borrow request."""
+	borrow_request = models.ForeignKey(BorrowRequest, on_delete=models.CASCADE, related_name='items')
+	item_name = models.CharField(max_length=255)
+	item_key = models.CharField(max_length=150, blank=True, null=True)
+	quantity = models.IntegerField(default=1)
+	
+	# Track item image for display
+	item_image = models.CharField(max_length=500, blank=True, null=True)
+	
+	def __str__(self):
+		return f"{self.item_name} x{self.quantity} (Request {self.borrow_request.request_id})"

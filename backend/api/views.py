@@ -1,7 +1,8 @@
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, InventoryItemSerializer
-from .models import InventoryItem
+from .serializers import UserReviewSerializer
+from .models import InventoryItem, UserReview
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -146,3 +147,27 @@ class SupabaseConfigView(APIView):
             )
         }
         return Response(data)
+
+
+class UserReviewViewSet(viewsets.ModelViewSet):
+    """Endpoint for user-submitted reviews/feedback. Supports image upload."""
+    queryset = UserReview.objects.all().order_by('-created_at')
+    serializer_class = UserReviewSerializer
+    permission_classes = [AllowAny]
+    # For development ease: disable default SessionAuthentication so CSRF isn't required
+    # (In production, prefer token auth or ensure CSRF token is sent.)
+    authentication_classes = []
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def create(self, request, *args, **kwargs):
+        # Let DRF handle validation including file upload
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context

@@ -235,3 +235,10 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         borrow_request.status = 'returned'
         borrow_request.save()
         return Response({'status': 'returned', 'request_id': borrow_request.request_id})
+    
+    @action(detail=False, methods=['get'])
+    def currently_borrowed(self, request):
+        """Get all currently borrowed items (status='borrowed')."""
+        borrowed_requests = BorrowRequest.objects.filter(status='borrowed').order_by('-created_at')
+        serializer = self.get_serializer(borrowed_requests, many=True)
+        return Response(serializer.data)

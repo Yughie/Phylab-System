@@ -316,6 +316,14 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
             # serialize created loan to include in response
             created_loans.append(BorrowRequestSerializer(new_req, context={'request': request}).data)
 
+        # Check if all items in the request have been returned and update parent status
+        all_items = borrow_request.items.all()
+        if all_items.exists():
+            all_returned = all(item.status == 'returned' for item in all_items)
+            if all_returned and borrow_request.status == 'borrowed':
+                borrow_request.status = 'returned'
+                borrow_request.save()
+
         # Return updated original request and any created loan entries
         serializer = self.get_serializer(borrow_request)
         payload = {'original_request': serializer.data}

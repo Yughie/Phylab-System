@@ -106,7 +106,12 @@ async function loadReturnWindow() {
           </div>`
       : "";
 
-    request.items.forEach((item) => {
+    // Filter out items that are already returned
+    const activeItems = request.items.filter(
+      (item) => item.status !== "returned",
+    );
+
+    activeItems.forEach((item) => {
       const itemKey = `item_${item.id}`;
       const storedItemRemark = remarks[itemKey];
       const itemHasRemark =
@@ -135,7 +140,7 @@ async function loadReturnWindow() {
                       ${remarkTimestampHtml}
             </div>
             <div class="loan-card-actions">
-              <button class="return-btn" onclick="completeReturn('${request.id}','${item.id}')">Mark Returned</button>
+              <button class="return-btn" data-request-id="${request.id}" data-item-id="${item.id}">Mark Returned</button>
               <button class="remark-btn" onclick="openRemarkModal('${request.id}', '${item.id}', '${(item.name || item.item_name).replace(/'/g, "\'")}')">${itemHasRemark ? "Edit" : "Remark"}</button>
               <button class="details-btn" onclick="openBorrowingDetails('${request.id}')">Details</button>
             </div>
@@ -421,3 +426,15 @@ function initSendReminderHandler() {
 
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", initSendReminderHandler);
+
+// Event delegation for return buttons to ensure handler works even if
+// inline onclick handlers fail (e.g. non-global function scope).
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest && e.target.closest(".return-btn");
+  if (!btn) return;
+  const requestId = btn.getAttribute("data-request-id");
+  const itemId = btn.getAttribute("data-item-id");
+  if (requestId && itemId) {
+    completeReturn(requestId, itemId);
+  }
+});

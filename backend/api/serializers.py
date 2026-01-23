@@ -52,8 +52,8 @@ class UserReviewSerializer(serializers.ModelSerializer):
 class BorrowRequestItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = BorrowRequestItem
-        fields = ['id', 'item_name', 'item_key', 'quantity', 'item_image']
-        read_only_fields = ['id']
+        fields = ['id', 'item_name', 'item_key', 'quantity', 'item_image', 'status', 'admin_remark', 'remark_type', 'remark_created_at']
+        read_only_fields = []
 
 
 class BorrowRequestSerializer(serializers.ModelSerializer):
@@ -84,11 +84,26 @@ class BorrowRequestSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         
-        # Update items if provided
+        # Update items if provided (supports partial nested updates)
         if items_data is not None:
-            # Clear existing items and recreate
-            instance.items.all().delete()
-            for item_data in items_data:
-                BorrowRequestItem.objects.create(borrow_request=instance, **item_data)
+            # If items have 'id', update existing; otherwise replace all
+            has_ids = any('id' in item for item in items_data)
+            if has_ids:
+                # Partial update: update existing items by id
+                for item_data in items_data:
+                    item_id = item_data.pop('id', None)
+                    if item_id:
+                        try:
+                            item_obj = instance.items.get(id=item_id)
+                            for key, val in item_data.items():
+                                setattr(item_obj, key, val)
+                            item_obj.save()
+                        except BorrowRequestItem.DoesNotExist:
+                            pass
+            else:
+                # Full replace: clear existing items and recreate
+                instance.items.all().delete()
+                for item_data in items_data:
+                    BorrowRequestItem.objects.create(borrow_request=instance, **item_data)
         
         return instance

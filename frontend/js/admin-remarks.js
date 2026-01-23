@@ -1,17 +1,22 @@
 // Admin remark system and item details editing
 
 let currentRemarkRequestId = null;
+let currentRemarkItemId = null;
 let currentRemarkItemName = null;
 
-function openRemarkModal(requestId, itemName) {
+function openRemarkModal(requestId, itemId, itemName) {
   currentRemarkRequestId = requestId;
-  currentRemarkItemName = itemName;
+  currentRemarkItemId = itemId || null;
+  currentRemarkItemName = itemName || "";
 
-  document.getElementById("remarkItemName").textContent = itemName;
+  document.getElementById("remarkItemName").textContent = currentRemarkItemName;
 
-  // Check if there's an existing remark for this request
+  // Check if there's an existing remark for this item (fallback to request-level key)
   const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  const existingRemark = remarks[requestId];
+  const key = currentRemarkItemId
+    ? `item_${currentRemarkItemId}`
+    : `req_${requestId}`;
+  const existingRemark = remarks[key];
 
   if (existingRemark) {
     document.getElementById("remarkType").value = existingRemark.type || "";
@@ -42,25 +47,53 @@ function saveRemark() {
     return;
   }
 
-  // Save to localStorage
+  // Save to localStorage (fallback)
   const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  remarks[currentRemarkRequestId] = {
+  const key = currentRemarkItemId
+    ? `item_${currentRemarkItemId}`
+    : `req_${currentRemarkRequestId}`;
+  const remarkObj = {
     type: remarkType,
     text: remarkText,
     itemName: currentRemarkItemName,
     createdAt: new Date().toISOString(),
     createdBy: "Admin",
   };
+  remarks[key] = remarkObj;
   localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
 
-  // Also add remark to the request in queue for persistence
-  let queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-  const reqIndex = queue.findIndex(
-    (r) => String(r.id) === String(currentRemarkRequestId),
-  );
-  if (reqIndex !== -1) {
-    queue[reqIndex].adminRemark = remarks[currentRemarkRequestId];
-    localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+  // Persist remark to backend per-item when possible
+  if (currentRemarkItemId && currentRemarkRequestId) {
+    const nowIso = new Date().toISOString();
+    const payload = {
+      items: [
+        {
+          id: currentRemarkItemId,
+          admin_remark: remarkText,
+          remark_type: remarkType,
+          remark_created_at: nowIso,
+        },
+      ],
+    };
+    const urls = [
+      `http://127.0.0.1:8000/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
+      `/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
+    ];
+    (async () => {
+      for (const u of urls) {
+        try {
+          const r = await fetch(u, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            mode: "cors",
+          });
+          if (r.ok) break;
+        } catch (e) {
+          continue;
+        }
+      }
+    })();
   }
 
   closeRemarkModal();

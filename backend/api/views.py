@@ -242,3 +242,83 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         borrowed_requests = BorrowRequest.objects.filter(status='borrowed').order_by('-created_at')
         serializer = self.get_serializer(borrowed_requests, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def update_item_statuses(self, request, pk=None):
+        """Update statuses of individual items within a borrow request.
+        
+        PATCH /api/borrow-requests/{id}/update_item_statuses/
+        Body: { "items": [ { "id": 12, "status": "approved", "quantity": 2 }, ... ] }
+        
+        Updates only the items provided by id. Items not included remain unchanged.
+        After updating, if all items are approved/rejected, the request status is updated accordingly.
+        """
+        borrow_request = self.get_object()
+        items_data = request.data.get('items', [])
+        
+        if not items_data:
+            return Response({'detail': 'items array required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update each item by id and collect approved items to create loan entries
+        approved_items_to_create = []
+        for item_update in items_data:
+            item_id = item_update.get('id')
+            if not item_id:
+                continue
+            try:
+                item_obj = borrow_request.items.get(id=item_id)
+                if 'status' in item_update:
+                    item_obj.status = item_update['status']
+                if 'quantity' in item_update:
+                    item_obj.quantity = item_update['quantity']
+                # support per-item admin remark fields
+                if 'admin_remark' in item_update:
+                    item_obj.admin_remark = item_update.get('admin_remark')
+                if 'remark_type' in item_update:
+                    item_obj.remark_type = item_update.get('remark_type')
+                if 'remark_created_at' in item_update:
+                    item_obj.remark_created_at = item_update.get('remark_created_at')
+
+                item_obj.save()
+
+                # If item was marked approved (or borrowed) create a loan entry for it
+                if item_obj.status in ('approved', 'borrowed'):
+                    approved_items_to_create.append(item_obj)
+            except BorrowRequestItem.DoesNotExist:
+                continue
+
+        # For any approved items, create a new BorrowRequest representing the actual loan(s)
+        # Group all approved items from this request into a single new BorrowRequest
+        created_loans = []
+        if approved_items_to_create:
+            import uuid
+            new_request_id = f"{borrow_request.request_id}-{uuid.uuid4().hex[:8]}"
+            new_req = BorrowRequest.objects.create(
+                request_id=new_request_id,
+                student_name=borrow_request.student_name,
+                student_id=borrow_request.student_id,
+                email=borrow_request.email,
+                teacher_name=borrow_request.teacher_name,
+                purpose=borrow_request.purpose,
+                borrow_date=borrow_request.borrow_date,
+                return_date=borrow_request.return_date,
+                status='borrowed',
+            )
+            for it in approved_items_to_create:
+                BorrowRequestItem.objects.create(
+                    borrow_request=new_req,
+                    item_name=it.item_name,
+                    item_key=it.item_key,
+                    quantity=it.quantity,
+                    status='borrowed',
+                    item_image=it.item_image,
+                )
+            # serialize created loan to include in response
+            created_loans.append(BorrowRequestSerializer(new_req, context={'request': request}).data)
+
+        # Return updated original request and any created loan entries
+        serializer = self.get_serializer(borrow_request)
+        payload = {'original_request': serializer.data}
+        if created_loans:
+            payload['created_loans'] = created_loans
+        return Response(payload)

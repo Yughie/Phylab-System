@@ -6,8 +6,8 @@ async function loadDashboardStats() {
   let allRequests = [];
   try {
     const urls = [
-      "/api/borrow-requests/",
       "http://127.0.0.1:8000/api/borrow-requests/",
+      "/api/borrow-requests/",
     ];
 
     let response = null;
@@ -66,8 +66,8 @@ async function loadDashboardBorrowers() {
   let allRequests = [];
   try {
     const urls = [
-      "/api/borrow-requests/",
       "http://127.0.0.1:8000/api/borrow-requests/",
+      "/api/borrow-requests/",
     ];
 
     let response = null;

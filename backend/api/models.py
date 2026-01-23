@@ -82,13 +82,27 @@ class BorrowRequest(models.Model):
 
 class BorrowRequestItem(models.Model):
 	"""Individual items in a borrow request."""
+	STATUS_CHOICES = [
+		('pending', 'Pending'),
+		('approved', 'Approved'),
+		('rejected', 'Rejected'),
+		('borrowed', 'Borrowed'),
+		('returned', 'Returned'),
+	]
+	
 	borrow_request = models.ForeignKey(BorrowRequest, on_delete=models.CASCADE, related_name='items')
 	item_name = models.CharField(max_length=255)
 	item_key = models.CharField(max_length=150, blank=True, null=True)
 	quantity = models.IntegerField(default=1)
+	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
 	
 	# Track item image for display
 	item_image = models.CharField(max_length=500, blank=True, null=True)
+
+	# Admin remark specific to this item
+	admin_remark = models.TextField(blank=True, null=True)
+	remark_type = models.CharField(max_length=50, blank=True, null=True)
+	remark_created_at = models.DateTimeField(null=True, blank=True)
 	
 	def __str__(self):
-		return f"{self.item_name} x{self.quantity} (Request {self.borrow_request.request_id})"
+		return f"{self.item_name} x{self.quantity} ({self.status}) (Request {self.borrow_request.request_id})"

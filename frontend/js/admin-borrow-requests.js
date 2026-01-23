@@ -12,8 +12,8 @@ async function loadBorrowRequests() {
   let pendingRequests = [];
   try {
     const urls = [
-      "/api/borrow-requests/?status=pending",
       "http://127.0.0.1:8000/api/borrow-requests/?status=pending",
+      "/api/borrow-requests/?status=pending",
     ];
 
     let response = null;
@@ -43,12 +43,16 @@ async function loadBorrowRequests() {
           borrowDate: req.borrow_date,
           returnDate: req.return_date,
           status: req.status,
-          items: req.items.map((item) => ({
-            name: item.item_name,
-            itemKey: item.item_key,
-            quantity: item.quantity,
-            image: item.item_image,
-          })),
+          items: req.items
+            .filter((item) => !item.status || item.status === "pending") // Only show pending items
+            .map((item) => ({
+              id: item.id,
+              name: item.item_name,
+              itemKey: item.item_key,
+              quantity: item.quantity,
+              image: item.item_image,
+              status: item.status || "pending",
+            })),
         }))
         .filter((req) => req.items.length > 0);
     }
@@ -77,9 +81,10 @@ async function loadBorrowRequests() {
     const itemsHtml = request.items
       .map(
         (item, itemIndex) => `
-          <div class="request-item">
+          <div class="request-item" data-item-id="${item.id || ""}" data-item-status="${item.status || "pending"}">
             <input type="checkbox" class="single-item-check" name="adminSelection"
                  data-req-id="${request.id}" 
+                 data-item-id="${item.id || ""}"
                  data-item-index="${itemIndex}" 
                  data-item-name="${item.name}">
               
@@ -201,102 +206,118 @@ function processSelectedItems(newStatus) {
 }
 
 async function executeBulkProcess(newStatus, selectedBoxes) {
-  // Group actions by request id
+  // Group actions by request id and collect item IDs
   const actionsByRequest = {};
   selectedBoxes.forEach((cb) => {
     const reqId = cb.getAttribute("data-req-id");
     const itemIndex = parseInt(cb.getAttribute("data-item-index"));
+    const itemId = cb.getAttribute("data-item-id"); // We'll need to add this attribute
     const qtyInput = document.getElementById(
       `qty-action-${reqId}-${itemIndex}`,
     );
     const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value) || 0) : 1;
     if (!actionsByRequest[reqId]) actionsByRequest[reqId] = [];
     actionsByRequest[reqId].push({
+      itemId: itemId,
       itemIndex,
       qty,
       itemName: cb.getAttribute("data-item-name"),
+      newStatus: newStatus === "borrowed" ? "approved" : newStatus,
     });
   });
 
-  // Process each request via backend API
+  // Process each request using the new update_item_statuses endpoint
   for (const reqId of Object.keys(actionsByRequest)) {
-    const action = newStatus === "borrowed" ? "approve" : "reject";
+    const itemsActions = actionsByRequest[reqId];
 
+    // Build the items array for the PATCH request
+    const itemsToUpdate = itemsActions.map((act) => ({
+      id: act.itemId,
+      status: act.newStatus,
+      quantity: act.qty,
+    }));
+
+    // Call the update_item_statuses endpoint
+    let success = false;
     try {
       const urls = [
-        `/api/borrow-requests/${reqId}/${action}/`,
-        `http://127.0.0.1:8000/api/borrow-requests/${reqId}/${action}/`,
+        `http://127.0.0.1:8000/api/borrow-requests/${reqId}/update_item_statuses/`,
+        `/api/borrow-requests/${reqId}/update_item_statuses/`,
       ];
 
-      let response = null;
       for (const url of urls) {
         try {
-          response = await fetch(url, {
-            method: "POST",
+          const response = await fetch(url, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: itemsToUpdate }),
             mode: "cors",
           });
-          if (response.ok) break;
+
+          if (response.ok) {
+            console.debug(
+              `Updated item statuses for request ${reqId}:`,
+              itemsToUpdate,
+            );
+            success = true;
+            break;
+          } else {
+            const txt = await response.text().catch(() => "<no-body>");
+            console.warn(`PATCH ${url} failed`, response.status, txt);
+          }
         } catch (e) {
+          console.warn(`PATCH ${url} error`, e);
           continue;
         }
       }
+    } catch (e) {
+      console.error("Error updating item statuses:", e);
+    }
 
-      if (response && response.ok) {
-        console.log(`Successfully ${action}ed request ${reqId}`);
+    // Fallback to localStorage for backwards compatibility (optional)
+    if (!success) {
+      let queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+      const requestIdx = queue.findIndex((r) => String(r.id) === String(reqId));
+      if (requestIdx !== -1) {
+        const originalRequest = queue[requestIdx];
+        itemsActions.forEach((action) => {
+          const selectedItem = originalRequest.items[action.itemIndex];
+          if (!selectedItem) return;
+
+          const actionQty = Math.min(action.qty, selectedItem.quantity);
+          if (actionQty <= 0) return;
+
+          if (newStatus === "borrowed") {
+            const approvedItem = { ...selectedItem, quantity: actionQty };
+            const approvedEntry = {
+              ...originalRequest,
+              id: generateLoanId(),
+              items: [approvedItem],
+              status: "borrowed",
+            };
+            queue.push(approvedEntry);
+          } else if (newStatus === "rejected") {
+            const stockKey =
+              "stock_" + (selectedItem.itemKey || selectedItem.name);
+            let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
+            localStorage.setItem(stockKey, currentStock + actionQty);
+          }
+
+          selectedItem.quantity -= actionQty;
+          if (selectedItem.quantity <= 0) {
+            originalRequest.items.splice(action.itemIndex, 1);
+          }
+        });
+
+        if (originalRequest.items.length === 0) {
+          queue.splice(requestIdx, 1);
+        }
       }
-    } catch (error) {
-      console.error(`Error ${action}ing request ${reqId}:`, error);
+      localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
     }
   }
 
-  // Also update localStorage for backwards compatibility
-  let queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-
-  Object.keys(actionsByRequest).forEach((reqId) => {
-    const requestIdx = queue.findIndex((r) => String(r.id) === String(reqId));
-    if (requestIdx !== -1) {
-      const originalRequest = queue[requestIdx];
-      const itemsActions = actionsByRequest[reqId].sort(
-        (a, b) => b.itemIndex - a.itemIndex,
-      );
-
-      itemsActions.forEach((action) => {
-        const selectedItem = originalRequest.items[action.itemIndex];
-        if (!selectedItem) return;
-
-        const actionQty = Math.min(action.qty, selectedItem.quantity);
-        if (actionQty <= 0) return;
-
-        if (newStatus === "borrowed") {
-          const approvedItem = { ...selectedItem, quantity: actionQty };
-          const approvedEntry = {
-            ...originalRequest,
-            id: generateLoanId(),
-            items: [approvedItem],
-            status: "borrowed",
-          };
-          queue.push(approvedEntry);
-        } else if (newStatus === "rejected") {
-          const stockKey =
-            "stock_" + (selectedItem.itemKey || selectedItem.name);
-          let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
-          localStorage.setItem(stockKey, currentStock + actionQty);
-        }
-
-        selectedItem.quantity -= actionQty;
-        if (selectedItem.quantity <= 0) {
-          originalRequest.items.splice(action.itemIndex, 1);
-        }
-      });
-
-      if (originalRequest.items.length === 0) {
-        queue.splice(requestIdx, 1);
-      }
-    }
-  });
-
-  localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+  // Reload the UI to reflect changes
   loadBorrowRequests();
   if (typeof loadReturnWindow === "function") loadReturnWindow();
   if (typeof loadStockFromMemory === "function") loadStockFromMemory();

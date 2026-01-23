@@ -139,13 +139,36 @@ async function loadDashboardBorrowers() {
 
 // Live Chart
 let myLiveChart = null;
-function initLiveChart() {
-  const history = JSON.parse(localStorage.getItem("phyLab_History")) || [];
+async function initLiveChart() {
+  // Fetch history from backend (requests with status='returned')
+  let history = [];
+  try {
+    const urls = [
+      "/api/borrow-requests/history/",
+      "http://127.0.0.1:8000/api/borrow-requests/history/",
+    ];
+    let response = null;
+    for (const url of urls) {
+      try {
+        response = await fetch(url, { mode: "cors" });
+        if (response && response.ok) break;
+      } catch (e) {
+        continue;
+      }
+    }
+    if (response && response.ok) {
+      history = await response.json();
+    }
+  } catch (e) {
+    console.warn("initLiveChart: failed to fetch history from backend", e);
+  }
+  console.debug("initLiveChart: history entries from backend:", history);
   const counts = {};
 
   history.forEach((req) => {
     if (req.items && req.items.length > 0) {
-      const itemName = req.items[0].name || "Unknown";
+      const first = req.items[0];
+      const itemName = (first.item_name || first.name || first.itemName || "Unknown").toString();
       counts[itemName] = (counts[itemName] || 0) + 1;
     }
   });

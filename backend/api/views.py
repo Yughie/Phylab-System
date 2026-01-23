@@ -242,6 +242,17 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         borrowed_requests = BorrowRequest.objects.filter(status='borrowed').order_by('-created_at')
         serializer = self.get_serializer(borrowed_requests, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        """Get borrow history (requests marked as returned).
+
+        GET /api/borrow-requests/history/
+        Returns serialized borrow requests whose status is 'returned'.
+        """
+        returned_requests = BorrowRequest.objects.filter(status='returned').order_by('-created_at')
+        serializer = self.get_serializer(returned_requests, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['patch'])
     def update_item_statuses(self, request, pk=None):

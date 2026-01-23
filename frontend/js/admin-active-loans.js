@@ -197,8 +197,14 @@ async function completeReturn(requestId, itemId) {
           }
         }
 
+        let returnedPayload = null;
         if (backendSuccess) {
           console.log("Successfully marked as returned in backend");
+          try {
+            returnedPayload = await response.json();
+          } catch (e) {
+            returnedPayload = null;
+          }
         }
       } catch (error) {
         console.error("Error marking return in backend:", error);
@@ -233,6 +239,52 @@ async function completeReturn(requestId, itemId) {
 
         localStorage.setItem("phyLab_History", JSON.stringify(history));
         localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+      } else if (backendSuccess) {
+        // Backend succeeded but we have no local queue entry. Create a minimal
+        // archive entry from the backend response (if available) so the
+        // dashboard history / frequent-items chart can include this return.
+        try {
+          const orig = (returnedPayload && returnedPayload.original_request) || returnedPayload || null;
+          const archiveEntry = {
+            id: (orig && (orig.id || orig.request_id)) || requestId,
+            request_id: (orig && (orig.request_id || orig.requestId)) || requestId,
+            studentName: (orig && (orig.student_name || orig.studentName)) || "",
+            student_id: (orig && (orig.student_id || orig.studentId)) || "",
+            email: (orig && orig.email) || "",
+            teacher_name: (orig && orig.teacher_name) || "",
+            borrow_date: (orig && orig.borrow_date) || "",
+            return_date: (orig && orig.return_date) || "",
+            status: "returned",
+            actualReturnDate: new Date().toLocaleString(),
+            items: [],
+          };
+
+          if (orig && Array.isArray(orig.items)) {
+            const returnedItem = orig.items.find((it) => String(it.id) === String(itemId) || String(it.id) === String(itemId));
+            if (returnedItem) {
+              const itemObj = {
+                id: returnedItem.id,
+                name: returnedItem.item_name || returnedItem.name || "",
+                itemKey: returnedItem.item_key || returnedItem.itemKey || "",
+                quantity: returnedItem.quantity || 1,
+                item_image: returnedItem.item_image || returnedItem.image || "",
+                status: returnedItem.status || "returned",
+              };
+              archiveEntry.items.push(itemObj);
+
+              // restore stock in localStorage
+              const stockKey = "stock_" + (itemObj.itemKey || itemObj.name);
+              const qtyToReturn = parseInt(itemObj.quantity) || 1;
+              let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
+              localStorage.setItem(stockKey, currentStock + qtyToReturn);
+            }
+          }
+
+          history.push(archiveEntry);
+          localStorage.setItem("phyLab_History", JSON.stringify(history));
+        } catch (e) {
+          console.warn("Failed to archive returned item from backend payload", e);
+        }
       }
 
       showNotification(

@@ -720,93 +720,144 @@
 .review-card {
   background: white;
   border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
+  padding: 0;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
-.review-card-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  object-fit: cover;
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface-alt);
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reviewer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.review-card-content {
-  flex: 1;
-  min-width: 200px;
+.reviewer-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.review-item-name {
-  font-size: 16px;
+.reviewer-info strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.review-card-body {
+  padding: 16px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.review-card-body-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-card-body h3 {
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-primary);
   margin: 0 0 8px 0;
 }
 
-.review-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.review-card-body p {
   font-size: 13px;
-  color: #64748b;
-  margin-bottom: 12px;
-}
-
-.review-comment {
-  font-size: 14px;
   color: #334155;
-  line-height: 1.6;
-  font-style: italic;
+  line-height: 1.5;
   margin: 0;
   background: var(--bg-surface-alt);
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   border-left: 3px solid var(--color-primary);
   word-break: break-word;
   white-space: pre-wrap;
+  font-style: italic;
+}
+
+.review-card-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid var(--border-color);
+}
+
+.review-card-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Mobile responsiveness for review cards */
 @media (max-width: 600px) {
-  .review-card {
+  .review-card-header {
     flex-direction: column;
-    padding: 16px;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
   }
 
-  .review-card-img {
-    width: 60px;
-    height: 60px;
-  }
-
-  .review-card-content {
-    min-width: 0;
+  .reviewer-info {
     width: 100%;
   }
 
-  .review-item-name {
+  .review-card-body {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+  }
+
+  .review-card-body h3 {
     font-size: 14px;
   }
 
-  .review-meta {
+  .review-card-body p {
     font-size: 12px;
-    gap: 8px;
+    padding: 8px 10px;
   }
 
-  .review-comment {
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-
-  .review-card-actions {
+  .review-card-img {
     width: 100%;
-    justify-content: flex-start;
+    height: auto;
+    max-height: 150px;
+  }
+
+  .resolve-review-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -824,13 +875,6 @@
   background: #fee2e2;
 }
 
-/* Resolve button mirrors delete button but uses success tint */
-.review-card-actions {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
 .resolve-review-btn {
   display: inline-flex;
   align-items: center;
@@ -839,18 +883,28 @@
   background: var(--color-success);
   color: #fff;
   border: none;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
-  box-shadow: 0 6px 14px rgba(16,185,129,0.12);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  font-weight: 500;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .resolve-review-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(16,185,129,0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
   background: #0ea06a;
+}
+
+.resolve-review-btn:active {
+  transform: translateY(0);
+}
+
+.resolve-review-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ============================================

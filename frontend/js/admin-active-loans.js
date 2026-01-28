@@ -41,26 +41,31 @@ async function loadReturnWindow() {
       console.log("Fetched currently borrowed from backend:", data);
 
       // Normalize backend response to match frontend format
-      activeLoans = data.map((req) => ({
+      activeLoans = (data || []).map((req) => ({
         id: req.id,
-        requestId: req.request_id,
-        studentName: req.student_name,
-        studentId: req.student_id,
-        email: req.email,
-        teacherName: req.teacher_name,
-        purpose: req.purpose,
-        borrowDate: req.borrow_date,
-        returnDate: req.return_date,
+        requestId: req.request_id || req.requestId || req.id,
+        studentName: req.student_name || req.studentName || req.full_name || "",
+        studentId: req.student_id || req.studentId || "",
+        email: req.email || req.student_email || "",
+        studentPhone: req.student_phone || req.phone || req.contact || "",
+        studentDepartment: req.department || req.student_department || "",
+        teacherName: req.teacher_name || req.teacherName || "",
+        teacherEmail: req.teacher_email || "",
+        teacherPhone: req.teacher_phone || "",
+        purpose: req.purpose || "",
+        borrowDate: req.borrow_date || req.borrowDate || "",
+        returnDate: req.return_date || req.returnDate || "",
         status: req.status,
         adminRemark: req.admin_remark,
         remarkType: req.remark_type,
-        items: req.items.map((item) => ({
+        items: (req.items || []).map((item) => ({
           id: item.id,
-          name: item.item_name,
-          itemKey: item.item_key,
-          quantity: item.quantity,
-          image: item.item_image,
+          name: item.item_name || item.name || "",
+          itemKey: item.item_key || item.itemKey || "",
+          quantity: item.quantity || 1,
+          image: item.item_image || item.image || "",
           status: item.status,
+          description: item.description || item.item_description || "",
           admin_remark: item.admin_remark,
           remark_type: item.remark_type,
           remark_created_at: item.remark_created_at,
@@ -134,6 +139,12 @@ async function loadReturnWindow() {
               <div class="loan-borrower">
                 <span class="borrower-avatar-small">${(request.studentName || "U").charAt(0).toUpperCase()}</span>
                 <span>${request.studentName || "N/A"}</span>
+              </div>
+              <div class="loan-contact">
+                <div class="loan-email">${request.email || "N/A"}</div>
+                <div class="loan-phone">${request.studentPhone || ""}</div>
+                <div class="loan-dept">${request.studentDepartment || ""}</div>
+                <div class="loan-teacher">Teacher: ${request.teacherName || "N/A"}${request.teacherEmail ? " (" + request.teacherEmail + ")" : ""}</div>
               </div>
               <div class="loan-due-date">Due: ${request.returnDate || "N/A"}</div>
                       ${itemRemarkBadge}
@@ -244,11 +255,16 @@ async function completeReturn(requestId, itemId) {
         // archive entry from the backend response (if available) so the
         // dashboard history / frequent-items chart can include this return.
         try {
-          const orig = (returnedPayload && returnedPayload.original_request) || returnedPayload || null;
+          const orig =
+            (returnedPayload && returnedPayload.original_request) ||
+            returnedPayload ||
+            null;
           const archiveEntry = {
             id: (orig && (orig.id || orig.request_id)) || requestId,
-            request_id: (orig && (orig.request_id || orig.requestId)) || requestId,
-            studentName: (orig && (orig.student_name || orig.studentName)) || "",
+            request_id:
+              (orig && (orig.request_id || orig.requestId)) || requestId,
+            studentName:
+              (orig && (orig.student_name || orig.studentName)) || "",
             student_id: (orig && (orig.student_id || orig.studentId)) || "",
             email: (orig && orig.email) || "",
             teacher_name: (orig && orig.teacher_name) || "",
@@ -260,7 +276,11 @@ async function completeReturn(requestId, itemId) {
           };
 
           if (orig && Array.isArray(orig.items)) {
-            const returnedItem = orig.items.find((it) => String(it.id) === String(itemId) || String(it.id) === String(itemId));
+            const returnedItem = orig.items.find(
+              (it) =>
+                String(it.id) === String(itemId) ||
+                String(it.id) === String(itemId),
+            );
             if (returnedItem) {
               const itemObj = {
                 id: returnedItem.id,
@@ -283,7 +303,10 @@ async function completeReturn(requestId, itemId) {
           history.push(archiveEntry);
           localStorage.setItem("phyLab_History", JSON.stringify(history));
         } catch (e) {
-          console.warn("Failed to archive returned item from backend payload", e);
+          console.warn(
+            "Failed to archive returned item from backend payload",
+            e,
+          );
         }
       }
 
@@ -323,30 +346,52 @@ async function openBorrowingDetails(requestId) {
 
     if (response && response.ok) {
       const data = await response.json();
-      // Normalize backend response
+      // Normalize backend response — map common server field names to frontend view model
       request = {
         id: data.id,
-        requestId: data.request_id,
-        studentName: data.student_name,
-        studentID: data.student_id,
-        email: data.email,
-        teacherName: data.teacher_name,
-        purpose: data.purpose,
-        borrowDate: data.borrow_date,
-        returnDate: data.return_date,
-        status: data.status,
+        requestId: data.request_id || data.requestId || data.id,
+        studentName:
+          data.student_name ||
+          data.studentName ||
+          data.full_name ||
+          data.fullname ||
+          "",
+        studentID: data.student_id || data.studentId || data.id_number || "",
+        email: data.email || data.student_email || "",
+        studentPhone:
+          data.student_phone ||
+          data.phone ||
+          data.contact ||
+          data.student_phone_number ||
+          "",
+        studentDepartment: data.department || data.student_department || "",
+        teacherName: data.teacher_name || data.teacherName || "",
+        teacherEmail: data.teacher_email || data.teacher_email_address || "",
+        teacherPhone: data.teacher_phone || data.teacher_phone_number || "",
+        purpose: data.purpose || data.reason || "",
+        borrowDate: data.borrow_date || data.borrowDate || "",
+        returnDate: data.return_date || data.returnDate || "",
+        status: data.status || "",
         adminRemark: data.admin_remark
           ? {
-              type: data.remark_type,
+              type: data.remark_type || data.admin_remark_type || "",
               text: data.admin_remark,
+              createdAt:
+                data.remark_created_at || data.admin_remark_created_at || null,
             }
           : null,
-        items: data.items.map((item) => ({
-          name: item.item_name,
-          itemKey: item.item_key,
-          quantity: item.quantity,
-          image: item.item_image,
-          description: "",
+        items: (data.items || []).map((item) => ({
+          id: item.id,
+          name: item.item_name || item.name || "",
+          itemKey: item.item_key || item.itemKey || "",
+          quantity: item.quantity || 1,
+          image: item.item_image || item.image || "",
+          description:
+            item.description || item.item_description || item.item_desc || "",
+          status: item.status || "pending",
+          admin_remark: item.admin_remark || item.remark || "",
+          remark_type: item.remark_type || null,
+          remark_created_at: item.remark_created_at || null,
         })),
       };
     }
@@ -376,16 +421,41 @@ async function openBorrowingDetails(requestId) {
   document.getElementById("det-item-img").src = item.image || "default.png";
   document.getElementById("det-description").innerText =
     item.description || "Physics Lab Equipment";
-  document.getElementById("det-inv-id").innerText = request.id;
+  document.getElementById("det-inv-id").innerText =
+    request.id || request.requestId || "N/A";
   document.getElementById("det-condition").innerText = "Good";
 
   document.getElementById("det-borrower-name").innerText =
     request.studentName || "N/A";
   document.getElementById("det-borrower-id").innerText =
-    "ID: " + (request.studentID || "N/A");
+    "ID: " +
+    (request.studentID || request.studentId || request.student_id || "N/A");
+  document.getElementById("det-email").innerText = request.email || "N/A";
+  const classEl = document.getElementById("det-class");
+  if (classEl)
+    classEl.innerText =
+      request.studentClass || request.class || request.course || "N/A";
+
+  // Extra borrower/teacher contact fields (may be absent from older payloads)
+  const borrowerPhoneEl = document.getElementById("det-borrower-phone");
+  if (borrowerPhoneEl)
+    borrowerPhoneEl.innerText = request.studentPhone || request.phone || "N/A";
+  const borrowerDeptEl = document.getElementById("det-borrower-department");
+  if (borrowerDeptEl)
+    borrowerDeptEl.innerText =
+      request.studentDepartment || request.department || "N/A";
+  const requestIdEl = document.getElementById("det-request-id");
+  if (requestIdEl)
+    requestIdEl.innerText = request.requestId || request.id || "N/A";
+
   document.getElementById("det-teacher").innerText =
     request.teacherName || "N/A";
-  document.getElementById("det-email").innerText = request.email || "N/A";
+  const teacherEmailEl = document.getElementById("det-teacher-email");
+  if (teacherEmailEl)
+    teacherEmailEl.innerText =
+      request.teacherEmail || request.teacher_email || "N/A";
+  const teacherPhoneEl = document.getElementById("det-teacher-phone");
+  if (teacherPhoneEl) teacherPhoneEl.innerText = request.teacherPhone || "N/A";
 
   document.getElementById("det-borrow-date").innerText =
     request.borrowDate || "N/A";

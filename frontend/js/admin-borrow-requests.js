@@ -1,5 +1,94 @@
 // Borrow request approval management
 
+// Try to refresh local phyLab_RequestQueue from backend (used after remote updates)
+async function refreshLocalQueueFromBackend() {
+  try {
+    const urls = [
+      "http://127.0.0.1:8000/api/borrow-requests/",
+      "/api/borrow-requests/",
+    ];
+
+    let response = null;
+    for (const url of urls) {
+      try {
+        response = await fetch(url, { mode: "cors" });
+        if (response && response.ok) break;
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!response || !response.ok) return;
+    const data = await response.json();
+
+    const pending = [];
+    const borrowed = [];
+
+    (data || []).forEach((req) => {
+      const items = (req.items || []).map((item) => ({
+        id: item.id,
+        name: item.item_name,
+        itemKey: item.item_key,
+        quantity: item.quantity,
+        image: item.item_image,
+        status: item.status || "pending",
+      }));
+
+      const pendingItems = items.filter(
+        (i) => !i.status || i.status === "pending",
+      );
+      const approvedItems = items.filter(
+        (i) => i.status === "approved" || i.status === "borrowed",
+      );
+
+      if (pendingItems.length > 0) {
+        pending.push({
+          id: req.id,
+          requestId: req.request_id || req.requestId || req.id,
+          studentName:
+            req.student_name || req.studentName || req.full_name || "",
+          studentID: req.student_id || req.studentId || req.id_number || "",
+          email: req.email || req.student_email || "",
+          studentPhone: req.student_phone || req.phone || req.contact || "",
+          studentDepartment: req.department || req.student_department || "",
+          teacherName: req.teacher_name || req.teacherName || "",
+          teacherEmail: req.teacher_email || "",
+          teacherPhone: req.teacher_phone || "",
+          purpose: req.purpose || "",
+          borrowDate: req.borrow_date || req.borrowDate || "",
+          returnDate: req.return_date || req.returnDate || "",
+          status: req.status || "pending",
+          items: pendingItems,
+        });
+      }
+
+      if (approvedItems.length > 0) {
+        borrowed.push({
+          id: generateLoanId(),
+          requestId: req.request_id || req.requestId || req.id,
+          studentName:
+            req.student_name || req.studentName || req.full_name || "",
+          studentID: req.student_id || req.studentId || req.id_number || "",
+          email: req.email || req.student_email || "",
+          studentPhone: req.student_phone || req.phone || req.contact || "",
+          studentDepartment: req.department || req.student_department || "",
+          teacherName: req.teacher_name || req.teacherName || "",
+          purpose: req.purpose || "",
+          borrowDate: req.borrow_date || req.borrowDate || "",
+          returnDate: req.return_date || req.returnDate || "",
+          status: "borrowed",
+          items: approvedItems,
+        });
+      }
+    });
+
+    const normalized = pending.concat(borrowed);
+    localStorage.setItem("phyLab_RequestQueue", JSON.stringify(normalized));
+  } catch (e) {
+    console.warn("refreshLocalQueueFromBackend failed", e);
+  }
+}
+
 async function loadBorrowRequests() {
   const container = document.getElementById("approvalsContainer");
   const selectAllEl = document.getElementById("selectAllChecks");
@@ -34,23 +123,29 @@ async function loadBorrowRequests() {
       pendingRequests = data
         .map((req) => ({
           id: req.id,
-          requestId: req.request_id,
-          studentName: req.student_name,
-          studentID: req.student_id,
-          email: req.email,
-          teacherName: req.teacher_name,
-          purpose: req.purpose,
-          borrowDate: req.borrow_date,
-          returnDate: req.return_date,
+          requestId: req.request_id || req.requestId || req.id,
+          studentName:
+            req.student_name || req.studentName || req.full_name || "",
+          studentID: req.student_id || req.studentId || req.id_number || "",
+          email: req.email || req.student_email || "",
+          studentPhone: req.student_phone || req.phone || req.contact || "",
+          studentDepartment: req.department || req.student_department || "",
+          teacherName: req.teacher_name || req.teacherName || "",
+          teacherEmail: req.teacher_email || "",
+          teacherPhone: req.teacher_phone || "",
+          purpose: req.purpose || "",
+          borrowDate: req.borrow_date || req.borrowDate || "",
+          returnDate: req.return_date || req.returnDate || "",
           status: req.status,
-          items: req.items
+          items: (req.items || [])
             .filter((item) => !item.status || item.status === "pending") // Only show pending items
             .map((item) => ({
               id: item.id,
-              name: item.item_name,
-              itemKey: item.item_key,
-              quantity: item.quantity,
-              image: item.item_image,
+              name: item.item_name || item.name || "",
+              itemKey: item.item_key || item.itemKey || "",
+              quantity: item.quantity || 1,
+              image: item.item_image || item.image || "",
+              description: item.description || item.item_description || "",
               status: item.status || "pending",
             })),
         }))
@@ -77,6 +172,18 @@ async function loadBorrowRequests() {
   pendingRequests.forEach((request) => {
     let requestBlock = document.createElement("div");
     requestBlock.className = "request-card";
+
+    // Normalize email fallbacks (support different backend field names)
+    const rawEmail =
+      request.email || request.student_email || request.contact || "";
+    const inferredEmail =
+      !rawEmail && request.studentName && request.studentName.includes("@")
+        ? request.studentName
+        : rawEmail;
+    const emailSafe = inferredEmail || "";
+    const mailHtml = emailSafe
+      ? `<a href=\"mailto:${escapeHtml(emailSafe)}\">${escapeHtml(emailSafe)}</a>`
+      : "N/A";
 
     const itemsHtml = request.items
       .map(
@@ -112,12 +219,20 @@ async function loadBorrowRequests() {
             <div>
               <span class="borrower-name">${request.studentName}</span>
               <span class="borrower-id">${request.studentID}</span>
+                <div class="borrower-meta">
+                <div class="borrower-email">${mailHtml}</div>
+                <div class="borrower-phone">${escapeHtml(request.studentPhone || "")}</div>
+                <div class="borrower-dept">${escapeHtml(request.studentDepartment || "")}</div>
+              </div>
             </div>
           </div>
           <div class="request-header-right">
             <div class="request-dates">
               <span>Borrow: ${request.borrowDate || "N/A"}</span>
               <span>Return: ${request.returnDate || "N/A"}</span>
+            </div>
+            <div class="request-teacher">
+              <small>Teacher: ${request.teacherName || "N/A"}${request.teacherEmail ? " — " + request.teacherEmail : ""}</small>
             </div>
           </div>
         </div>
@@ -227,6 +342,7 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
   });
 
   // Process each request using the new update_item_statuses endpoint
+  let anyRemoteSuccess = false;
   for (const reqId of Object.keys(actionsByRequest)) {
     const itemsActions = actionsByRequest[reqId];
 
@@ -274,6 +390,10 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
       console.error("Error updating item statuses:", e);
     }
 
+    if (success) {
+      anyRemoteSuccess = true;
+    }
+
     // Fallback to localStorage for backwards compatibility (optional)
     if (!success) {
       let queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
@@ -314,6 +434,15 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
         }
       }
       localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+    }
+  }
+
+  // If remote updates succeeded, refresh local queue from backend so borrowed loans appear
+  if (anyRemoteSuccess) {
+    try {
+      await refreshLocalQueueFromBackend();
+    } catch (e) {
+      // ignore
     }
   }
 

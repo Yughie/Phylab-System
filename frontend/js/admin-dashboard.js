@@ -41,8 +41,27 @@ async function loadDashboardStats() {
     reviews = JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
   }
 
-  const pending = allRequests.filter((r) => r.status === "pending").length;
-  const loans = allRequests.filter((r) => r.status === "borrowed").length;
+  // Count requests that have at least one pending item (match Borrow Requests page)
+  const pending = allRequests.filter((r) => {
+    try {
+      const items = Array.isArray(r.items) ? r.items : [];
+      return (
+        items.filter((i) => !i.status || i.status === "pending").length > 0
+      );
+    } catch (e) {
+      return false;
+    }
+  }).length;
+
+  // Count requests that have at least one borrowed item (match Active Loans page)
+  const loans = allRequests.filter((r) => {
+    try {
+      const items = Array.isArray(r.items) ? r.items : [];
+      return items.filter((i) => i.status === "borrowed").length > 0;
+    } catch (e) {
+      return false;
+    }
+  }).length;
   const equipment = document.querySelectorAll(".inventory-card").length;
 
   document.getElementById("statPending").textContent = pending;
@@ -82,13 +101,20 @@ async function loadDashboardBorrowers() {
 
     if (response && response.ok) {
       const data = await response.json();
-      // Normalize backend response
+      // Normalize backend response (include contact/teacher fields)
       allRequests = data.map((req) => ({
-        studentName: req.student_name,
-        studentID: req.student_id,
-        borrowDate: req.borrow_date,
-        status: req.status,
-        items: req.items.map((item) => ({ name: item.item_name })),
+        studentName: req.student_name || req.studentName || req.full_name || "",
+        studentID: req.student_id || req.studentId || req.id_number || "",
+        email: req.email || req.student_email || "",
+        studentPhone: req.student_phone || req.phone || "",
+        studentDepartment: req.department || "",
+        teacherName: req.teacher_name || req.teacherName || "",
+        teacherEmail: req.teacher_email || "",
+        borrowDate: req.borrow_date || req.borrowDate || "",
+        status: req.status || "",
+        items: (req.items || []).map((item) => ({
+          name: item.item_name || item.name,
+        })),
       }));
     }
   } catch (error) {
@@ -123,12 +149,18 @@ async function loadDashboardBorrowers() {
               ${recentRequests
                 .map(
                   (req) => `
-                  <tr>
-                      <td><strong>${req.studentName || "N/A"}</strong></td>
-                      <td>${req.items ? req.items.map((i) => i.name).join(", ") : "N/A"}</td>
-                      <td><span class="status-badge status-${req.status}">${req.status}</span></td>
-                      <td>${req.borrowDate || "N/A"}</td>
-                  </tr>
+                          <tr>
+                              <td>
+                                <strong>${req.studentName || "N/A"}</strong>
+                                <div class="small-muted">${req.email || ""} ${req.studentPhone ? "• " + req.studentPhone : ""}</div>
+                              </td>
+                              <td>${req.items ? req.items.map((i) => i.name).join(", ") : "N/A"}</td>
+                              <td>
+                                <div>${req.teacherName || "N/A"}</div>
+                                <div class="small-muted">${req.teacherEmail || ""}</div>
+                              </td>
+                              <td><span class="status-badge status-${req.status}">${req.status}</span><div class="small-muted">${req.borrowDate || "N/A"}</div></td>
+                          </tr>
               `,
                 )
                 .join("")}
@@ -168,7 +200,12 @@ async function initLiveChart() {
   history.forEach((req) => {
     if (req.items && req.items.length > 0) {
       const first = req.items[0];
-      const itemName = (first.item_name || first.name || first.itemName || "Unknown").toString();
+      const itemName = (
+        first.item_name ||
+        first.name ||
+        first.itemName ||
+        "Unknown"
+      ).toString();
       counts[itemName] = (counts[itemName] || 0) + 1;
     }
   });

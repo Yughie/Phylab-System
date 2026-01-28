@@ -56,6 +56,27 @@
           Logout
         </button>
       </div>
+      <button
+        class="sidebar-toggle-large"
+        id="sidebarToggleLarge"
+        aria-label="Toggle sidebar"
+        title="Toggle sidebar"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="admin-layout">
@@ -358,7 +379,6 @@
             <!-- Inventory cards are rendered dynamically by `renderInventoryGrid()` -->
           </div>
         </section>
-
         <!-- Reviews Page -->
         <section class="page-section" data-page="reviews">
           <div class="page-header">
@@ -442,9 +462,30 @@
                   <p>
                     <strong>Teacher:</strong> <span id="det-teacher">---</span>
                   </p>
+                  <p>
+                    <strong>Teacher Email:</strong>
+                    <span id="det-teacher-email">---</span>
+                  </p>
+                  <p>
+                    <strong>Teacher Phone:</strong>
+                    <span id="det-teacher-phone">---</span>
+                  </p>
                   <p><strong>Class:</strong> <span id="det-class">---</span></p>
                   <p>
-                    <strong>Contact:</strong> <span id="det-email">---</span>
+                    <strong>Contact (email):</strong>
+                    <span id="det-email">---</span>
+                  </p>
+                  <p>
+                    <strong>Phone:</strong>
+                    <span id="det-borrower-phone">---</span>
+                  </p>
+                  <p>
+                    <strong>Department:</strong>
+                    <span id="det-borrower-department">---</span>
+                  </p>
+                  <p>
+                    <strong>Request ID:</strong>
+                    <span id="det-request-id">---</span>
                   </p>
                 </div>
               </div>
@@ -694,16 +735,2026 @@
       </div>
     </div>
 
-    <!-- Modular JavaScript Components -->
-    <script src="js/admin-utils.js"></script>
-    <script src="js/admin-notifications.js"></script>
-    <script src="js/admin-emailjs.js"></script>
-    <script src="js/admin-navigation.js"></script>
-    <script src="js/admin-dashboard.js"></script>
+    <script>
+      (function () {
+        emailjs.init("lJ6EFXKyc4N6yIyEG");
+      })();
+
+      // EmailJS configuration: use one shared template and pass different params
+      const EMAILJS_SERVICE_ID = "service_t43eph7";
+      const EMAILJS_SHARED_TEMPLATE = "template_33ionwk"; // create this template in EmailJS
+
+      const detailsModal = document.getElementById("Borrowing-Details-window");
+
+      // ============================================
+      // CUSTOM POPUP/MODAL SYSTEM
+      // ============================================
+
+      // Show notification popup (replaces alert)
+      function showNotification(message, type = "success") {
+        const popup = document.getElementById("notificationPopup");
+        const msgEl = document.getElementById("notificationMessage");
+        const iconEl = document.getElementById("notificationIcon");
+
+        msgEl.textContent = message;
+
+        // Remove previous type classes and set base + type + show
+        popup.className = "notification-popup notification-" + type + " show";
+
+        // Set icon based on type
+        if (type === "error" || type === "rejected") {
+          iconEl.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+          iconEl.style.background = "rgba(239, 68, 68, 0.1)";
+          popup.className = "notification-popup notification-rejected show";
+        } else if (type === "warning") {
+          iconEl.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+          iconEl.style.background = "rgba(245, 158, 11, 0.1)";
+          popup.className = "notification-popup notification-warning show";
+        } else if (type === "approved") {
+          iconEl.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+          iconEl.style.background = "rgba(16, 185, 129, 0.1)";
+          popup.className = "notification-popup notification-approved show";
+        } else {
+          iconEl.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+          iconEl.style.background = "rgba(16, 185, 129, 0.1)";
+          popup.className = "notification-popup notification-success show";
+        }
+      }
+
+      function hideNotification() {
+        document.getElementById("notificationPopup").classList.remove("show");
+      }
+
+      // EmailJS helper: sanitize recipient and send with logging
+      function sanitizeEmail(raw) {
+        if (!raw || typeof raw !== "string") return "";
+        const s = raw.trim();
+        const m = s.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+        return m ? m[0] : "";
+      }
+
+      function safeSendEmail(serviceId, templateId, templateParams) {
+        return new Promise((resolve, reject) => {
+          if (!window.emailjs || typeof emailjs.send !== "function") {
+            return reject(new Error("EmailJS not available"));
+          }
+          const params = Object.assign({}, templateParams);
+          // normalize 'to_email' fields used in templates
+          if (params.to_email) params.to_email = sanitizeEmail(params.to_email);
+          // fallback: if no to_email present, try to infer from to_name if it's an email
+          if (
+            !params.to_email &&
+            params.to_name &&
+            params.to_name.includes("@")
+          )
+            params.to_email = sanitizeEmail(params.to_name);
+          if (!params.to_email)
+            return reject(new Error("Invalid recipient email"));
+          // log minimal payload for debugging (avoid logging sensitive full message_html)
+          console.log("EmailJS send:", serviceId, templateId, {
+            to_email: params.to_email,
+            to_name: params.to_name || "",
+            subject: params.subject || "",
+          });
+          emailjs
+            .send(serviceId, templateId, params)
+            .then(resolve)
+            .catch(reject);
+        });
+      }
+
+      // Show confirmation modal (replaces confirm)
+      let confirmCallback = null;
+      function showConfirm(title, message, onConfirm) {
+        const modal = document.getElementById("confirmModal");
+        document.getElementById("confirmTitle").textContent = title;
+        document.getElementById("confirmMessage").textContent = message;
+        confirmCallback = onConfirm;
+        modal.classList.add("show");
+      }
+
+      function hideConfirmModal() {
+        document.getElementById("confirmModal").classList.remove("show");
+        confirmCallback = null;
+      }
+
+      function executeConfirmCallback() {
+        document.getElementById("confirmModal").classList.remove("show");
+        if (typeof confirmCallback === "function") {
+          confirmCallback();
+        }
+        confirmCallback = null;
+      }
+
+      // ============================================
+      // ADMIN REMARK SYSTEM
+      // ============================================
+
+      let currentRemarkRequestId = null;
+      let currentRemarkItemName = null;
+
+      function openRemarkModal(requestId, itemName) {
+        currentRemarkRequestId = requestId;
+        currentRemarkItemName = itemName;
+
+        // Set the item name in modal
+        document.getElementById("remarkItemName").textContent = itemName;
+
+        // Check if there's an existing remark for this request
+        const remarks =
+          JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
+        const existingRemark = remarks[requestId];
+
+        if (existingRemark) {
+          document.getElementById("remarkType").value =
+            existingRemark.type || "";
+          document.getElementById("remarkText").value =
+            existingRemark.text || "";
+        } else {
+          document.getElementById("remarkType").value = "";
+          document.getElementById("remarkText").value = "";
+        }
+
+        document.getElementById("remarkModal").classList.add("show");
+      }
+
+      function closeRemarkModal() {
+        document.getElementById("remarkModal").classList.remove("show");
+        currentRemarkRequestId = null;
+        currentRemarkItemName = null;
+      }
+
+      function saveRemark() {
+        const remarkType = document.getElementById("remarkType").value;
+        const remarkText = document.getElementById("remarkText").value.trim();
+
+        if (!remarkType && !remarkText) {
+          showNotification(
+            "Please select an issue type or enter a description.",
+            "warning",
+          );
+          return;
+        }
+
+        // Save to localStorage
+        const remarks =
+          JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
+        remarks[currentRemarkRequestId] = {
+          type: remarkType,
+          text: remarkText,
+          itemName: currentRemarkItemName,
+          createdAt: new Date().toISOString(),
+          createdBy: "Admin",
+        };
+        localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
+
+        // Also add remark to the request in queue for persistence
+        let queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const reqIndex = queue.findIndex(
+          (r) => String(r.id) === String(currentRemarkRequestId),
+        );
+        if (reqIndex !== -1) {
+          queue[reqIndex].adminRemark = remarks[currentRemarkRequestId];
+          localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+        }
+
+        closeRemarkModal();
+        showNotification("Remark saved successfully!", "success");
+
+        // Reload the loans view to show the remark badge
+        loadReturnWindow();
+      }
+
+      // Item Edit Modal handlers
+      function openItemEditModal(itemKey, itemId) {
+        const modal = document.getElementById("itemEditModal");
+        const nameEl = document.getElementById("editItemName");
+        const typeEl = document.getElementById("editItemType");
+        const useEl = document.getElementById("editItemUse");
+        const cabinetEl = document.getElementById("editItemCabinet");
+        const descEl = document.getElementById("editItemDescription");
+
+        if (!modal) return;
+
+        // First try to get saved details from localStorage
+        const saved = JSON.parse(
+          localStorage.getItem("item_details_" + itemKey) || "{}",
+        );
+
+        // Also get the card element to fetch original data attributes as fallback
+        const stockInput = document.querySelector(
+          '.stock-input[data-item="' + itemKey + '"]',
+        );
+        const card = stockInput ? stockInput.closest(".inventory-card") : null;
+
+        // Get card's data attributes as fallback values
+        const cardType = card ? card.getAttribute("data-type") || "" : "";
+        const cardUse = card ? card.getAttribute("data-use") || "" : "";
+        const cardCabinet = card ? card.getAttribute("data-cabinet") || "" : "";
+        const cardDesc = card
+          ? card.getAttribute("data-description") || ""
+          : "";
+        const cardName = card
+          ? card.querySelector(".item-name")?.textContent?.trim() || itemKey
+          : itemKey;
+
+        // Populate modal: prefer saved values, fallback to card data attributes
+        nameEl.textContent = saved.name || cardName || itemKey;
+        typeEl.value = saved.type || cardType;
+        useEl.value = saved.use || cardUse;
+        cabinetEl.value = saved.cabinet || cardCabinet;
+        descEl.value = saved.description || cardDesc;
+
+        modal.dataset.editingItem = itemKey;
+        if (itemId) modal.dataset.editingItemId = itemId;
+        modal.classList.add("show");
+      }
+
+      function closeItemEditModal() {
+        const modal = document.getElementById("itemEditModal");
+        if (!modal) return;
+        modal.classList.remove("show");
+        delete modal.dataset.editingItem;
+        delete modal.dataset.editingItemId;
+      }
+
+      async function saveItemDetails() {
+        const modal = document.getElementById("itemEditModal");
+        if (!modal) return;
+        const itemKey = modal.dataset.editingItem;
+        const itemId = modal.dataset.editingItemId;
+        if (!itemKey) {
+          if (typeof showNotification === "function")
+            showNotification("No item selected to save.", "error");
+          return;
+        }
+
+        const name =
+          document.getElementById("editItemName").textContent || itemKey;
+        const type = document.getElementById("editItemType").value.trim();
+        const use = document.getElementById("editItemUse").value.trim();
+        const cabinet = document.getElementById("editItemCabinet").value.trim();
+        const description = document
+          .getElementById("editItemDescription")
+          .value.trim();
+
+        const payload = {
+          name,
+          type,
+          use,
+          cabinet,
+          description,
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Try to persist to backend if we have an item id; fall back to localStorage
+        let backendSucceeded = false;
+        if (itemId) {
+          const urls = [
+            "/api/inventory/" + itemId + "/",
+            "http://127.0.0.1:8000/api/inventory/" + itemId + "/",
+          ];
+
+          for (let u of urls) {
+            try {
+              const resp = await fetch(u, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type, use, cabinet, description, name }),
+              });
+              if (resp && resp.ok) {
+                backendSucceeded = true;
+                break;
+              }
+            } catch (e) {
+              // try next
+            }
+          }
+        }
+
+        // If backend failed or no id, persist to localStorage as before
+        localStorage.setItem(
+          "item_details_" + itemKey,
+          JSON.stringify(payload),
+        );
+
+        // Update the card's data attributes with new values
+        const card = document
+          .querySelector('.stock-input[data-item="' + itemKey + '"]')
+          ?.closest(".inventory-card");
+        if (card) {
+          card.setAttribute("data-type", type);
+          card.setAttribute("data-use", use);
+          card.setAttribute("data-cabinet", cabinet);
+          card.setAttribute("data-description", description);
+        }
+
+        closeItemEditModal();
+        if (backendSucceeded) {
+          if (typeof showNotification === "function")
+            showNotification("Item details saved to server.", "approved");
+        } else {
+          if (typeof showNotification === "function")
+            showNotification(
+              "Item details saved locally (offline fallback).",
+              "warning",
+            );
+        }
+
+        // Refresh card display for this item
+        const input = document.querySelector(
+          '.stock-input[data-item="' + itemKey + '"]',
+        );
+        if (input) updateStockDisplay(input);
+
+        saveInventoryToLocalStorage(); // update inventory cache for user page sync (may be a noop)
+      }
+
+      function getRemarkTypeLabel(type) {
+        const labels = {
+          damaged: "Damaged",
+          "missing-parts": "Missing Parts",
+          "late-return": "Late Return",
+          "wrong-item": "Wrong Item",
+          other: "Other",
+        };
+        return labels[type] || type;
+      }
+
+      // Page Navigation System
+      function showPage(pageName) {
+        // Update nav items
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.toggle("active", item.dataset.page === pageName);
+        });
+
+        // Update page sections
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.toggle("active", section.dataset.page === pageName);
+        });
+
+        // Load page-specific content
+        if (pageName === "dashboard") {
+          loadDashboardStats();
+          loadDashboardBorrowers();
+          initLiveChart();
+        } else if (pageName === "approvals") {
+          loadBorrowRequests();
+        } else if (pageName === "loans") {
+          loadReturnWindow();
+        } else if (pageName === "reviews") {
+          displayUserReviews();
+        }
+      }
+
+      // Sidebar navigation click handlers
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.onclick = () => showPage(item.dataset.page);
+      });
+
+      // Dashboard Stats
+      function loadDashboardStats() {
+        const queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const reviews =
+          JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
+
+        const pending = queue.filter((r) => r.status === "pending").length;
+        const loans = queue.filter((r) => r.status === "borrowed").length;
+        const equipment = document.querySelectorAll(".inventory-card").length;
+
+        document.getElementById("statPending").textContent = pending;
+        document.getElementById("statLoans").textContent = loans;
+        document.getElementById("statEquipment").textContent = equipment;
+        document.getElementById("statReviews").textContent = reviews.length;
+
+        // Update nav badges
+        document.getElementById("pendingCount").textContent = pending;
+        document.getElementById("loansCount").textContent = loans;
+        // Reviews nav badge
+        const reviewsCountEl = document.getElementById("reviewsCount");
+        if (reviewsCountEl) reviewsCountEl.textContent = reviews.length;
+      }
+
+      // Dashboard Borrowers List
+      function loadDashboardBorrowers() {
+        const queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const container = document.getElementById("dashboardBorrowersList");
+
+        const recentRequests = queue.slice(-5).reverse();
+
+        if (recentRequests.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state">No recent borrowing activity</div>';
+          return;
+        }
+
+        container.innerHTML = `
+            <table class="borrowers-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${recentRequests
+                      .map(
+                        (req) => `
+                        <tr>
+                            <td><strong>${req.studentName || "N/A"}</strong></td>
+                            <td>${req.items ? req.items.map((i) => i.name).join(", ") : "N/A"}</td>
+                            <td><span class="status-badge status-${req.status}">${req.status}</span></td>
+                            <td>${req.borrowDate || "N/A"}</td>
+                        </tr>
+                    `,
+                      )
+                      .join("")}
+                </tbody>
+            </table>
+        `;
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        // Prefer backend-provided inventory; `refreshInventoryFromBackend` is defined in `supabase_fetch.js`.
+        if (typeof refreshInventoryFromBackend === "function") {
+          refreshInventoryFromBackend().catch(() => {});
+        }
+        renderInventoryGrid(); // populate DOM from whatever `getInventory()` returns
+        loadStockFromMemory();
+        loadDashboardStats();
+        loadDashboardBorrowers();
+        initLiveChart();
+        loadCabinetFromMemory();
+      });
+
+      // Ensure inventory loaded: prefer backend fetch; no client-side defaults
+      function ensureInventoryLoaded() {
+        if (typeof refreshInventoryFromBackend === "function") {
+          // attempt to refresh cache from backend; callers will render from getInventory()
+          refreshInventoryFromBackend().catch(() => {});
+        }
+        // otherwise, do nothing — getInventory() may return an empty array
+      }
+
+      // Render the inventory grid from storage (getInventory -> localStorage or defaults)
+      function renderInventoryGrid() {
+        const inventory =
+          typeof getInventory === "function"
+            ? getInventory()
+            : JSON.parse(localStorage.getItem("phyLab_AdminInventory") || "[]");
+        const grid = document.querySelector(".inventory-grid");
+        if (!grid) return;
+
+        grid.innerHTML = "";
+
+        // debug: log how many items we're about to render
+        try {
+          console.debug(
+            "renderInventoryGrid: rendering",
+            inventory && inventory.length ? inventory.length : 0,
+            "items",
+          );
+        } catch (e) {}
+
+        inventory.forEach((item) => {
+          const itemKey =
+            item.itemKey ||
+            item.item_key ||
+            String(item.name).toLowerCase().replace(/\s+/g, "_");
+          const imgSrc = item.image || "";
+          const name = item.name || "";
+          const category = item.category || "";
+          const cabinet = item.cabinet || "";
+          const type = item.type || "";
+          const use = item.use || "";
+          const description = item.description || "";
+          const stock =
+            item.stock !== undefined && item.stock !== null ? item.stock : 0;
+
+          const cardHtml = `
+          <div class="inventory-card" data-id="${escapeHtml(item.id || "")}" data-category="${escapeHtml(category)}" data-cabinet="${escapeHtml(cabinet)}" data-type="${escapeHtml(type)}" data-use="${escapeHtml(use)}" data-description="${escapeHtml(description)}">
+            <img class="inventory-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}">
+            <div class="inventory-details">
+              <span class="item-name">${escapeHtml(name)}</span>
+              <button class="edit-details-btn" onclick="openItemEditModal('${escapeJs(itemKey)}','${escapeJs(item.id || "")}')">Edit Details</button>
+              <div class="stock-control">
+                <label>Stock</label>
+                <input type="number" class="stock-input" data-item="${escapeHtml(itemKey)}" value="${escapeHtml(stock)}" placeholder="No." oninput="saveStock(this)">
+              </div>
+            </div>
+          </div>`;
+
+          grid.insertAdjacentHTML("beforeend", cardHtml);
+        });
+
+        // After adding cards, initialize stock displays and cabinet data
+        loadCabinetFromMemory();
+        loadStockFromMemory();
+      }
+
+      // small helpers to avoid XSS when inserting from stored data
+      function escapeHtml(s) {
+        if (s === undefined || s === null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeJs(s) {
+        if (s === undefined || s === null) return "";
+        return String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      }
+
+      // Save all inventory cards to localStorage for user page to fetch
+      function saveInventoryToLocalStorage() {
+        const inventoryArray = [];
+        document.querySelectorAll(".inventory-card").forEach((card) => {
+          const stockInput = card.querySelector(".stock-input");
+          const itemKey = stockInput
+            ? stockInput.getAttribute("data-item")
+            : "";
+          const nameEl = card.querySelector(".item-name");
+          const imgEl = card.querySelector(".inventory-img");
+
+          // Get the image src - use getAttribute to get relative path if possible
+          let imageSrc = "";
+          if (imgEl) {
+            // Try to get the original relative path from the attribute first
+            imageSrc = imgEl.getAttribute("src") || imgEl.src || "";
+          }
+
+          // Also read any saved item_details for this item (includes cabinet edits)
+          const savedDetails = JSON.parse(
+            localStorage.getItem("item_details_" + itemKey) || "{}",
+          );
+
+          inventoryArray.push({
+            itemKey: itemKey,
+            name: nameEl ? nameEl.textContent.trim() : "",
+            image: imageSrc,
+            category: card.getAttribute("data-category") || "",
+            cabinet:
+              savedDetails.cabinet || card.getAttribute("data-cabinet") || "",
+            type: savedDetails.type || card.getAttribute("data-type") || "",
+            use: savedDetails.use || card.getAttribute("data-use") || "",
+            description:
+              savedDetails.description ||
+              card.getAttribute("data-description") ||
+              "",
+            stock: stockInput ? stockInput.value : "0",
+          });
+        });
+        saveInventory(inventoryArray); // Uses function from inventory_data.js
+      }
+
+      async function saveStock(inputElement) {
+        const itemName = inputElement.getAttribute("data-item");
+        let value = parseInt(inputElement.value, 10);
+        if (isNaN(value) || value < 0) value = 0;
+
+        const originalKey = "stock_original_" + itemName;
+        let original = parseInt(localStorage.getItem(originalKey), 10);
+        if (isNaN(original)) original = value;
+
+        // If admin increases current beyond original, treat it as increasing original stock
+        if (value > original) {
+          localStorage.setItem(originalKey, String(value));
+          original = value;
+        }
+
+        // Ensure current does not fall below active borrowed quantity
+        const loansQty = computeActiveLoansForItem(itemName);
+        if (value < loansQty) {
+          value = loansQty;
+          inputElement.value = value;
+          if (typeof showNotification === "function")
+            showNotification(
+              "Current stock adjusted to match active loans.",
+              "warning",
+            );
+        }
+
+        // Clamp current to not exceed original
+        if (value > original) value = original;
+
+        // Try to persist change to backend using card data-id (use set_stock action), fall back to set_stock_by_key
+        let backendSucceeded = false;
+        try {
+          const card = inputElement.closest(".inventory-card");
+          const itemId = card ? card.getAttribute("data-id") : null;
+
+          if (itemId) {
+            const urls = [
+              "/api/inventory/" + itemId + "/set_stock/",
+              "http://127.0.0.1:8000/api/inventory/" + itemId + "/set_stock/",
+            ];
+            for (let u of urls) {
+              try {
+                const resp = await fetch(u, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ stock: value }),
+                });
+                if (resp && resp.ok) {
+                  backendSucceeded = true;
+                  break;
+                }
+              } catch (e) {
+                // try next url
+              }
+            }
+          } else {
+            // fallback: call set_stock_by_key endpoint using itemKey
+            const urls = [
+              "/api/inventory/set_stock_by_key/",
+              "http://127.0.0.1:8000/api/inventory/set_stock_by_key/",
+            ];
+            for (let u of urls) {
+              try {
+                const resp = await fetch(u, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ item_key: itemName, stock: value }),
+                });
+                if (resp && resp.ok) {
+                  backendSucceeded = true;
+                  break;
+                }
+              } catch (e) {
+                // try next
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        // Persist locally regardless so UI stays in sync (server is authoritative when available)
+        localStorage.setItem("stock_" + itemName, String(value));
+        updateStockDisplay(inputElement);
+        if (backendSucceeded) {
+          if (typeof showNotification === "function")
+            showNotification("Stock saved to server.", "approved");
+        } else {
+          if (typeof showNotification === "function")
+            showNotification(
+              "Stock saved locally (offline fallback).",
+              "warning",
+            );
+        }
+
+        saveInventoryToLocalStorage(); // Update inventory for user page sync
+      }
+
+      function loadStockFromMemory() {
+        document.querySelectorAll(".stock-input").forEach((input) => {
+          const itemName = input.getAttribute("data-item");
+          if (itemName) {
+            const savedValue = localStorage.getItem("stock_" + itemName);
+            const originalKey = "stock_original_" + itemName;
+
+            // Determine original stock (persisted or current input fallback)
+            let original = parseInt(localStorage.getItem(originalKey), 10);
+            if (isNaN(original)) {
+              original = parseInt(input.value, 10) || 0;
+              localStorage.setItem(originalKey, String(original));
+            }
+
+            // Calculate active borrowed quantity for this item
+            const loansQty = computeActiveLoansForItem(itemName);
+
+            // Available current = original - loans (cannot be negative)
+            let computedCurrent = Math.max(0, original - loansQty);
+
+            // Persist and display the computed available stock so circulating loans are reflected
+            input.value = String(computedCurrent);
+            localStorage.setItem("stock_" + itemName, String(computedCurrent));
+
+            // render stock indicators
+            updateStockDisplay(input);
+          }
+        });
+      }
+
+      // Compute how many units of an item are currently borrowed (active loans)
+      function computeActiveLoansForItem(itemKey) {
+        if (!itemKey) return 0;
+        const queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        let sum = 0;
+        const norm = (s) => (s || "").toString().trim().toLowerCase();
+
+        queue.forEach((req) => {
+          if (
+            req &&
+            req.status &&
+            String(req.status).toLowerCase() === "borrowed" &&
+            Array.isArray(req.items)
+          ) {
+            req.items.forEach((it) => {
+              if (!it) return;
+              // preferred: exact itemKey match
+              if (it.itemKey && String(it.itemKey) === String(itemKey)) {
+                sum += parseInt(it.quantity, 10) || 0;
+                return;
+              }
+
+              // fallback: match by normalized name (e.g., 'Capacitor' -> 'capacitor')
+              const nameMatch = norm(it.name) === norm(itemKey);
+              if (nameMatch) {
+                sum += parseInt(it.quantity, 10) || 0;
+                return;
+              }
+            });
+          }
+        });
+        return sum;
+      }
+
+      // Update or create footer showing original and current inline below the card
+      function updateStockDisplay(input) {
+        const itemName = input.getAttribute("data-item");
+        if (!itemName) return;
+        const current =
+          localStorage.getItem("stock_" + itemName) || input.value;
+        const original =
+          localStorage.getItem("stock_original_" + itemName) ||
+          input.defaultValue ||
+          input.value;
+
+        const card = input.closest(".inventory-card");
+
+        // Footer container (below card)
+        let footer = card.querySelector(".stock-footer");
+        if (!footer) {
+          footer = document.createElement("div");
+          footer.className = "stock-footer";
+          card.appendChild(footer);
+        }
+
+        footer.innerHTML = `
+        <div class="stock-header">
+          <div class="stock-current-btm">Current: <strong>${current}</strong></div>
+          <div class="stock-original editable" title="Click to edit original stock (confirmation required)">
+            <span class="original-label">Original: ${original}</span>
+            <span class="edit-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>
+          </div>
+        </div>`;
+
+        // Item details (type/use/description) and cabinet info
+        const datasetType =
+          card && card.dataset && card.dataset.type ? card.dataset.type : "";
+        const datasetUse =
+          card && card.dataset && card.dataset.use ? card.dataset.use : "";
+        const datasetDesc =
+          card && card.dataset && card.dataset.description
+            ? card.dataset.description
+            : "";
+        const detailsKey = "item_details_" + itemName;
+        const detailsSaved = JSON.parse(
+          localStorage.getItem(detailsKey) || "{}",
+        );
+        const itemType = detailsSaved.type || datasetType || "";
+        const itemUse = detailsSaved.use || datasetUse || "";
+        const itemDesc = detailsSaved.description || datasetDesc || "";
+
+        const datasetCab =
+          card && card.dataset && card.dataset.cabinet
+            ? card.dataset.cabinet
+            : "";
+        const cabinetSaved =
+          localStorage.getItem("cabinet_" + itemName) || datasetCab || "";
+        const cabinetOriginal =
+          localStorage.getItem("cabinet_original_" + itemName) ||
+          cabinetSaved ||
+          datasetCab ||
+          "";
+
+        // Insert details display into the details area so it appears above the stock control
+        const detailsEl = card.querySelector(".inventory-details");
+        const detailsHtml = `
+        <div class="details-row">
+          <div class="item-type">Type: ${itemType || "—"}</div>
+          <div class="item-use">Use: ${itemUse || "—"}</div>
+          <div class="item-desc">${itemDesc ? "Description: " + (itemDesc.length > 100 ? itemDesc.slice(0, 100) + "…" : itemDesc) : "Description: —"}</div>
+        </div>`;
+
+        // Cabinet is edited via the Edit Details modal, not inline on cards
+
+        if (detailsEl) {
+          // remove any existing details row to avoid duplicates
+          const existingDetails = detailsEl.querySelector(".details-row");
+          if (existingDetails) existingDetails.remove();
+          const existingCab = detailsEl.querySelector(".cabinet-row");
+          if (existingCab) existingCab.remove();
+          const stockControl = detailsEl.querySelector(".stock-control");
+          if (stockControl) {
+            stockControl.insertAdjacentHTML("beforebegin", detailsHtml);
+          } else {
+            detailsEl.insertAdjacentHTML("beforeend", detailsHtml);
+          }
+        } else {
+          // fallback: ensure only one details row in footer
+          const existingDetailsFooter = footer.querySelector(".details-row");
+          if (existingDetailsFooter) existingDetailsFooter.remove();
+          const existingCabFooter = footer.querySelector(".cabinet-row");
+          if (existingCabFooter) existingCabFooter.remove();
+          footer.insertAdjacentHTML("beforeend", detailsHtml);
+        }
+
+        const origEl = footer.querySelector(".stock-original.editable");
+        if (origEl) {
+          origEl.onclick = function (e) {
+            e.stopPropagation();
+            showConfirm(
+              "Edit Original Stock",
+              `Unlock editing the original stock for "${itemName}"? This is a permanent change.`,
+              function () {
+                enableOriginalEdit(itemName, footer);
+              },
+            );
+          };
+        }
+      }
+
+      function enableOriginalEdit(itemName, container) {
+        // container is the footer element; find the related stock input inside the card
+        const card = container.closest(".inventory-card");
+        const stockInput = card ? card.querySelector(".stock-input") : null;
+        if (!stockInput) return;
+        const originalKey = "stock_original_" + itemName;
+        const origValue = localStorage.getItem(originalKey) || stockInput.value;
+
+        container.innerHTML = `
+        <input type="number" class="original-edit-input" value="${origValue}" min="0">
+        <div class="original-edit-actions">
+          <button class="primary-btn original-save">Save</button>
+          <button class="secondary-btn original-cancel">Cancel</button>
+        </div>`;
+
+        const inputEl = container.querySelector(".original-edit-input");
+        container.querySelector(".original-save").onclick = function () {
+          const v = inputEl.value;
+          if (v === "" || isNaN(parseInt(v))) {
+            showNotification("Please enter a valid number", "error");
+            return;
+          }
+          const newVal = String(parseInt(v));
+
+          // Try to persist to backend using set_stock action
+          (async function () {
+            let backendSucceeded = false;
+            try {
+              const card = stockInput.closest(".inventory-card");
+              const itemId = card ? card.getAttribute("data-id") : null;
+              if (itemId) {
+                const urls = [
+                  "/api/inventory/" + itemId + "/set_stock/",
+                  "http://127.0.0.1:8000/api/inventory/" +
+                    itemId +
+                    "/set_stock/",
+                ];
+                for (let u of urls) {
+                  try {
+                    const resp = await fetch(u, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ stock: parseInt(newVal) }),
+                    });
+                    if (resp && resp.ok) {
+                      backendSucceeded = true;
+                      break;
+                    }
+                  } catch (e) {}
+                }
+              } else {
+                const urls = [
+                  "/api/inventory/set_stock_by_key/",
+                  "http://127.0.0.1:8000/api/inventory/set_stock_by_key/",
+                ];
+                for (let u of urls) {
+                  try {
+                    const resp = await fetch(u, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        item_key: itemName,
+                        stock: parseInt(newVal),
+                      }),
+                    });
+                    if (resp && resp.ok) {
+                      backendSucceeded = true;
+                      break;
+                    }
+                  } catch (e) {}
+                }
+              }
+            } catch (e) {}
+
+            // Persist locally regardless so UI stays in sync
+            localStorage.setItem(originalKey, newVal);
+            if (backendSucceeded) {
+              showNotification("Original stock updated on server", "approved");
+            } else {
+              showNotification(
+                "Original stock updated locally (offline fallback)",
+                "warning",
+              );
+            }
+            // refresh display using the hidden stock input
+            updateStockDisplay(stockInput);
+          })();
+        };
+        container.querySelector(".original-cancel").onclick = function () {
+          updateStockDisplay(stockInput);
+          showNotification("Edit cancelled", "warning");
+        };
+      }
+
+      function enableCabinetEdit(itemName, container) {
+        const card = container.closest(".inventory-card");
+        const stockInput = card ? card.querySelector(".stock-input") : null;
+        if (!stockInput) return;
+
+        const cabinetKey = "cabinet_original_" + itemName;
+        const currentCab =
+          localStorage.getItem(cabinetKey) ||
+          localStorage.getItem("cabinet_" + itemName) ||
+          "";
+
+        // Use compact inline controls so editing stays on a single line
+        container.innerHTML = `
+        <input type="text" class="cabinet-edit-input" value="${currentCab}" placeholder="Cabinet #">
+        <div class="cabinet-edit-actions">
+          <button class="small primary-btn cabinet-save">Save</button>
+          <button class="small secondary-btn cabinet-cancel">Cancel</button>
+        </div>`;
+
+        const inputEl = container.querySelector(".cabinet-edit-input");
+        container.querySelector(".cabinet-save").onclick = function () {
+          const v = inputEl.value.trim();
+          // allow empty as valid (clearing)
+          localStorage.setItem(cabinetKey, v);
+          localStorage.setItem("cabinet_" + itemName, v);
+          showNotification("Cabinet updated", "success");
+          // refresh display
+          if (stockInput) updateStockDisplay(stockInput);
+        };
+
+        container.querySelector(".cabinet-cancel").onclick = function () {
+          if (stockInput) updateStockDisplay(stockInput);
+          showNotification("Edit cancelled", "warning");
+        };
+      }
+
+      // --------------------------
+      // Cabinet location persistence
+      // --------------------------
+      function loadCabinetFromMemory() {
+        // initialize cabinet values. Prefer saved localStorage; fall back to data-cabinet attribute
+        document.querySelectorAll(".inventory-card").forEach((card) => {
+          const stockInput = card.querySelector(".stock-input");
+          if (!stockInput) return;
+          const itemName = stockInput.getAttribute("data-item");
+          const dataCab =
+            card && card.dataset && card.dataset.cabinet
+              ? card.dataset.cabinet
+              : "";
+          const savedCab = localStorage.getItem("cabinet_" + itemName) || "";
+
+          // If there's a saved cabinet, ensure an _original key exists
+          if (
+            savedCab &&
+            !localStorage.getItem("cabinet_original_" + itemName)
+          ) {
+            localStorage.setItem("cabinet_original_" + itemName, savedCab);
+          }
+
+          // If nothing saved but a static data-cabinet exists on the card, initialize storage
+          if (!savedCab && dataCab) {
+            localStorage.setItem("cabinet_" + itemName, dataCab);
+            if (!localStorage.getItem("cabinet_original_" + itemName)) {
+              localStorage.setItem("cabinet_original_" + itemName, dataCab);
+            }
+          }
+        });
+      }
+
+      document.querySelectorAll(".category-button").forEach((button) => {
+        button.onclick = () => {
+          document
+            .querySelectorAll(".category-button")
+            .forEach((btn) => btn.classList.remove("active"));
+          button.classList.add("active");
+
+          const filter = button.getAttribute("data-filter");
+          document.querySelectorAll(".inventory-card").forEach((card) => {
+            if (
+              filter === "all" ||
+              card.getAttribute("data-category") === filter
+            ) {
+              card.style.display = "flex"; // Use flex to keep layout
+            } else {
+              card.style.display = "none";
+            }
+          });
+        };
+      });
+
+      // Close handlers: keep generic closers, but avoid overriding global button handlers
+      document
+        .querySelectorAll(".close-btn, .close-details-btn")
+        .forEach((btn) => {
+          btn.onclick = function () {
+            const parent = this.closest(".Borrowing-Details-modal");
+            if (parent) parent.style.display = "none";
+          };
+        });
+
+      // Secondary buttons that are specifically inside the Borrowing Details modal
+      document
+        .querySelectorAll(".Borrowing-Details-modal .secondary-btn")
+        .forEach((btn) => {
+          btn.onclick = function () {
+            const parent = this.closest(".Borrowing-Details-modal");
+            if (parent) parent.style.display = "none";
+          };
+        });
+
+      function loadBorrowRequests() {
+        const queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const container = document.getElementById("approvalsContainer");
+        const selectAllEl = document.getElementById("selectAllChecks");
+        if (selectAllEl) selectAllEl.checked = false;
+
+        if (!container) return;
+        container.innerHTML = "";
+
+        const pendingRequests = queue.filter(
+          (req) => req.status === "pending" && req.items.length > 0,
+        );
+
+        if (pendingRequests.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><path d="M8 15h8M9 9h.01M15 9h.01"></path></svg><p>No pending requests</p></div>';
+          return;
+        }
+
+        pendingRequests.forEach((request) => {
+          let requestBlock = document.createElement("div");
+          requestBlock.className = "request-card";
+
+          const itemsHtml = request.items
+            .map(
+              (item, itemIndex) => `
+                <div class="request-item">
+                  <input type="checkbox" class="single-item-check" name="adminSelection"
+                       data-req-id="${request.id}" 
+                       data-item-index="${itemIndex}" 
+                       data-item-name="${item.name}">
+                    
+                    <img src="${item.image || "default.png"}" class="request-item-img" alt="${item.name}">
+                    
+                    <div class="request-item-info">
+                        <span class="request-item-name">${item.name}</span>
+                        <span class="request-item-qty">Requested: ${item.quantity}</span>
+                    </div>
+
+                    <div class="action-qty-group">
+                        <label>Qty:</label>
+                        <input type="number" id="qty-action-${request.id}-${itemIndex}" 
+                               value="${item.quantity}" min="1" max="${item.quantity}" 
+                               class="action-qty-input">
+                    </div>
+                </div>`,
+            )
+            .join("");
+
+          requestBlock.innerHTML = `
+              <div class="request-card-header">
+                <div class="borrower-info">
+                  <div class="borrower-avatar">${(request.studentName || "U").charAt(0).toUpperCase()}</div>
+                  <div>
+                    <span class="borrower-name">${request.studentName}</span>
+                    <span class="borrower-id">${request.studentID}</span>
+                  </div>
+                </div>
+                <div class="request-header-right">
+                  <div class="request-dates">
+                    <span>Borrow: ${request.borrowDate || "N/A"}</span>
+                    <span>Return: ${request.returnDate || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="select-all-row">
+                <label class="request-select-inline select-all-below">
+                  <input type="checkbox" class="request-select-all" data-req-id="${request.id}" onchange="toggleRequestSelect(this)"> Select all items
+                </label>
+              </div>
+                <div class="request-items-list">
+                    ${itemsHtml}
+                </div>
+                <div class="request-card-footer">
+                    <span class="request-purpose">${request.purpose || "No purpose stated"}</span>
+                    <div class="request-actions">
+                        <button onclick="processSelectedItems('borrowed')" class="approve-btn">Approve Selected</button>
+                        <button onclick="processSelectedItems('rejected')" class="reject-btn">Reject Selected</button>
+                    </div>
+                </div>
+            `;
+
+          container.appendChild(requestBlock);
+        });
+        // setup checkbox sync after DOM added
+        setupRequestCheckboxSync();
+      }
+
+      function toggleRequestSelect(master) {
+        const reqId =
+          master && master.getAttribute
+            ? master.getAttribute("data-req-id")
+            : null;
+        if (!reqId) return;
+        const boxes = document.querySelectorAll(
+          `.single-item-check[data-req-id="${reqId}"]`,
+        );
+        boxes.forEach((cb) => (cb.checked = !!master.checked));
+      }
+
+      function setupRequestCheckboxSync() {
+        // attach change handlers to item checkboxes so master reflects state
+        document.querySelectorAll(".single-item-check").forEach((cb) => {
+          cb.onchange = function () {
+            const reqId = this.getAttribute("data-req-id");
+            if (!reqId) return;
+            const all = Array.from(
+              document.querySelectorAll(
+                `.single-item-check[data-req-id="${reqId}"]`,
+              ),
+            );
+            const master = document.querySelector(
+              `.request-select-all[data-req-id="${reqId}"]`,
+            );
+            if (master)
+              master.checked = all.length > 0 && all.every((x) => x.checked);
+          };
+        });
+
+        // initialize master checkboxes state
+        document.querySelectorAll(".request-select-all").forEach((master) => {
+          const reqId = master.getAttribute("data-req-id");
+          const all = Array.from(
+            document.querySelectorAll(
+              `.single-item-check[data-req-id="${reqId}"]`,
+            ),
+          );
+          master.checked = all.length > 0 && all.every((x) => x.checked);
+        });
+      }
+
+      function onlyOne(checkbox) {
+        const checkboxes = document.getElementsByName("adminSelection");
+        checkboxes.forEach((item) => {
+          if (item !== checkbox) item.checked = false;
+        });
+        if (!checkbox.checked) checkbox.checked = true;
+      }
+
+      function toggleSelectAll(master) {}
+
+      // New unified function to process selected items with confirmation
+      function processSelectedItems(newStatus) {
+        const selectedBoxes = Array.from(
+          document.querySelectorAll(".single-item-check:checked"),
+        );
+        if (selectedBoxes.length === 0) {
+          showNotification(
+            "Please select at least one item to process.",
+            "warning",
+          );
+          return;
+        }
+
+        const actionVerb = newStatus === "borrowed" ? "Approve" : "Reject";
+        const actionVerbLower = actionVerb.toLowerCase();
+
+        // Show confirmation modal
+        showConfirm(
+          `${actionVerb} Items`,
+          `Are you sure you want to ${actionVerbLower} ${selectedBoxes.length} selected item(s)?`,
+          function () {
+            // Execute the actual processing
+            executeBulkProcess(newStatus, selectedBoxes);
+          },
+        );
+      }
+
+      // Generate a short loan id (keeps IDs compact while reasonably unique)
+      function generateLoanId() {
+        return "L" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      }
+
+      function executeBulkProcess(newStatus, selectedBoxes) {
+        let queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+
+        // Group actions by request id
+        const actionsByRequest = {};
+        selectedBoxes.forEach((cb) => {
+          const reqId = cb.getAttribute("data-req-id");
+          const itemIndex = parseInt(cb.getAttribute("data-item-index"));
+          const qtyInput = document.getElementById(
+            `qty-action-${reqId}-${itemIndex}`,
+          );
+          const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value) || 0) : 1;
+          if (!actionsByRequest[reqId]) actionsByRequest[reqId] = [];
+          actionsByRequest[reqId].push({
+            itemIndex,
+            qty,
+            itemName: cb.getAttribute("data-item-name"),
+          });
+        });
+
+        Object.keys(actionsByRequest).forEach((reqId) => {
+          const requestIdx = queue.findIndex(
+            (r) => String(r.id) === String(reqId),
+          );
+          if (requestIdx === -1) return;
+
+          const originalRequest = queue[requestIdx];
+          const borrowerNameOrEmail =
+            originalRequest.studentName || originalRequest.email || reqId;
+          // process highest index first to avoid splice shifting
+          const itemsActions = actionsByRequest[reqId].sort(
+            (a, b) => b.itemIndex - a.itemIndex,
+          );
+
+          // Aggregate per-request items for a single email
+          const aggregatedItems = [];
+
+          itemsActions.forEach((action) => {
+            const selectedItem = originalRequest.items[action.itemIndex];
+            if (!selectedItem) return;
+
+            const actionQty = Math.min(action.qty, selectedItem.quantity);
+            if (actionQty <= 0) return;
+
+            const itemName = selectedItem.name || action.itemName || "item";
+
+            // Track for aggregated email
+            aggregatedItems.push({ name: itemName, qty: actionQty });
+
+            if (newStatus === "borrowed") {
+              const approvedItem = { ...selectedItem, quantity: actionQty };
+              const approvedEntry = {
+                ...originalRequest,
+                id: generateLoanId(),
+                items: [approvedItem],
+                status: "borrowed",
+              };
+              queue.push(approvedEntry);
+            } else if (newStatus === "rejected") {
+              const stockKey =
+                "stock_" + (selectedItem.itemKey || selectedItem.name);
+              let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
+              localStorage.setItem(stockKey, currentStock + actionQty);
+            }
+
+            selectedItem.quantity -= actionQty;
+            if (selectedItem.quantity <= 0) {
+              originalRequest.items.splice(action.itemIndex, 1);
+            }
+          });
+
+          if (originalRequest.items.length === 0) {
+            queue.splice(requestIdx, 1);
+          }
+
+          // Send one email per request summarizing all items processed
+          if (aggregatedItems.length > 0) {
+            const itemsHtml = aggregatedItems
+              .map((i) => `<li>${i.qty}× ${i.name}</li>`)
+              .join("");
+            const templateParams = {
+              subject: `PhyLab: Request ${newStatus === "borrowed" ? "Approved" : "Rejected"} - ${borrowerNameOrEmail}`,
+              to_email: originalRequest.email,
+              to_name: originalRequest.studentName || originalRequest.email,
+              student_name: originalRequest.studentName || "",
+              status: newStatus === "borrowed" ? "Approved" : "Rejected",
+              item_details: aggregatedItems
+                .map((i) => `${i.qty}× ${i.name}`)
+                .join(", "),
+              item_name: "",
+              return_date: originalRequest.returnDate || "",
+              message_html: `<p>Hi ${originalRequest.studentName || originalRequest.email},</p><p>The following items from your request were <strong>${newStatus === "borrowed" ? "approved" : "rejected"}</strong>:</p><ul>${itemsHtml}</ul><p>${newStatus === "borrowed" ? "Please collect the items from the lab." : "No further action is required."}</p><p>Regards,<br/>PhyLab Team</p>`,
+              logo_url: `${window.location.origin}/Phylab.png`,
+              company_url: window.location.origin,
+              company_email: "support@" + window.location.hostname,
+            };
+
+            if (window.emailjs && typeof emailjs.send === "function") {
+              safeSendEmail(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_SHARED_TEMPLATE,
+                templateParams,
+              )
+                .then(() =>
+                  console.log("Summary email sent to", templateParams.to_email),
+                )
+                .catch((err) => {
+                  console.error("Summary email error", err);
+                  showNotification(
+                    `Status updated but failed to send email to ${templateParams.to_email || originalRequest.email}.`,
+                    "warning",
+                  );
+                });
+            }
+
+            // Per-request confirmation notification
+            const singleStatusText =
+              newStatus === "borrowed" ? "Approved" : "Rejected";
+            showNotification(
+              `${singleStatusText} request for ${borrowerNameOrEmail}.`,
+              newStatus === "borrowed" ? "approved" : "rejected",
+            );
+          }
+        });
+
+        localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+        loadBorrowRequests();
+        if (typeof loadReturnWindow === "function") loadReturnWindow();
+        loadStockFromMemory();
+        loadDashboardStats();
+
+        // Show summary notification with appropriate type indicator
+        const statusText = newStatus === "borrowed" ? "approved" : "rejected";
+        const notificationType =
+          newStatus === "borrowed" ? "approved" : "rejected";
+        showNotification(
+          `Successfully ${statusText} ${selectedBoxes.length} item(s).`,
+          notificationType,
+        );
+      }
+
+      // Keep old function for backwards compatibility but redirect to new one
+      function processBulkAction(newStatus) {
+        processSelectedItems(newStatus);
+      }
+
+      function processSingleItem(newStatus) {
+        const selected = document.querySelector(".single-item-check:checked");
+        if (!selected) {
+          showNotification(
+            "Please select at least one item to process.",
+            "warning",
+          );
+          return;
+        }
+
+        const requestId = selected.getAttribute("data-req-id");
+        const itemIndex = parseInt(selected.getAttribute("data-item-index"));
+        const itemName = selected.getAttribute("data-item-name");
+
+        const actionInput = document.getElementById(
+          `qty-action-${requestId}-${itemIndex}`,
+        );
+        const actionQty = parseInt(actionInput.value);
+
+        if (actionQty <= 0) {
+          showNotification("Quantity must be at least 1", "error");
+          return;
+        }
+
+        let queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const requestIdx = queue.findIndex(
+          (r) => String(r.id) === String(requestId),
+        );
+
+        if (requestIdx !== -1) {
+          const originalRequest = queue[requestIdx];
+          const selectedItem = originalRequest.items[itemIndex];
+
+          if (actionQty > selectedItem.quantity) {
+            showNotification(
+              `Cannot ${newStatus} more than the requested quantity (${selectedItem.quantity}).`,
+              "error",
+            );
+            return;
+          }
+
+          if (newStatus === "borrowed") {
+            const approvedItem = { ...selectedItem, quantity: actionQty };
+
+            const approvedEntry = {
+              ...originalRequest,
+              id: generateLoanId(),
+              items: [approvedItem],
+              status: "borrowed",
+            };
+            queue.push(approvedEntry);
+          } else if (newStatus === "rejected") {
+            const stockKey =
+              "stock_" + (selectedItem.itemKey || selectedItem.name);
+            let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
+
+            localStorage.setItem(stockKey, currentStock + actionQty);
+          }
+
+          selectedItem.quantity -= actionQty;
+
+          if (selectedItem.quantity <= 0) {
+            originalRequest.items.splice(itemIndex, 1);
+          }
+
+          if (originalRequest.items.length === 0) {
+            queue.splice(requestIdx, 1);
+          }
+
+          localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
+
+          loadBorrowRequests();
+          if (typeof loadReturnWindow === "function") loadReturnWindow();
+
+          loadStockFromMemory();
+          loadDashboardStats();
+
+          const statusText =
+            newStatus === "borrowed"
+              ? "Approved"
+              : newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+
+          // Build payload for unified EmailJS template (borrower notification)
+          const templateParams = {
+            // Required fields
+            subject: `PhyLab: Request ${statusText} - ${itemName}`,
+            to_email: originalRequest.email,
+            to_name: originalRequest.studentName || originalRequest.email,
+
+            // Optional conditional fields (template uses {{#field}}...{{/field}})
+            student_name: originalRequest.studentName || "",
+            status: statusText,
+            item_details: `${itemName} (Qty: ${actionQty})`,
+            item_name: "", // leave empty so item_details shows instead
+            return_date: originalRequest.returnDate || "",
+
+            // HTML message body (triple-brace unescaped in template)
+            message_html: `<p>Hi ${originalRequest.studentName || originalRequest.email},</p>
+                <p>Your request for <strong>${actionQty}× ${itemName}</strong> has been <strong>${statusText.toLowerCase()}</strong>.</p>
+                <p>${newStatus === "borrowed" ? "Please collect the item from the lab." : "No further action is required."}</p>
+                <p>Regards,<br/>PhyLab Team</p>`,
+
+            // Branding / footer fields
+            logo_url: `${window.location.origin}/Phylab.png`,
+            company_url: window.location.origin,
+            company_email: "support@" + window.location.hostname,
+          };
+
+          safeSendEmail(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_SHARED_TEMPLATE,
+            templateParams,
+          )
+            .then(() => {
+              showNotification(
+                `${actionQty}x ${itemName} ${newStatus === "borrowed" ? "approved" : "rejected"} successfully!`,
+                "success",
+              );
+            })
+            .catch((err) => {
+              console.error("EmailJS send error", err);
+              showNotification(
+                "Status updated but failed to send email notification.",
+                "warning",
+              );
+            });
+        }
+      }
+
+      function loadReturnWindow() {
+        const queue =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const container = document.getElementById("loansContainer");
+
+        if (!container) return;
+        container.innerHTML = "";
+
+        const activeLoans = queue.filter(
+          (req) => req.status && req.status.toLowerCase() === "borrowed",
+        );
+
+        if (activeLoans.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg><p>No active loans</p></div>';
+          return;
+        }
+
+        // Get remarks from localStorage
+        const remarks =
+          JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
+
+        activeLoans.forEach((request) => {
+          const hasRemark = remarks[request.id] || request.adminRemark;
+          const remarkBadgeHTML = hasRemark
+            ? `
+                <div class="remark-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    ${getRemarkTypeLabel(hasRemark.type) || "Has Remark"}
+                </div>`
+            : "";
+
+          request.items.forEach((item) => {
+            const itemHTML = `
+                    <div class="loan-card">
+                        <img class="loan-card-img" src="${item.image || "default.png"}" alt="${item.name}">
+                        <div class="loan-card-info">
+                            <h3 class="loan-item-name">${item.name}</h3>
+                            <div class="loan-qty">Qty: ${item.quantity}</div>
+                            <div class="loan-borrower">
+                                <span class="borrower-avatar-small">${(request.studentName || "U").charAt(0).toUpperCase()}</span>
+                                <span>${request.studentName || "N/A"}</span>
+                            </div>
+                            <div class="loan-due-date">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                Due: ${request.returnDate || "N/A"}
+                            </div>
+                            ${remarkBadgeHTML}
+                        </div>
+                        <div class="loan-card-actions">
+                            <button class="return-btn" onclick="completeReturn('${request.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Mark Returned
+                            </button>
+                            <button class="remark-btn" onclick="openRemarkModal('${request.id}', '${item.name}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                ${hasRemark ? "Edit" : "Remark"}
+                            </button>
+                            <button class="details-btn" onclick="openBorrowingDetails('${request.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                Details
+                            </button>
+                        </div>
+                    </div>`;
+            container.insertAdjacentHTML("beforeend", itemHTML);
+          });
+        });
+      }
+
+      function completeReturn(requestId) {
+        showConfirm(
+          "Confirm Return",
+          "Are you sure? This will restore the item to stock.",
+          function () {
+            let queue =
+              JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+            let history =
+              JSON.parse(localStorage.getItem("phyLab_History")) || [];
+
+            const itemIndex = queue.findIndex(
+              (req) => String(req.id) === String(requestId),
+            );
+
+            if (itemIndex !== -1) {
+              let itemToArchive = queue[itemIndex];
+
+              if (itemToArchive.items && itemToArchive.items.length > 0) {
+                const itemData = itemToArchive.items[0];
+                const stockKey = "stock_" + (itemData.itemKey || itemData.name);
+
+                const qtyToReturn = parseInt(itemData.quantity) || 1;
+
+                let currentStock =
+                  parseInt(localStorage.getItem(stockKey)) || 0;
+                localStorage.setItem(stockKey, currentStock + qtyToReturn);
+              }
+
+              itemToArchive.actualReturnDate = new Date().toLocaleString();
+              itemToArchive.status = "returned";
+
+              history.push(itemToArchive);
+              queue.splice(itemIndex, 1);
+
+              localStorage.setItem("phyLab_History", JSON.stringify(history));
+              localStorage.setItem(
+                "phyLab_RequestQueue",
+                JSON.stringify(queue),
+              );
+
+              showNotification(
+                "Item returned and archived successfully.",
+                "success",
+              );
+              loadReturnWindow();
+              loadStockFromMemory();
+              loadDashboardStats();
+              initLiveChart();
+            } else {
+              showNotification("Transaction not found.", "error");
+            }
+          },
+        );
+      }
+
+      function openBorrowingDetails(requestId) {
+        const allRequests =
+          JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+        const history =
+          JSON.parse(localStorage.getItem("phyLab_History")) || [];
+        const request = [...allRequests, ...history].find(
+          (r) => String(r.id) === String(requestId),
+        );
+
+        if (!request) {
+          showNotification("Details not found.", "error");
+          return;
+        }
+
+        const item =
+          request.items && request.items.length > 0 ? request.items[0] : {};
+
+        document.getElementById("det-item-name").innerText = item.name || "N/A";
+        document.getElementById("det-item-img").src =
+          item.image || "default.png";
+        document.getElementById("det-description").innerText =
+          item.description || "Physics Lab Equipment";
+        document.getElementById("det-inv-id").innerText = request.id;
+        document.getElementById("det-condition").innerText = "Good";
+
+        document.getElementById("det-borrower-name").innerText =
+          request.studentName || "N/A";
+        document.getElementById("det-borrower-id").innerText =
+          "ID: " + (request.studentID || "N/A");
+        document.getElementById("det-teacher").innerText =
+          request.teacherName || "N/A";
+        document.getElementById("det-email").innerText = request.email || "N/A";
+
+        document.getElementById("det-borrow-date").innerText =
+          request.borrowDate || "N/A";
+        document.getElementById("det-return-date").innerText =
+          request.returnDate || "N/A";
+        document.getElementById("det-purpose").innerText =
+          request.purpose || "No purpose stated.";
+
+        const statusEl = document.getElementById("det-status");
+        statusEl.innerText = (request.status || "Borrowed").toUpperCase();
+        statusEl.className = `status-tag ${request.status}`;
+
+        // Show admin remark if exists
+        const remarks =
+          JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
+        const remark = remarks[requestId] || request.adminRemark;
+        const remarkSection = document.getElementById("det-remark-section");
+
+        if (remark && (remark.type || remark.text)) {
+          remarkSection.style.display = "block";
+          document.getElementById("det-remark-type").textContent =
+            getRemarkTypeLabel(remark.type) || "";
+          document.getElementById("det-remark-text").textContent =
+            remark.text || "No description provided.";
+
+          const remarkDate = remark.createdAt
+            ? new Date(remark.createdAt).toLocaleString()
+            : "";
+          document.getElementById("det-remark-meta").textContent = remarkDate
+            ? `Added: ${remarkDate}`
+            : "";
+        } else {
+          remarkSection.style.display = "none";
+        }
+
+        document.getElementById("Borrowing-Details-window").style.display =
+          "flex";
+      }
+
+      document.getElementById("sendReminderBtn").onclick = function () {
+        const btn = this;
+        const borrowerEmail = document.getElementById("det-email").innerText;
+
+        if (borrowerEmail === "---" || !borrowerEmail.includes("@")) {
+          showNotification("No valid email address found.", "error");
+          return;
+        }
+
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+
+        // Build payload for unified EmailJS template (reminder notification)
+        const itemName = document.getElementById("det-item-name").innerText;
+        const borrowerName =
+          document.getElementById("det-borrower-name").innerText;
+        const returnDate = document.getElementById("det-return-date").innerText;
+
+        const templateParams = {
+          // Required fields
+          subject: `Reminder: Return ${itemName}`,
+          to_email: borrowerEmail,
+          to_name: borrowerName,
+
+          // Optional conditional fields (template uses {{#field}}...{{/field}})
+          student_name: borrowerName,
+          status: "", // no status for reminders
+          item_details: "", // leave empty so item_name shows instead
+          item_name: itemName,
+          return_date: returnDate,
+
+          // HTML message body (triple-brace unescaped in template)
+          message_html: `<p>Hi ${borrowerName},</p>
+          <p>This is a friendly reminder to return <strong>${itemName}</strong> by <strong>${returnDate}</strong>.</p>
+          <p>Please contact us if you need an extension.</p>
+          <p>Thanks,<br/>PhyLab Team</p>`,
+
+          // Branding / footer fields
+          logo_url: `${window.location.origin}/Phylab.png`,
+          company_url: window.location.origin,
+          company_email: "support@" + window.location.hostname,
+        };
+
+        safeSendEmail(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_SHARED_TEMPLATE,
+          templateParams,
+        )
+          .then(() =>
+            showNotification("Reminder sent successfully!", "success"),
+          )
+          .catch((err) => {
+            console.error("Reminder email error", err);
+            showNotification("Failed to send reminder.", "error");
+          })
+          .finally(() => {
+            btn.innerText = "Send Reminder";
+            btn.disabled = false;
+          });
+      };
+
+      function displayUserReviews() {
+        const container = document.getElementById("reviewsContainer");
+        if (!container) return;
+        const reviews =
+          JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
+        container.innerHTML = "";
+
+        if (reviews.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><p>No reviews yet</p></div>';
+          return;
+        }
+
+        const placeholder =
+          "data:image/svg+xml;utf8," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="#f3eaea"/><g fill="#c7bebe"><rect x="32" y="72" width="256" height="168" rx="12"/><circle cx="128" cy="156" r="40" fill="#fff"/></g></svg>',
+          );
+
+        const revs = reviews.slice().reverse();
+        let html = "";
+        revs.forEach((rev, i) => {
+          const imgSrc =
+            rev.itemImage && rev.itemImage.trim() ? rev.itemImage : placeholder;
+          // compute original index in the stored reviews array since we reversed for display
+          const originalIndex = reviews.length - 1 - i;
+          html += `
+        <div class="review-card">
+          <img class="review-card-img" src="${imgSrc}" alt="${rev.itemName || ""}">
+          <div class="review-card-content">
+            <h3 class="review-item-name">${rev.itemName || "Unnamed Item"}</h3>
+            <div class="review-meta">
+              <span class="review-user">${rev.userName || "Anonymous"}</span>
+              <span class="review-date">${rev.timestamp || ""}</span>
+            </div>
+            <p class="review-comment">"${rev.comment && rev.comment.trim() ? rev.comment : "No comment"}"</p>
+          </div>
+          <div class="review-card-actions">
+            <button onclick="resolveReview(${originalIndex})" class="resolve-review-btn" aria-label="Resolve review">Resolve</button>
+          </div>
+        </div>
+        `;
+        });
+
+        container.innerHTML = html;
+
+        // make images clickable to open larger view
+        container.querySelectorAll(".review-card-img").forEach((img) => {
+          img.style.cursor = "pointer";
+          img.addEventListener("click", () =>
+            openReviewImage(img.src, img.alt),
+          );
+        });
+
+        // show a brief notification with count
+        if (typeof showNotification === "function")
+          showNotification(`${reviews.length} review(s) loaded`, "success");
+      }
+
+      function resolveReview(index) {
+        let reviews =
+          JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
+
+        showConfirm(
+          "Resolve Review",
+          "Mark this review as resolved?",
+          function () {
+            reviews.splice(index, 1);
+            localStorage.setItem("phyLab_UserReviews", JSON.stringify(reviews));
+            displayUserReviews();
+            showNotification("Review resolved.", "success");
+          },
+        );
+      }
+
+      // Image lightbox handlers
+      function openReviewImage(src, alt) {
+        const modal = document.getElementById("reviewImageModal");
+        const img = document.getElementById("reviewImageView");
+        const cap = document.getElementById("reviewImageCaption");
+        img.src = src || "";
+        img.alt = alt || "";
+        cap.textContent = alt || "";
+        modal.style.display = "flex";
+      }
+
+      function closeReviewImage() {
+        const modal = document.getElementById("reviewImageModal");
+        const img = document.getElementById("reviewImageView");
+        modal.style.display = "none";
+        img.src = "";
+      }
+
+      let myLiveChart = null;
+      function initLiveChart() {
+        const history =
+          JSON.parse(localStorage.getItem("phyLab_History")) || [];
+        const counts = {};
+
+        history.forEach((req) => {
+          if (req.items) {
+            req.items.forEach((item) => {
+              const qty = parseInt(item.quantity) || 1;
+              counts[item.name] = (counts[item.name] || 0) + qty;
+            });
+          }
+        });
+
+        const sorted = Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+        const labels = sorted.map((i) => i[0]);
+        const data = sorted.map((i) => i[1]);
+
+        const ctx = document.getElementById("liveChart");
+        if (!ctx) return;
+
+        if (myLiveChart) myLiveChart.destroy();
+
+        const primaryColor = (
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--color-primary",
+          ) || "#1565C0"
+        ).trim();
+        myLiveChart = new Chart(ctx.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                data,
+                backgroundColor: primaryColor,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          },
+        });
+      }
+
+      function resetGraphData() {
+        showConfirm(
+          "Reset Graph",
+          "Reset graph history? Active loans remain unaffected.",
+          function () {
+            localStorage.removeItem("phyLab_History");
+            initLiveChart();
+            showNotification("Graph data reset.", "success");
+          },
+        );
+      }
+    </script>
+
+    <script>
+      (function () {
+        const input = document.getElementById("inventorySearch");
+        if (!input) return;
+        let timer = null;
+        input.addEventListener("input", () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const q = input.value.trim().toLowerCase();
+            const cards = document.querySelectorAll(".inventory-card");
+            if (!cards) return;
+            cards.forEach((card) => {
+              const nameEl = card.querySelector(".item-name");
+              const img = card.querySelector(".inventory-img");
+              const name = (
+                nameEl ? nameEl.textContent : (img ? img.alt : "") || ""
+              ).toLowerCase();
+              if (!q || name.includes(q)) card.style.display = "";
+              else card.style.display = "none";
+            });
+          }, 180);
+        });
+
+        // allow Enter to focus first visible card (small UX enhancement)
+        input.addEventListener("keyup", (e) => {
+          if (e.key === "Enter") {
+            const first = document.querySelector(
+              '.inventory-card:not([style*="display: none"])',
+            );
+            if (first)
+              first.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        const mobileToggle = document.getElementById("mobileMenuToggle");
+        const largeToggle = document.getElementById("sidebarToggleLarge");
+        const sidebar = document.querySelector(".admin-sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        const mqLarge = window.matchMedia("(min-width: 992px)");
+
+        function setInitialCollapsed() {
+          if (mqLarge.matches) {
+            sidebar.classList.add("collapsed");
+            sidebar.classList.remove("open");
+            overlay.classList.remove("active");
+          } else {
+            sidebar.classList.remove("collapsed");
+          }
+        }
+
+        // initial state
+        if (!sidebar) return;
+        setInitialCollapsed();
+
+        // respond to viewport changes
+        mqLarge.addEventListener
+          ? mqLarge.addEventListener("change", setInitialCollapsed)
+          : mqLarge.addListener(setInitialCollapsed);
+
+        if (mobileToggle && overlay) {
+          mobileToggle.addEventListener("click", () => {
+            // mobile behaviour: open/close overlay-sidebar
+            sidebar.classList.toggle("open");
+            overlay.classList.toggle("active");
+          });
+
+          overlay.addEventListener("click", () => {
+            sidebar.classList.remove("open");
+            overlay.classList.remove("active");
+          });
+
+          document.querySelectorAll(".sidebar-nav .nav-item").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              sidebar.classList.remove("open");
+              overlay.classList.remove("active");
+            });
+          });
+        }
+
+        if (largeToggle) {
+          largeToggle.addEventListener("click", () => {
+            // only toggle collapsed state on large screens
+            if (mqLarge.matches) {
+              sidebar.classList.toggle("collapsed");
+            } else {
+              // on small screens, open the overlay menu
+              sidebar.classList.toggle("open");
+              overlay.classList.toggle("active");
+            }
+          });
+        }
+      })();
+    </script>
     <script src="js/admin-borrow-requests.js"></script>
-    <script src="js/admin-active-loans.js"></script>
-    <script src="js/admin-reviews.js"></script>
-    <script src="js/admin-remarks.js"></script>
-    <script src="js/admin-inventory.js"></script>
   </body>
 </html>

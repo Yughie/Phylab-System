@@ -1402,7 +1402,10 @@
           if (itemId) {
             const urls = [
               "/api/inventory/" + itemId + "/set_stock/",
-              "http://127.0.0.1:8000/api/inventory/" + itemId + "/set_stock/",
+              (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+                "/api/inventory/" +
+                itemId +
+                "/set_stock/",
             ];
             for (let u of urls) {
               try {
@@ -1423,7 +1426,8 @@
             // fallback: call set_stock_by_key endpoint using itemKey
             const urls = [
               "/api/inventory/set_stock_by_key/",
-              "http://127.0.0.1:8000/api/inventory/set_stock_by_key/",
+              (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+                "/api/inventory/set_stock_by_key/",
             ];
             for (let u of urls) {
               try {
@@ -1666,7 +1670,8 @@
               if (itemId) {
                 const urls = [
                   "/api/inventory/" + itemId + "/set_stock/",
-                  "http://127.0.0.1:8000/api/inventory/" +
+                  (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+                    "/api/inventory/" +
                     itemId +
                     "/set_stock/",
                 ];
@@ -1686,7 +1691,8 @@
               } else {
                 const urls = [
                   "/api/inventory/set_stock_by_key/",
-                  "http://127.0.0.1:8000/api/inventory/set_stock_by_key/",
+                  (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+                    "/api/inventory/set_stock_by_key/",
                 ];
                 for (let u of urls) {
                   try {
@@ -2888,6 +2894,7 @@
       })();
     </script>
 
+    <script src="js/config.js"></script>
     <script src="js/admin-utils.js"></script>
     <script src="js/admin-notifications.js"></script>
     <script src="js/admin-emailjs.js"></script>

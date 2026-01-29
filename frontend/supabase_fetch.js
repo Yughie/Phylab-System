@@ -15,9 +15,11 @@
       let resp = await fetch("/api/inventory/").catch(() => null);
       tried.push(window.location.origin + "/api/inventory/");
 
-      // If relative returned a 404 or failed, try an explicit local backend origin fallback
+      // If relative returned a 404 or failed, try an explicit backend origin fallback
       if (!resp || !resp.ok) {
-        const fallback = "http://127.0.0.1:8000/api/inventory/";
+        const fallback =
+          (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+          "/api/inventory/";
         tried.push(fallback);
         try {
           resp = await fetch(fallback);

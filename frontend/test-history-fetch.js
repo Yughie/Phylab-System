@@ -6,9 +6,11 @@ async function testHistoryFetch() {
 
   const urls = [
     "/api/borrow-requests/history/",
-    "http://127.0.0.1:8000/api/borrow-requests/history/",
+    (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+      "/api/borrow-requests/history/",
     "/api/borrow-requests/?status=returned",
-    "http://127.0.0.1:8000/api/borrow-requests/?status=returned",
+    (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+      "/api/borrow-requests/?status=returned",
   ];
 
   for (const url of urls) {

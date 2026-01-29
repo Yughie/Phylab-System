@@ -81,6 +81,21 @@ function updateBorrowButtonCount() {
 export function toggleModal(show) {
   const borrowModal = document.getElementById("borrowModal");
   const borrowToggleButton = document.getElementById("borrowToggleButton");
+  // If we're about to show the borrow modal, ensure history modal is closed
+  try {
+    if (show) {
+      const historyModal = document.getElementById("historyModal");
+      const detail = document.getElementById("historyDetailPane");
+      if (historyModal && historyModal.classList.contains("show")) {
+        historyModal.classList.remove("show");
+        historyModal.style.display = "none";
+        historyModal.setAttribute("aria-hidden", "true");
+      }
+      if (detail) detail.style.display = "none";
+    }
+  } catch (e) {
+    // ignore
+  }
 
   if (show) {
     borrowModal.classList.add("show");

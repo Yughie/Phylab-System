@@ -1429,7 +1429,7 @@
   border-radius: 14px; /* match borrow button */
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  z-index: 1100;
+  z-index: 1500; /* sit above modal-overlay so it's clickable while modal open */
   display: flex;
   align-items: center;
   gap: 10px; /* match borrow button spacing */

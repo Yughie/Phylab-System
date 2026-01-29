@@ -72,7 +72,12 @@
               and materials.
             </p>
             <div class="welcome-hero-features">
-              <div class="hero-feature" id="findEquipmentBtn">
+              <button
+                id="findEquipmentBtn"
+                class="hero-feature hero-action"
+                type="button"
+                aria-label="Find Equipment"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -84,8 +89,13 @@
                   />
                 </svg>
                 <span>Find Equipment</span>
-              </div>
-              <div class="hero-feature">
+              </button>
+              <button
+                id="borrowItemsBtn"
+                class="hero-feature hero-action"
+                type="button"
+                aria-label="Borrow Items"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -97,8 +107,13 @@
                   />
                 </svg>
                 <span>Borrow Items</span>
-              </div>
-              <div class="hero-feature">
+              </button>
+              <button
+                id="trackReturnsBtn"
+                class="hero-feature hero-action"
+                type="button"
+                aria-label="Track Returns"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -110,7 +125,7 @@
                   />
                 </svg>
                 <span>Track Returns</span>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -432,6 +447,27 @@
 
         function toggleModal(show) {
           if (!modal) return;
+          // If we are showing the history modal, close borrow modal first
+          try {
+            if (show === undefined) {
+              // toggling: determine target state
+              const willShow = !modal.classList.contains("show");
+              if (willShow) {
+                const borrowModal = document.getElementById("borrowModal");
+                if (borrowModal && borrowModal.classList.contains("show")) {
+                  borrowModal.classList.remove("show");
+                  borrowModal.style.display = "none";
+                }
+              }
+            } else if (show) {
+              const borrowModal = document.getElementById("borrowModal");
+              if (borrowModal && borrowModal.classList.contains("show")) {
+                borrowModal.classList.remove("show");
+                borrowModal.style.display = "none";
+              }
+            }
+          } catch (e) {}
+
           if (show === undefined) modal.classList.toggle("show");
           else if (show) modal.classList.add("show");
           else modal.classList.remove("show");
@@ -439,6 +475,15 @@
             "aria-hidden",
             modal.classList.contains("show") ? "false" : "true",
           );
+          // Ensure inline display is synchronized with the class (fixes conflicts
+          // where other code sets `style.display = 'none'` directly).
+          if (modal.classList.contains("show")) {
+            modal.style.display = "flex";
+            modal.setAttribute("aria-hidden", "false");
+          } else {
+            modal.style.display = "none";
+            modal.setAttribute("aria-hidden", "true");
+          }
           // hide detail pane when modal is closed
           const detail = document.getElementById("historyDetailPane");
           if (detail && !modal.classList.contains("show"))
@@ -460,6 +505,35 @@
         if (modal) {
           modal.addEventListener("click", function (e) {
             if (e.target === modal) toggleModal(false);
+          });
+        }
+
+        // Hero action buttons: find equipment, open borrow modal, open history
+        const findBtn = document.getElementById("findEquipmentBtn");
+        const borrowHeroBtn = document.getElementById("borrowItemsBtn");
+        const trackBtnHero = document.getElementById("trackReturnsBtn");
+
+        if (findBtn) {
+          findBtn.addEventListener("click", function () {
+            const inv = document.querySelector(".available-inventory");
+            if (inv) inv.scrollIntoView({ behavior: "smooth", block: "start" });
+            const search = document.getElementById("userInventorySearch");
+            if (search) setTimeout(() => search.focus(), 450);
+          });
+        }
+
+        if (borrowHeroBtn) {
+          borrowHeroBtn.addEventListener("click", function () {
+            try {
+              if (window.toggleModal) window.toggleModal(true);
+              else document.getElementById("borrowToggleButton")?.click();
+            } catch (e) {}
+          });
+        }
+
+        if (trackBtnHero) {
+          trackBtnHero.addEventListener("click", function () {
+            document.getElementById("historyToggleButton")?.click();
           });
         }
 
@@ -500,23 +574,6 @@
         setTimeout(positionHistoryButton, 50);
         window.addEventListener("resize", positionHistoryButton);
         window.addEventListener("scroll", positionHistoryButton, {
-
-        // 'Find Equipment' hero button should jump to inventory search
-        const findBtn = document.getElementById('findEquipmentBtn');
-        const inventorySearch = document.getElementById('userInventorySearch');
-        if (findBtn && inventorySearch) {
-          findBtn.style.cursor = 'pointer';
-          findBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            // ensure inventory is visible and scroll into view
-            try {
-              inventorySearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              inventorySearch.focus({ preventScroll: true });
-            } catch (err) {
-              inventorySearch.focus();
-            }
-          });
-        }
           passive: true,
         });
       });

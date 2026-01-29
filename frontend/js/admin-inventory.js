@@ -178,7 +178,9 @@ async function saveStock(inputElement) {
     if (itemId) {
       const urls = [
         `/api/inventory/${itemId}/set_stock/`,
-        `http://127.0.0.1:8000/api/inventory/${itemId}/set_stock/`,
+        (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+          ? window.PHYLAB_API(`/api/inventory/${itemId}/set_stock/`)
+          : `/api/inventory/${itemId}/set_stock/`,
       ];
 
       for (let u of urls) {
@@ -422,7 +424,9 @@ async function exportInventoryExcel() {
   try {
     const endpoints = [
       "/api/inventory/export_xlsx/",
-      "http://127.0.0.1:8000/api/inventory/export_xlsx/",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API('/api/inventory/export_xlsx/')
+        : '/api/inventory/export_xlsx/',
     ];
     let res = null;
     for (let u of endpoints) {

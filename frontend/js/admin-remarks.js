@@ -87,7 +87,9 @@ async function saveRemark() {
     }
 
     const urls = [
-      `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API(`/api/borrow-requests/${resolvedReqId}/update_item_statuses/`)
+        : `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
       `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
     ];
 
@@ -210,7 +212,9 @@ async function saveItemDetails() {
   if (itemId) {
     const urls = [
       `/api/inventory/${itemId}/`,
-      `http://127.0.0.1:8000/api/inventory/${itemId}/`,
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API(`/api/inventory/${itemId}/`)
+        : `/api/inventory/${itemId}/`,
     ];
 
     for (let u of urls) {

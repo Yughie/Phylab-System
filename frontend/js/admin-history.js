@@ -4,9 +4,13 @@ console.log("admin-history.js loaded");
 async function fetchHistoryFromBackend() {
   // Try a few possible backend endpoints (local first, then same-origin)
   const urls = [
-    "http://127.0.0.1:8000/api/borrow-requests/history/",
+    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+      ? window.PHYLAB_API('/api/borrow-requests/history/')
+      : '/api/borrow-requests/history/',
     "/api/borrow-requests/history/",
-    "http://127.0.0.1:8000/api/borrow-requests/?status=returned",
+    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+      ? window.PHYLAB_API('/api/borrow-requests/?status=returned')
+      : '/api/borrow-requests/?status=returned',
     "/api/borrow-requests/?status=returned",
   ];
 
@@ -494,7 +498,9 @@ async function testBackendConnection() {
 
   // Test 1: Check if backend is reachable
   const testUrls = [
-    "http://127.0.0.1:8000/api/borrow-requests/history/",
+    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+      ? window.PHYLAB_API('/api/borrow-requests/history/')
+      : '/api/borrow-requests/history/',
     "/api/borrow-requests/history/",
   ];
 

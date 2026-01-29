@@ -10,19 +10,29 @@ async function loadReturnWindow() {
   let activeLoans = [];
   let lastErrorBody = null;
   try {
-    // Prefer standard list endpoint filtered by status to avoid custom action routing issues
+    // Build candidate URLs using configured API base so production/local resolve reliably
     const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/?status=borrowed",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+        ? window.PHYLAB_API("/api/borrow-requests/?status=borrowed")
+        : "/api/borrow-requests/?status=borrowed",
       "/api/borrow-requests/?status=borrowed",
       // fallback to custom action if present
-      "http://127.0.0.1:8000/api/borrow-requests/currently_borrowed/",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+        ? window.PHYLAB_API("/api/borrow-requests/currently_borrowed/")
+        : "/api/borrow-requests/currently_borrowed/",
       "/api/borrow-requests/currently_borrowed/",
     ];
 
     let response = null;
+    // Prepare auth-aware fetch options
+    const token = sessionStorage.getItem("auth_token");
     for (const url of urls) {
       try {
-        response = await fetch(url, { mode: "cors" });
+        const options = { method: "GET", mode: "cors" };
+        if (token) options.headers = { Authorization: "Token " + token };
+        else options.credentials = "include";
+
+        response = await fetch(url, options);
         if (response.ok) break;
         // capture non-ok response body for debugging
         try {
@@ -201,7 +211,9 @@ async function completeReturn(requestId, itemId) {
 
         // Use update_item_statuses endpoint to mark specific item as returned
         const urls = [
-          `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+          (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+            ? window.PHYLAB_API(`/api/borrow-requests/${resolvedReqId}/update_item_statuses/`)
+            : `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
           `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
         ];
 
@@ -209,15 +221,20 @@ async function completeReturn(requestId, itemId) {
         console.log("completeReturn: sending payload:", payload);
 
         let response = null;
+        const token = sessionStorage.getItem("auth_token");
         for (const url of urls) {
           try {
             console.log("completeReturn: trying PATCH to", url);
-            response = await fetch(url, {
+            const options = {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
               mode: "cors",
-            });
+            };
+            if (token) options.headers.Authorization = "Token " + token;
+            else options.credentials = "include";
+
+            response = await fetch(url, options);
             console.log("completeReturn: response status:", response.status);
 
             if (response.ok) {
@@ -392,14 +409,21 @@ async function openBorrowingDetails(requestId) {
 
   try {
     const urls = [
+      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+        ? window.PHYLAB_API(`/api/borrow-requests/${requestId}/`)
+        : `/api/borrow-requests/${requestId}/`,
       `/api/borrow-requests/${requestId}/`,
-      `http://127.0.0.1:8000/api/borrow-requests/${requestId}/`,
     ];
 
     let response = null;
+    const token = sessionStorage.getItem("auth_token");
     for (const url of urls) {
       try {
-        response = await fetch(url, { mode: "cors" });
+        const options = { method: "GET", mode: "cors" };
+        if (token) options.headers = { Authorization: "Token " + token };
+        else options.credentials = "include";
+
+        response = await fetch(url, options);
         if (response.ok) break;
       } catch (e) {
         continue;

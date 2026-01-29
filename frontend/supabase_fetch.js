@@ -15,14 +15,19 @@
       let resp = await fetch("/api/inventory/").catch(() => null);
       tried.push(window.location.origin + "/api/inventory/");
 
-      // If relative returned a 404 or failed, try an explicit backend origin fallback
+      // If relative returned a 404 or failed, try configured backend base
       if (!resp || !resp.ok) {
         const fallback =
-          (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
-          "/api/inventory/";
+          (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+            ? window.PHYLAB_API("/api/inventory/")
+            : (window.PHYLAB_API_BASE || window.location.origin) + "/api/inventory/";
         tried.push(fallback);
         try {
-          resp = await fetch(fallback);
+          const token = sessionStorage.getItem("auth_token");
+          const options = { method: "GET", mode: "cors" };
+          if (token) options.headers = { Authorization: "Token " + token };
+          else options.credentials = "include";
+          resp = await fetch(fallback, options);
         } catch (e) {
           resp = null;
         }

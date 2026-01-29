@@ -1459,6 +1459,7 @@
           const payload = { email: idInput, password: passInput };
           const res = await fetch(window.PHYLAB_API("/api/login/"), {
             method: "POST",
+            mode: "cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
@@ -1505,13 +1506,34 @@
               window.location.href = "PhyLab_user_page.html";
             });
           } else {
-            const err = await res.json().catch(() => ({}));
-            const msg =
-              err.detail ||
-              Object.entries(err)
-                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`)
-                .join(" | ") ||
-              "Invalid credentials.";
+            let msg = "Invalid credentials.";
+            try {
+              const clone = res.clone();
+              // Try JSON first, fallback to text for debugging
+              const err = await clone.json().catch(async () => {
+                const t = await res.text().catch(() => "");
+                return { __text: t };
+              });
+
+              if (err && typeof err === "object") {
+                if (err.detail) msg = err.detail;
+                else if (err.__text) msg = err.__text;
+                else
+                  msg = Object.entries(err)
+                    .map(
+                      ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`,
+                    )
+                    .join(" | ");
+              }
+            } catch (dbgErr) {
+              console.warn("Error parsing error response", dbgErr);
+            }
+
+            console.warn("Login failed", {
+              status: res.status,
+              statusText: res.statusText,
+              body: msg,
+            });
 
             const loginErr = document.getElementById("loginError");
             if (loginErr) {

@@ -6,7 +6,9 @@ async function loadDashboardStats() {
   let allRequests = [];
   try {
     const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API('/api/borrow-requests/')
+        : '/api/borrow-requests/',
       "/api/borrow-requests/",
     ];
 
@@ -85,7 +87,9 @@ async function loadDashboardBorrowers() {
   let allRequests = [];
   try {
     const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API('/api/borrow-requests/')
+        : '/api/borrow-requests/',
       "/api/borrow-requests/",
     ];
 
@@ -177,7 +181,9 @@ async function initLiveChart() {
   try {
     const urls = [
       "/api/borrow-requests/history/",
-      "http://127.0.0.1:8000/api/borrow-requests/history/",
+      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+        ? window.PHYLAB_API('/api/borrow-requests/history/')
+        : '/api/borrow-requests/history/',
     ];
     let response = null;
     for (const url of urls) {

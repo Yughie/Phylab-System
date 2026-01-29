@@ -383,15 +383,20 @@ export async function loadUserRequests() {
 
   // Try to fetch from backend first
   try {
-    const urls = [
-      `http://127.0.0.1:8000/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
-      `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
-    ];
+    const baseUrl = (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+      ? window.PHYLAB_API(`/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`)
+      : `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`;
 
+    const urls = [baseUrl, `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`];
+
+    const token = sessionStorage.getItem('auth_token');
     for (let url of urls) {
       try {
         console.debug("loadUserRequests: fetching", url);
-        const resp = await fetch(url, { method: "GET", mode: "cors" });
+        const options = { method: 'GET', mode: 'cors' };
+        if (token) options.headers = { Authorization: 'Token ' + token };
+        else options.credentials = 'include';
+        const resp = await fetch(url, options);
         console.debug("loadUserRequests: response", url, resp && resp.status);
         if (resp && resp.ok) {
           const data = await resp.json();

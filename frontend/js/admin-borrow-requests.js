@@ -4,7 +4,9 @@
 async function refreshLocalQueueFromBackend() {
   try {
     const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/",
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+        ? window.PHYLAB_API("/api/borrow-requests/")
+        : "/api/borrow-requests/",
       "/api/borrow-requests/",
     ];
 
@@ -101,7 +103,9 @@ async function loadBorrowRequests() {
   let pendingRequests = [];
   try {
     const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/?status=pending",
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+        ? window.PHYLAB_API("/api/borrow-requests/?status=pending")
+        : "/api/borrow-requests/?status=pending",
       "/api/borrow-requests/?status=pending",
     ];
 
@@ -366,10 +370,26 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
         console.warn("resolveRequestNumericId failed", e);
       }
 
-      const urls = [
+      const urls = [];
+      if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+        try {
+          urls.push(
+            window.PHYLAB_API(
+              `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+            ),
+          );
+        } catch (e) {}
+      }
+      if (window.PHYLAB_API_BASE) {
+        urls.push(
+          (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+            `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+        );
+      }
+      urls.push(
         `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
-        `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
-      ];
+      );
+      urls.push(`/api/borrow-requests/${resolvedReqId}/update_item_statuses/`);
 
       for (const url of urls) {
         try {

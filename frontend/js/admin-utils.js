@@ -43,12 +43,36 @@ function getRemarkTypeLabel(type) {
 }
 
 // Shared function to fetch reviews from backend API
-async function fetchReviewsFromBackend() {
-  const urls = ["http://127.0.0.1:8000/api/reviews/", "/api/reviews/"];
-  for (let u of urls) {
+// Accepts an optional `payload`. If provided, a POST is attempted; otherwise GET.
+async function fetchReviewsFromBackend(payload = null) {
+  const candidates = [];
+  if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
     try {
-      const r = await fetch(u, { mode: "cors" });
-      if (r.ok) return await r.json();
+      candidates.push(window.PHYLAB_API("/api/reviews/"));
+    } catch (e) {}
+  }
+  if (window.PHYLAB_API_BASE) {
+    candidates.push(
+      (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") + "/api/reviews/",
+    );
+  }
+  candidates.push("http://127.0.0.1:8000/api/reviews/");
+  candidates.push("/api/reviews/");
+
+  for (const url of candidates) {
+    try {
+      const token = sessionStorage.getItem("auth_token");
+      const options = {
+        method: payload ? "POST" : "GET",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+      };
+      if (payload) options.body = JSON.stringify(payload);
+      if (token) options.headers.Authorization = "Token " + token;
+      else options.credentials = "include";
+
+      const res = await fetch(url, options);
+      if (res && res.ok) return await res.json();
     } catch (e) {
       continue;
     }
@@ -66,19 +90,41 @@ async function resolveRequestNumericId(identifier) {
   // try local cache
   try {
     const queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-    const found = queue.find((r) => String(r.requestId) === asStr || String(r.request_id) === asStr || String(r.requestId || "") === asStr);
+    const found = queue.find(
+      (r) =>
+        String(r.requestId) === asStr ||
+        String(r.request_id) === asStr ||
+        String(r.requestId || "") === asStr,
+    );
     if (found && found.id) return String(found.id);
   } catch (e) {}
 
-  // fallback: fetch list from backend and search
-  const urls = ["http://127.0.0.1:8000/api/borrow-requests/", "/api/borrow-requests/"];
-  for (const u of urls) {
+  // fallback: fetch list from backend and search (try API helper/base/localhost/relative)
+  const candidates = [];
+  if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+    try {
+      candidates.push(window.PHYLAB_API("/api/borrow-requests/"));
+    } catch (e) {}
+  }
+  if (window.PHYLAB_API_BASE) {
+    candidates.push(
+      (window.PHYLAB_API_BASE || "http://127.0.0.1:8000") +
+        "/api/borrow-requests/",
+    );
+  }
+  candidates.push("http://127.0.0.1:8000/api/borrow-requests/");
+  candidates.push("/api/borrow-requests/");
+
+  for (const u of candidates) {
     try {
       const resp = await fetch(u, { mode: "cors" });
       if (!resp || !resp.ok) continue;
       const data = await resp.json();
       if (Array.isArray(data)) {
-        const found = data.find((r) => String(r.request_id) === asStr || String(r.requestId) === asStr);
+        const found = data.find(
+          (r) =>
+            String(r.request_id) === asStr || String(r.requestId) === asStr,
+        );
         if (found && found.id) return String(found.id);
       }
     } catch (e) {

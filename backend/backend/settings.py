@@ -58,6 +58,9 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Allow cross-site cookie use when deployed over HTTPS (required for some mobile flows)
+    SESSION_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SAMESITE = 'None'
 
 # Static files for Render
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -162,6 +165,8 @@ STATIC_URL = 'static/'
 
 # CORS - allow frontend (for development)
 CORS_ALLOW_ALL_ORIGINS = True
+# Allow cookies/auth credentials over CORS when needed by frontend
+CORS_ALLOW_CREDENTIALS = True
 
 # Media files (uploaded images)
 MEDIA_URL = '/media/'

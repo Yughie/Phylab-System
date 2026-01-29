@@ -85,21 +85,36 @@ function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
  * Submit review to backend
  */
 async function postReviewFormData(form) {
-  const urls = ["/api/reviews/", "http://127.0.0.1:8000/api/reviews/"];
-  for (let u of urls) {
-    try {
-      console.log("postReviewFormData: POST", u, form.get("item_name"));
-      const resp = await fetch(u, {
-        method: "POST",
-        body: form,
-        credentials: "same-origin",
-      });
-      console.log("postReviewFormData: response", u, resp && resp.status);
-      if (resp && resp.ok) return true;
-    } catch (e) {
-      console.warn("postReviewFormData failed for", u, e);
+  // Use configured backend base (supports production vs local)
+  const url = (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+    ? window.PHYLAB_API("/api/reviews/")
+    : "/api/reviews/";
+
+  try {
+    console.log("postReviewFormData: POST", url, form.get("item_name"));
+
+    const token = sessionStorage.getItem("auth_token");
+    const options = {
+      method: "POST",
+      mode: "cors",
+      body: form,
+    };
+
+    // If token-based auth available, send Authorization header.
+    // Otherwise include credentials so cookie sessions (if used) are sent.
+    if (token) {
+      options.headers = { Authorization: "Token " + token };
+    } else {
+      options.credentials = "include";
     }
+
+    const resp = await fetch(url, options);
+    console.log("postReviewFormData: response", url, resp && resp.status);
+    if (resp && resp.ok) return true;
+  } catch (e) {
+    console.warn("postReviewFormData failed for", url, e);
   }
+
   return false;
 }
 

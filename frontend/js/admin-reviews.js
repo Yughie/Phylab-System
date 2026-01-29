@@ -94,8 +94,10 @@ async function resolveReview(reviewId) {
     async function () {
       try {
         const urls = [
+          (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+            ? window.PHYLAB_API(`/api/reviews/${reviewId}/resolve/`)
+            : `/api/reviews/${reviewId}/resolve/`,
           `/api/reviews/${reviewId}/resolve/`,
-          `http://127.0.0.1:8000/api/reviews/${reviewId}/resolve/`,
         ];
 
         let response = null;

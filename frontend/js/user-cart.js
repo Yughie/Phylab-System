@@ -161,28 +161,20 @@ async function handleBorrowFormSubmit(e) {
   };
 
   try {
-    const urls = [
-      "http://127.0.0.1:8000/api/borrow-requests/",
-      "/api/borrow-requests/",
-    ];
+    const url = (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+      ? window.PHYLAB_API('/api/borrow-requests/')
+      : '/api/borrow-requests/';
     let success = false;
+    const token = sessionStorage.getItem('auth_token');
+    try {
+      const options = { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) };
+      if (token) options.headers.Authorization = 'Token ' + token;
+      else options.credentials = 'include';
 
-    for (let url of urls) {
-      try {
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestData),
-          mode: "cors",
-        });
-
-        if (resp && resp.ok) {
-          success = true;
-          break;
-        }
-      } catch (err) {
-        console.warn(`Failed to submit to ${url}:`, err);
-      }
+      const resp = await fetch(url, options);
+      if (resp && resp.ok) success = true;
+    } catch (err) {
+      console.warn(`Failed to submit to ${url}:`, err);
     }
 
     if (!success) {

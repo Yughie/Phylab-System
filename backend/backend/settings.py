@@ -183,7 +183,13 @@ DATABASES = {
 }
 
 STORAGES = {
+    # This handles your CSS, JS, and Images (WhiteNoise)
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+    # This handles media uploads/file fields (Required by Django 5+)
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
 }
+

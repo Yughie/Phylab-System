@@ -8,6 +8,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
+from django.http import HttpResponse
+import io
+from openpyxl import Workbook
+from django.db.models import Sum
 import logging
 from rest_framework import status
 from django.conf import settings
@@ -125,6 +129,73 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
         resp = requests.patch(url, json=body, headers=headers, timeout=10)
         return resp.ok
+
+    @action(detail=False, methods=['get'])
+    def export_xlsx(self, request):
+        """Export all inventory items as an Excel (.xlsx) file.
+
+        GET /api/inventory/export_xlsx/
+        """
+        qs = InventoryItem.objects.all().order_by('name')
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Inventory"
+        headers = [
+            'id',
+            'name',
+            'category',
+            'type',
+            'use',
+            'cabinet',
+            'stock',
+            'active_borrowed',
+            'current_stock',
+            'description',
+        ]
+        ws.append(headers)
+        for it in qs:
+            image_url = ""
+            try:
+                if getattr(it, 'image', None):
+                    image_field = it.image
+                    if hasattr(image_field, 'url') and self.request is not None:
+                        image_url = self.request.build_absolute_uri(image_field.url)
+            except Exception:
+                image_url = ""
+            # Compute how many units are currently borrowed for this item
+            borrowed_agg = BorrowRequestItem.objects.filter(
+                item_key=getattr(it, 'item_key', None), status__iexact='borrowed'
+            ).aggregate(total=Sum('quantity'))
+            active_borrowed = borrowed_agg.get('total') or 0
+            try:
+                stock_val = int(getattr(it, 'stock', 0) or 0)
+            except Exception:
+                stock_val = 0
+            current_stock = stock_val - int(active_borrowed)
+
+            row = [
+                getattr(it, 'id', ''),
+                getattr(it, 'name', ''),
+                getattr(it, 'category', ''),
+                getattr(it, 'type', ''),
+                getattr(it, 'use', ''),
+                getattr(it, 'cabinet', ''),
+                stock_val,
+                active_borrowed,
+                current_stock,
+                getattr(it, 'description', ''),
+            ]
+            ws.append(row)
+
+        bio = io.BytesIO()
+        wb.save(bio)
+        bio.seek(0)
+        resp = HttpResponse(
+            bio.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        resp['Content-Disposition'] = 'attachment; filename="inventory.xlsx"'
+        return resp
 
     def get_serializer_context(self):
         # Ensure serializer can build absolute image URLs

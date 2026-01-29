@@ -417,6 +417,44 @@ function initInventorySearch() {
   });
 }
 
+// Export inventory to Excel
+async function exportInventoryExcel() {
+  try {
+    const endpoints = [
+      "/api/inventory/export_xlsx/",
+      "http://127.0.0.1:8000/api/inventory/export_xlsx/",
+    ];
+    let res = null;
+    for (let u of endpoints) {
+      try {
+        res = await fetch(u, { method: "GET" });
+        if (res && res.ok) break;
+      } catch (e) {
+        // try next
+      }
+    }
+    if (!res || !res.ok) {
+      if (typeof showNotification === "function")
+        showNotification("Export failed", "error");
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventory.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    if (typeof showNotification === "function")
+      showNotification("Export started", "success");
+  } catch (e) {
+    if (typeof showNotification === "function")
+      showNotification("Export failed", "error");
+  }
+}
+
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", function () {
   if (typeof refreshInventoryFromBackend === "function") {
@@ -430,6 +468,9 @@ document.addEventListener("DOMContentLoaded", function () {
   loadCabinetFromMemory();
   initCategoryFilters();
   initInventorySearch();
+
+  const exportBtn = document.getElementById("exportExcelBtn");
+  if (exportBtn) exportBtn.addEventListener("click", exportInventoryExcel);
 
   // Close button handlers
   document.querySelectorAll(".close-btn, .close-details-btn").forEach((btn) => {

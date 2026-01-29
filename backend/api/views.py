@@ -266,7 +266,19 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         After updating, if all items are approved/rejected, the request status is updated accordingly.
         """
         logger = logging.getLogger(__name__)
-        borrow_request = self.get_object()
+        # Allow callers to use either the numeric DB PK or the public `request_id`
+        # in the URL. Try numeric lookup first, then fall back to request_id.
+        borrow_request = None
+        if pk is None:
+            borrow_request = self.get_object()
+        else:
+            try:
+                borrow_request = BorrowRequest.objects.get(pk=pk)
+            except (ValueError, BorrowRequest.DoesNotExist):
+                try:
+                    borrow_request = BorrowRequest.objects.get(request_id=pk)
+                except BorrowRequest.DoesNotExist:
+                    return Response({'detail': 'not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             logger.debug("update_item_statuses called for request %s by %s: %s", pk or borrow_request.id, getattr(request, 'user', None), request.data)
             # Also print to stdout for local dev visibility

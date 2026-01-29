@@ -1681,6 +1681,12 @@
   will-change: transform;
 }
 
+/* Reserve space and allow footer to be positioned at the visual bottom */
+.inventory-card {
+  position: relative;
+  padding-bottom: 88px; /* space for footer (button + stock row) */
+}
+
 .inventory-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 40px rgba(2, 6, 23, 0.12);
@@ -3089,13 +3095,53 @@ input::-webkit-inner-spin-button {
 }
 
 .stock-footer {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column; /* stack button above stock row */
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 8px 12px;
+  width: auto;
+  z-index: 2;
+}
+
+/* When the edit button is moved into the footer, make it full width and prominent */
+.stock-footer .edit-item-btn,
+.stock-footer .edit-details-btn {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 12px !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  border: 1px solid var(--color-primary-strong) !important;
+  border-radius: 8px !important;
+  text-align: center !important;
+}
+
+.stock-footer .stock-header {
+  display: flex;
   gap: 12px;
   align-items: center;
-  justify-content: center;
-  padding: 8px 0px;
-  width: 100%;
+  justify-content: flex-start;
+}
+
+.stock-current-btm,
+.stock-original {
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+.stock-current-btm strong,
+.stock-original strong {
+  display: inline-block;
+  min-width: 28px;
+  text-align: right;
+  color: var(--color-text);
 }
 
 /* ============================================

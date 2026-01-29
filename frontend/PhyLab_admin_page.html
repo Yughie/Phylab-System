@@ -457,7 +457,6 @@
         display: flex;
         flex-direction: column;
         border: 1px solid var(--border-color-strong);
-        max-height: calc(100vh - 80px);
       }
 
       .Borrow-Details-header {
@@ -504,7 +503,6 @@
       .Borrow-Details-body {
         padding: 20px;
         display: block;
-        overflow-y: auto;
       }
 
       .info-grid {
@@ -724,8 +722,25 @@
                     <strong>Teacher:</strong> <span id="det-teacher">---</span>
                   </p>
                   <p>
+                    <strong>Teacher Email:</strong>
+                    <span id="det-teacher-email">---</span>
+                  </p>
+                  <p>
+                    <strong>Teacher Phone:</strong>
+                    <span id="det-teacher-phone">---</span>
+                  </p>
+                  <p><strong>Class:</strong> <span id="det-class">---</span></p>
+                  <p>
                     <strong>Contact (email):</strong>
                     <span id="det-email">---</span>
+                  </p>
+                  <p>
+                    <strong>Phone:</strong>
+                    <span id="det-borrower-phone">---</span>
+                  </p>
+                  <p>
+                    <strong>Department:</strong>
+                    <span id="det-borrower-department">---</span>
                   </p>
                   <p>
                     <strong>Request ID:</strong>
@@ -1273,6 +1288,16 @@
         // After adding cards, initialize stock displays and cabinet data
         loadCabinetFromMemory();
         loadStockFromMemory();
+        // move edit buttons into footer (if helper available)
+        try {
+          if (typeof moveEditButtonsToFooter === "function")
+            moveEditButtonsToFooter();
+          else
+            setTimeout(() => {
+              if (typeof moveEditButtonsToFooter === "function")
+                moveEditButtonsToFooter();
+            }, 250);
+        } catch (e) {}
       }
 
       // small helpers to avoid XSS when inserting from stored data
@@ -2405,8 +2430,6 @@
         document.getElementById("det-description").innerText =
           item.description || "Physics Lab Equipment";
         document.getElementById("det-inv-id").innerText = request.id;
-        const headerReqEl = document.getElementById("det-request-id-header");
-        if (headerReqEl) headerReqEl.innerText = request.id || "—";
         document.getElementById("det-condition").innerText = "Good";
 
         document.getElementById("det-borrower-name").innerText =

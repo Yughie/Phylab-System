@@ -60,6 +60,17 @@ function renderInventoryGrid() {
   // After adding cards, initialize stock displays and cabinet data
   loadCabinetFromMemory();
   loadStockFromMemory();
+  // move edit buttons into the footer so they stack above stock info
+  try {
+    if (typeof moveEditButtonsToFooter === "function") {
+      moveEditButtonsToFooter();
+    } else {
+      setTimeout(() => {
+        if (typeof moveEditButtonsToFooter === "function")
+          moveEditButtonsToFooter();
+      }, 200);
+    }
+  } catch (e) {}
 }
 
 // Save all inventory cards to localStorage
@@ -98,6 +109,37 @@ function saveInventoryToLocalStorage() {
   if (typeof saveInventory === "function") {
     saveInventory(inventoryArray);
   }
+}
+
+// Move edit buttons into the card's stock-footer and place them above the stock row
+function moveEditButtonsToFooter() {
+  document.querySelectorAll(".inventory-card").forEach((card) => {
+    const btn = card.querySelector(".edit-item-btn, .edit-details-btn");
+    if (!btn) return;
+
+    // Ensure footer exists
+    let footer = card.querySelector(".stock-footer");
+    if (!footer) {
+      footer = document.createElement("div");
+      footer.className = "stock-footer";
+      card.appendChild(footer);
+    }
+
+    // If button already inside footer, ensure ordering
+    if (btn.closest(".stock-footer")) {
+      // move to top of footer
+      footer.insertBefore(btn, footer.firstChild);
+    } else {
+      // insert button as first child of footer
+      footer.insertBefore(btn, footer.firstChild);
+    }
+
+    // Reset positioning so CSS within footer applies
+    btn.style.position = "";
+    btn.style.right = "";
+    btn.style.bottom = "";
+    btn.style.margin = "";
+  });
 }
 
 async function saveStock(inputElement) {

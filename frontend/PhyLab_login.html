@@ -6,6 +6,10 @@
     <title>PhyLab - Physics Laboratory Inventory System</title>
     <link rel="stylesheet" href="Phylab_theme_vars.css" />
     <link rel="stylesheet" href="Phylab_style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script
       src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
       onload="emailjs && emailjs.init('lJ6EFXKyc4N6yIyEG')"
@@ -47,7 +51,303 @@
       })();
     </script>
     <style>
-      /* Simple centered modal used for login success/failure messages */
+      /* ========== LANDING PAGE STYLES ========== */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: var(--bg-body);
+        overflow-x: hidden;
+      }
+
+      .landing-page {
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      /* ========== NAVIGATION ========== */
+      .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-sm);
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      .landing-nav.scrolled {
+        box-shadow: var(--shadow-md);
+      }
+
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .nav-actions {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.625rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        border: none;
+        font-size: 0.95rem;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--color-primary);
+        border: 2px solid var(--color-primary);
+      }
+
+      .btn-outline:hover {
+        background: var(--color-primary);
+        color: white;
+      }
+
+      .btn-primary {
+        background: var(--color-primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--color-primary-strong);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* ========== HERO SECTION ========== */
+      .hero-section {
+        margin-top: 70px;
+        padding: 6rem 2rem 4rem;
+        background: linear-gradient(
+          135deg,
+          var(--color-primary-strong) 0%,
+          var(--color-primary) 50%,
+          var(--color-accent) 100%
+        );
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.4;
+      }
+
+      .hero-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        letter-spacing: -1px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.35rem;
+        margin-bottom: 1rem;
+        opacity: 0.95;
+        font-weight: 500;
+      }
+
+      .hero-description {
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        opacity: 0.9;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+      }
+
+      .hero-cta {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn-hero {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        border-radius: 10px;
+      }
+
+      .btn-light {
+        background: white;
+        color: var(--color-primary);
+      }
+
+      .btn-light:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ========== FEATURES SECTION ========== */
+      .features-section {
+        padding: 5rem 2rem;
+        background: var(--bg-surface);
+      }
+
+      .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+      }
+
+      .section-title {
+        font-size: 2.5rem;
+        color: var(--color-text);
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .section-subtitle {
+        font-size: 1.15rem;
+        color: var(--color-muted);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2.5rem;
+      }
+
+      .feature-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: var(--shadow-card);
+        transition: all var(--transition-normal);
+        border: 1px solid var(--border-color);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(
+          135deg,
+          var(--color-primary-light),
+          var(--color-primary)
+        );
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        color: white;
+        font-size: 2rem;
+      }
+
+      .feature-title {
+        font-size: 1.5rem;
+        color: var(--color-text);
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+
+      .feature-description {
+        color: var(--color-text-light);
+        line-height: 1.7;
+        font-size: 1rem;
+      }
+
+      .feature-list {
+        margin-top: 1.25rem;
+        padding-left: 0;
+        list-style: none;
+      }
+
+      .feature-list li {
+        padding: 0.5rem 0;
+        color: var(--color-text-light);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .feature-list li::before {
+        content: "✓";
+        color: var(--color-success);
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      /* ========== FOOTER ========== */
+      .landing-footer {
+        background: var(--color-text);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .footer-text {
+        font-size: 0.95rem;
+      }
+
+      /* ========== MODAL STYLES ========== */
       .phylab-modal {
         position: fixed;
         top: 0;
@@ -55,49 +355,150 @@
         width: 100%;
         height: 100%;
         display: none;
-        /* place modal slightly higher than center */
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
-        padding-top: 10vh;
-        background: rgba(0, 0, 0, 0.35);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
+        padding: 1rem;
       }
+
+      .phylab-modal.active {
+        display: flex;
+      }
+
       .phylab-modal-content {
         background: #fff;
         padding: 18px 22px;
-        border-radius: 8px;
+        border-radius: 12px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
         min-width: 260px;
         text-align: center;
         font-family: inherit;
         font-size: 16px;
+        max-width: 90%;
       }
+
       .phylab-modal.success .phylab-modal-content {
         border-left: 6px solid #2ecc71;
       }
+
       .phylab-modal.error .phylab-modal-content {
         border-left: 6px solid #e74c3c;
       }
-      /* Inline form error styling */
-      .form-error {
+
+      /* ========== AUTH MODAL ========== */
+      .auth-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
         display: none;
-        color: #e74c3c;
-        font-size: 14px;
-        margin-top: 8px;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 1rem;
+        overflow-y: auto;
       }
-      .input-error {
+
+      .auth-modal.active {
+        display: flex;
+      }
+
+      .auth-modal-content {
+        background: var(--bg-surface);
+        width: 100%;
+        max-width: 480px;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--color-muted);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all var(--transition-fast);
+      }
+
+      .modal-close:hover {
+        background: var(--bg-surface-alt);
+        color: var(--color-text);
+      }
+
+      .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .auth-title {
+        color: var(--color-primary);
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+      }
+
+      .auth-subtitle {
+        color: var(--color-muted);
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .input-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .input-label {
+        display: block;
+        color: var(--color-text-light);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+
+      .form-input {
+        border: 1.5px solid var(--border-color-strong);
+        border-radius: 10px;
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        transition:
+          border-color var(--transition-fast),
+          box-shadow var(--transition-fast);
+        font-family: inherit;
+      }
+
+      .form-input:focus {
         outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(172, 49, 49, 0.1);
+      }
+
+      .input-error {
         border-color: #e74c3c !important;
         box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.08);
       }
-      /* Password toggle styles */
-      .input-password,
-      .input-group {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
+
+      .form-error {
+        display: none;
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
       }
 
       .input-with-toggle {
@@ -118,48 +519,453 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: var(--color-text, #111);
+        color: var(--color-text);
       }
 
       .password-toggle:focus {
         outline: 2px solid rgba(0, 0, 0, 0.12);
         border-radius: 4px;
       }
-      .password-input,
-      .form-input {
+
+      .password-input {
+        padding-right: 44px !important;
+      }
+
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .remember-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .remember-check {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .remember-label {
+        font-size: 0.95rem;
+        color: var(--color-text-light);
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .admin-link {
+        color: var(--color-primary);
+        font-size: 0.95rem;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .admin-link:hover {
+        text-decoration: underline;
+      }
+
+      .submit-btn {
         width: 100%;
-        padding-right: 44px; /* room for the toggle */
-        box-sizing: border-box;
+        padding: 0.875rem;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+      }
+
+      .submit-btn:hover {
+        background: var(--color-primary-strong);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .auth-switch {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
+        color: var(--color-text-light);
+      }
+
+      .auth-switch-link {
+        color: var(--color-primary);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .auth-switch-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Admin Modal Specific */
+      .admin-modal-content {
+        background: white;
+        max-width: 400px;
+        padding: 2rem;
+      }
+
+      .admin-modal-title {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        color: var(--color-text);
+      }
+
+      .admin-modal-desc {
+        margin: 0 0 1.5rem 0;
+        color: var(--color-text-light);
+        font-size: 0.95rem;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+      }
+
+      .secondary-btn {
+        padding: 0.625rem 1.25rem;
+        background: var(--bg-surface-alt);
+        color: var(--color-text);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+      }
+
+      .secondary-btn:hover {
+        background: var(--border-color-strong);
+      }
+
+      .primary-btn {
+        padding: 0.625rem 1.25rem;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+      }
+
+      .primary-btn:hover {
+        background: var(--color-primary-strong);
+      }
+
+      /* ========== RESPONSIVE DESIGN ========== */
+      @media (max-width: 768px) {
+        .nav-container {
+          padding: 1rem;
+        }
+
+        .nav-logo {
+          font-size: 1.25rem;
+        }
+
+        .btn {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+        }
+
+        .hero-section {
+          padding: 4rem 1.5rem 3rem;
+        }
+
+        .hero-title {
+          font-size: 2.25rem;
+        }
+
+        .hero-subtitle {
+          font-size: 1.1rem;
+        }
+
+        .hero-description {
+          font-size: 1rem;
+        }
+
+        .btn-hero {
+          padding: 0.875rem 1.75rem;
+          font-size: 1rem;
+        }
+
+        .features-section {
+          padding: 3rem 1.5rem;
+        }
+
+        .section-title {
+          font-size: 2rem;
+        }
+
+        .features-grid {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .feature-card {
+          padding: 2rem;
+        }
+
+        .auth-modal-content {
+          padding: 2rem 1.5rem;
+        }
+
+        .auth-title {
+          font-size: 1.75rem;
+        }
+
+        .checkbox-container {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title {
+          font-size: 1.875rem;
+        }
+
+        .hero-cta {
+          flex-direction: column;
+        }
+
+        .btn-hero {
+          width: 100%;
+        }
+
+        .nav-actions {
+          gap: 0.5rem;
+        }
       }
     </style>
   </head>
-  <body class="wholescreen">
-    <div id="login-section" class="bg_login-form">
-      <div class="second_bg_login-form">
-        <div class="header-login-form">
-          <h1 class="header1">PhyLab</h1>
-          <p class="sub-header">Physics Laboratory Inventory System</p>
+  <body>
+    <!-- Landing Page -->
+    <div class="landing-page">
+      <!-- Navigation -->
+      <nav class="landing-nav" id="mainNav">
+        <div class="nav-container">
+          <a href="#" class="nav-logo">PhyLab</a>
+          <div class="nav-actions">
+            <button class="btn btn-outline" onclick="openAuthModal('login')">
+              Login
+            </button>
+            <button class="btn btn-primary" onclick="openAuthModal('register')">
+              Get Started
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-container">
+          <h1 class="hero-title">PhyLab</h1>
+          <p class="hero-subtitle">Physics Laboratory Inventory System</p>
+          <p class="hero-description">
+            Streamline your laboratory equipment management with our
+            comprehensive digital solution. Track inventory, manage borrowing
+            requests, and monitor returns all in one intuitive platform.
+          </p>
+          <div class="hero-cta">
+            <button
+              class="btn btn-light btn-hero"
+              onclick="openAuthModal('register')"
+            >
+              Start Managing Now
+            </button>
+            <button
+              class="btn btn-outline btn-hero"
+              style="color: white; border-color: white"
+              onclick="
+                document
+                  .getElementById('features')
+                  .scrollIntoView({ behavior: 'smooth' })
+              "
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section class="features-section" id="features">
+        <div class="features-container">
+          <div class="section-header">
+            <h2 class="section-title">
+              Powerful Features for Efficient Management
+            </h2>
+            <p class="section-subtitle">
+              Everything you need to manage your physics laboratory equipment
+              effectively and efficiently
+            </p>
+          </div>
+
+          <div class="features-grid">
+            <!-- Feature 1: Find Equipment -->
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">Find Equipment</h3>
+              <p class="feature-description">
+                Quickly search and discover available laboratory equipment with
+                our advanced search and filtering system. Access real-time
+                inventory status and detailed specifications.
+              </p>
+              <ul class="feature-list">
+                <li>Advanced search with multiple filters</li>
+                <li>Real-time availability tracking</li>
+                <li>Detailed equipment specifications</li>
+                <li>Cabinet location information</li>
+                <li>High-quality equipment images</li>
+              </ul>
+            </div>
+
+            <!-- Feature 2: Borrow Items -->
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+                  ></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">Borrow Items</h3>
+              <p class="feature-description">
+                Submit borrowing requests seamlessly through our user-friendly
+                cart system. Track your requests in real-time from submission to
+                approval.
+              </p>
+              <ul class="feature-list">
+                <li>Simple cart-based borrowing system</li>
+                <li>Multiple items per request</li>
+                <li>Instant request submission</li>
+                <li>Real-time status updates</li>
+                <li>Email notifications for approvals</li>
+              </ul>
+            </div>
+
+            <!-- Feature 3: Track Returns -->
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">Track Returns</h3>
+              <p class="feature-description">
+                Monitor all your active loans and return schedules with ease.
+                Receive timely reminders and manage your borrowing history
+                comprehensively.
+              </p>
+              <ul class="feature-list">
+                <li>View all active borrowings</li>
+                <li>Track return deadlines</li>
+                <li>Borrowing history access</li>
+                <li>Automatic return reminders</li>
+                <li>Submit feedback and reviews</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="landing-footer">
+        <div class="footer-content">
+          <p class="footer-text">
+            &copy; 2026 PhyLab - Physics Laboratory Inventory System. All rights
+            reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="auth-modal">
+      <div class="auth-modal-content">
+        <button
+          class="modal-close"
+          onclick="closeAuthModal('login')"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div class="auth-header">
+          <h2 class="auth-title">Welcome Back</h2>
+          <p class="auth-subtitle">Sign in to access your account</p>
         </div>
 
-        <div class="input-username">
-          <label for="username" class="username-label">Email</label>
+        <div class="input-group">
+          <label for="login_email" class="input-label">Email</label>
           <input
-            type="text"
-            id="username"
-            class="username-input"
-            name="username"
+            type="email"
+            id="login_email"
+            class="form-input"
+            placeholder="your.email@example.com"
             required
           />
         </div>
 
-        <div class="input-password">
-          <label for="password" class="password-label">Password</label>
+        <div class="input-group">
+          <label for="login_password" class="input-label">Password</label>
           <div class="input-with-toggle">
             <input
               type="password"
-              id="password_login"
-              class="password-input"
-              name="password"
+              id="login_password"
+              class="form-input password-input"
+              placeholder="Enter your password"
               required
             />
             <button
@@ -167,9 +973,8 @@
               class="password-toggle"
               aria-pressed="false"
               aria-label="Show password"
-              onclick="togglePassword('password_login', this)"
+              onclick="togglePassword('login_password', this)"
             >
-              <!-- eye icon (show) -->
               <svg
                 width="18"
                 height="18"
@@ -199,40 +1004,43 @@
           </div>
         </div>
 
-        <div class="checkbox-button">
-          <div class="checkbox-button-rm1">
-            <input
-              type="checkbox"
-              id="remember"
-              class="remember-check"
-              name="remember"
-            />
+        <div class="checkbox-container">
+          <div class="remember-group">
+            <input type="checkbox" id="remember" class="remember-check" />
             <label for="remember" class="remember-label">Remember me</label>
           </div>
-          <button class="admin-button" onclick="openAdminModal()">
-            Admin Login
-          </button>
+          <a class="admin-link" onclick="openAdminModal()">Admin Login</a>
         </div>
 
         <p id="loginError" class="form-error" role="alert"></p>
-        <button class="login" onclick="handleLogin()">Login</button>
+        <button class="submit-btn" onclick="handleLogin()">Sign In</button>
 
-        <div class="register-container-login">
-          <label class="register-label">
-            Don't have an account?
-            <span class="register-button-link" onclick="switchView('register')"
-              >Register</span
-            >
-          </label>
-        </div>
+        <p class="auth-switch">
+          Don't have an account?
+          <a
+            class="auth-switch-link"
+            onclick="switchAuthModal('login', 'register')"
+            >Create one</a
+          >
+        </p>
       </div>
     </div>
 
-    <div id="register-section" class="bg_register-form" style="display: none">
-      <div class="second_bg_register-form">
-        <div class="header-register-form">
-          <h1 class="header1">Create Account</h1>
-          <p class="sub-header">Join the Physics Laboratory Inventory System</p>
+    <!-- Register Modal -->
+    <div id="registerModal" class="auth-modal">
+      <div class="auth-modal-content">
+        <button
+          class="modal-close"
+          onclick="closeAuthModal('register')"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div class="auth-header">
+          <h2 class="auth-title">Create Account</h2>
+          <p class="auth-subtitle">
+            Join the Physics Laboratory Inventory System
+          </p>
         </div>
 
         <form id="registerForm">
@@ -255,8 +1063,7 @@
               type="text"
               id="id_number"
               class="form-input"
-              placeholder="Student / Employee ID"
-              title="ID number"
+              placeholder="Enter your ID"
               maxlength="20"
               required
             />
@@ -268,69 +1075,94 @@
               type="email"
               id="email"
               class="form-input"
-              placeholder="example@univ.edu"
+              placeholder="your.email@example.com"
               required
             />
           </div>
 
           <div class="input-group">
-            <label for="password" class="input-label">Password</label>
-            <input
-              type="password"
-              id="password_reg"
-              class="form-input"
-              placeholder="••••••••"
-              required
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              aria-pressed="false"
-              aria-label="Show password"
-              onclick="togglePassword('password_reg', this)"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
+            <label for="password_reg" class="input-label">Password</label>
+            <div class="input-with-toggle">
+              <input
+                type="password"
+                id="password_reg"
+                class="form-input password-input"
+                placeholder="Create a secure password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                aria-pressed="false"
+                aria-label="Show password"
+                onclick="togglePassword('password_reg', this)"
               >
-                <path
-                  d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7z"
-                  stroke="currentColor"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="3"
-                  stroke="currentColor"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7z"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <button type="submit" class="register-btn">Register</button>
+          <p id="registerError" class="form-error" role="alert"></p>
+          <button type="submit" class="submit-btn">Create Account</button>
         </form>
 
-        <div class="login-link-container">
-          <p class="login-text">
-            Already have an account?
-            <span class="login-span" onclick="switchView('login')"
-              >Login here</span
-            >
-          </p>
+        <p class="auth-switch">
+          Already have an account?
+          <a
+            class="auth-switch-link"
+            onclick="switchAuthModal('register', 'login')"
+            >Sign in</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- Admin Access Modal -->
+    <div id="adminModal" class="phylab-modal" role="dialog" aria-live="polite">
+      <div class="admin-modal-content phylab-modal-content">
+        <h3 class="admin-modal-title">Admin Access</h3>
+        <p class="admin-modal-desc">Enter the admin access key to continue.</p>
+        <input
+          id="adminKeyInput"
+          type="password"
+          class="form-input"
+          placeholder="Access key"
+        />
+        <p id="adminKeyError" class="form-error"></p>
+        <div class="modal-actions">
+          <button class="secondary-btn" onclick="closeAdminModal()">
+            Cancel
+          </button>
+          <button class="primary-btn" onclick="submitAdminKey()">Submit</button>
         </div>
       </div>
     </div>
-    <!-- Modal used for brief notifications (login success/failure) -->
+
+    <!-- Notification Modal -->
     <div
       id="phylab-modal"
       class="phylab-modal"
@@ -342,84 +1174,88 @@
       </div>
     </div>
 
-    <!-- Admin access modal (replaces prompt) -->
-    <div
-      id="adminModal"
-      class="phylab-modal"
-      role="dialog"
-      aria-live="polite"
-      style="display: none"
-    >
-      <div class="phylab-modal-content">
-        <h3 style="margin: 0 0 8px 0; font-size: 18px">Admin Access</h3>
-        <p style="margin: 0 0 12px 0; color: var(--color-text-light)">
-          Enter the admin access key to continue.
-        </p>
-        <input
-          id="adminKeyInput"
-          type="password"
-          placeholder="Access key"
-          style="
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-          "
-        />
-        <p id="adminKeyError" class="form-error" style="margin-top: 8px"></p>
-        <div
-          style="
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 12px;
-          "
-        >
-          <button class="secondary-btn" id="adminCancelBtn">Cancel</button>
-          <button class="primary-btn" id="adminSubmitBtn">Submit</button>
-        </div>
-      </div>
-    </div>
-
     <script>
-      // Global modal helper reused by login and registration flows
-      function showPhylabModal(message, isSuccess = true, callback) {
-        const modal = document.getElementById("phylab-modal");
-        const msgEl = document.getElementById("phylab-modal-message");
-        if (!modal || !msgEl) {
-          // If modal markup is missing (unexpected), create a lightweight inline modal instead
-          try {
-            const dynamic = document.createElement("div");
-            dynamic.id = "phylab-modal";
-            dynamic.className = "phylab-modal";
-            dynamic.style.display = "flex";
-            dynamic.innerHTML = `<div class="phylab-modal-content ${isSuccess ? "success" : "error"}"><p id="phylab-modal-message">${message}</p></div>`;
-            document.body.appendChild(dynamic);
-            setTimeout(() => {
-              dynamic.style.display = "none";
-              document.body.removeChild(dynamic);
-              if (typeof callback === "function") callback();
-            }, 2000);
-          } catch (e) {
-            console.warn(
-              "phylab modal missing and dynamic creation failed:",
-              e,
-            );
-          }
-          return;
+      // ========== NAVIGATION SCROLL EFFECT ==========
+      window.addEventListener("scroll", () => {
+        const nav = document.getElementById("mainNav");
+        if (window.scrollY > 50) {
+          nav.classList.add("scrolled");
+        } else {
+          nav.classList.remove("scrolled");
         }
-        msgEl.textContent = message;
-        modal.classList.remove("success", "error");
-        modal.classList.add(isSuccess ? "success" : "error");
-        modal.style.display = "flex";
-        setTimeout(() => {
-          modal.style.display = "none";
-          if (typeof callback === "function") callback();
-        }, 2000);
+      });
+
+      // ========== MODAL MANAGEMENT ==========
+      function openAuthModal(type) {
+        const loginModal = document.getElementById("loginModal");
+        const registerModal = document.getElementById("registerModal");
+
+        if (type === "login") {
+          loginModal.classList.add("active");
+          setTimeout(
+            () => document.getElementById("login_email")?.focus(),
+            100,
+          );
+        } else if (type === "register") {
+          registerModal.classList.add("active");
+          setTimeout(() => document.getElementById("fullname")?.focus(), 100);
+        }
+
+        document.body.style.overflow = "hidden";
       }
 
-      // EmailJS helpers for login page (sanitize + safe send)
+      function closeAuthModal(type) {
+        const loginModal = document.getElementById("loginModal");
+        const registerModal = document.getElementById("registerModal");
+
+        if (type === "login") {
+          loginModal.classList.remove("active");
+          clearLoginErrors();
+        } else if (type === "register") {
+          registerModal.classList.remove("active");
+          clearRegisterErrors();
+        }
+
+        document.body.style.overflow = "";
+      }
+
+      function switchAuthModal(from, to) {
+        closeAuthModal(from);
+        setTimeout(() => openAuthModal(to), 200);
+      }
+
+      function clearLoginErrors() {
+        const err = document.getElementById("loginError");
+        if (err) {
+          err.textContent = "";
+          err.style.display = "none";
+        }
+        document.getElementById("login_email")?.classList.remove("input-error");
+        document
+          .getElementById("login_password")
+          ?.classList.remove("input-error");
+      }
+
+      function clearRegisterErrors() {
+        const err = document.getElementById("registerError");
+        if (err) {
+          err.textContent = "";
+          err.style.display = "none";
+        }
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener("click", (e) => {
+        const loginModal = document.getElementById("loginModal");
+        const registerModal = document.getElementById("registerModal");
+        const adminModal = document.getElementById("adminModal");
+
+        if (e.target === loginModal) closeAuthModal("login");
+        if (e.target === registerModal) closeAuthModal("register");
+        if (e.target === adminModal) closeAdminModal();
+      });
+
+      // ========== EMAILJS HELPERS ==========
       function sanitizeEmail(raw) {
         if (!raw || typeof raw !== "string") return "";
         const s = raw.trim();
@@ -441,7 +1277,7 @@
             params.to_email = sanitizeEmail(params.to_name);
           if (!params.to_email)
             return reject(new Error("Invalid recipient email"));
-          console.log("EmailJS send (login):", {
+          console.log("EmailJS send:", {
             to_email: params.to_email,
             to_name: params.to_name,
           });
@@ -452,29 +1288,38 @@
         });
       }
 
-      // Configure these with your EmailJS Service & Template IDs
       const EMAILJS_SERVICE_ID = "your_service_id";
       const EMAILJS_TEMPLATE_ID = "your_template_id";
 
-      // Auto-format / sanitize ID input (permissive: allow alphanumeric, dash, space)
+      // ========== NOTIFICATION MODAL ==========
+      function showPhylabModal(message, isSuccess = true, callback) {
+        const modal = document.getElementById("phylab-modal");
+        const msgEl = document.getElementById("phylab-modal-message");
+
+        if (!modal || !msgEl) return;
+
+        msgEl.textContent = message;
+        modal.classList.remove("success", "error");
+        modal.classList.add(isSuccess ? "success" : "error");
+        modal.classList.add("active");
+
+        setTimeout(() => {
+          modal.classList.remove("active");
+          if (typeof callback === "function") callback();
+        }, 2500);
+      }
+
+      // ========== ID INPUT FORMATTER ==========
       (function attachIdFormatter() {
         const idInput = document.getElementById("id_number");
         if (!idInput) return;
 
         function sanitize(raw) {
-          // allow letters, digits, spaces and dashes; limit to 20 chars
           return (raw || "").replace(/[^A-Za-z0-9\-\s]/g, "").slice(0, 20);
         }
 
         idInput.addEventListener("input", () => {
-          const v = idInput.value;
-          idInput.value = sanitize(v);
-          try {
-            idInput.setSelectionRange(
-              idInput.value.length,
-              idInput.value.length,
-            );
-          } catch (err) {}
+          idInput.value = sanitize(idInput.value);
         });
 
         idInput.addEventListener("paste", (e) => {
@@ -482,44 +1327,10 @@
           const paste =
             (e.clipboardData || window.clipboardData).getData("text") || "";
           idInput.value = sanitize(paste);
-          try {
-            idInput.setSelectionRange(
-              idInput.value.length,
-              idInput.value.length,
-            );
-          } catch (err) {}
         });
       })();
-      class UserProfile {
-        constructor(fullname, idNumber, email, password) {
-          this.fullname = fullname;
-          this.idNumber = idNumber;
-          this.email = email;
-          this.password = password;
-          this.dateRegistered = new Date().toLocaleDateString();
-        }
 
-        getProfileSummary() {
-          return `${this.fullname} (${this.idNumber})`;
-        }
-      }
-
-      const getUsers = () =>
-        JSON.parse(localStorage.getItem("phylab_users")) || [];
-
-      function switchView(viewName) {
-        const loginSection = document.getElementById("login-section");
-        const registerSection = document.getElementById("register-section");
-
-        if (viewName === "register") {
-          loginSection.style.display = "none";
-          registerSection.style.display = "flex";
-        } else {
-          registerSection.style.display = "none";
-          loginSection.style.display = "flex";
-        }
-      }
-
+      // ========== REGISTRATION ==========
       document
         .getElementById("registerForm")
         .addEventListener("submit", async function (e) {
@@ -530,7 +1341,6 @@
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password_reg").value;
 
-          // Generic ID validation: allow 4-20 characters (letters, digits, spaces, dashes)
           const idRegex = /^[A-Za-z0-9\-\s]{4,20}$/;
           if (!idRegex.test(idNumber)) {
             showPhylabModal(
@@ -540,18 +1350,16 @@
             return;
           }
 
-          // Basic email validation
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(email)) {
             showPhylabModal("Please enter a valid email address.", false);
             return;
           }
 
-          // Disable submit button to prevent duplicates
           const submitBtn = this.querySelector('button[type="submit"]');
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = "Registering...";
+            submitBtn.textContent = "Creating Account...";
           }
 
           const payload = {
@@ -564,15 +1372,13 @@
           try {
             const res = await fetch("http://127.0.0.1:8000/api/register/", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
 
             if (res.status === 201) {
               const data = await res.json();
-              // If backend returned a token and user info, auto-login and redirect
+
               if (data.token) {
                 const userObj = {
                   id: data.id,
@@ -582,6 +1388,7 @@
                 };
                 sessionStorage.setItem("auth_token", data.token);
                 sessionStorage.setItem("current_user", JSON.stringify(userObj));
+
                 showPhylabModal(
                   `Registration successful. Welcome ${userObj.fullname}!`,
                   true,
@@ -594,12 +1401,14 @@
                   `Registration successful. Welcome ${fullname}!`,
                   true,
                   () => {
-                    switchView("login");
+                    closeAuthModal("register");
+                    openAuthModal("login");
                   },
                 );
               }
+
               this.reset();
-              // Attempt to send a welcome email (non-blocking). Configure IDs above.
+
               try {
                 const params = {
                   to_email: email,
@@ -616,7 +1425,6 @@
               const err = await res.json().catch(() => ({}));
               let msg = "Registration failed.";
               if (err && typeof err === "object") {
-                // Build readable message from serializer errors
                 msg = Object.entries(err)
                   .map(
                     ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`,
@@ -631,16 +1439,17 @@
           } finally {
             if (submitBtn) {
               submitBtn.disabled = false;
-              submitBtn.textContent = "Register";
+              submitBtn.textContent = "Create Account";
             }
           }
         });
 
+      // ========== LOGIN ==========
       async function handleLogin() {
-        const idInput = document.getElementById("username").value.trim();
-        const passInput = document.getElementById("password_login").value;
+        const idInput = document.getElementById("login_email").value.trim();
+        const passInput = document.getElementById("login_password").value;
 
-        const submitBtn = document.querySelector(".login");
+        const submitBtn = document.querySelector("#loginModal .submit-btn");
         if (submitBtn) {
           submitBtn.disabled = true;
           submitBtn.textContent = "Signing in...";
@@ -656,10 +1465,8 @@
 
           if (res.ok) {
             const data = await res.json();
-            // store token for subsequent requests
             if (data.token) sessionStorage.setItem("auth_token", data.token);
 
-            // build basic user object
             const userObj = {
               id: data.id,
               email: data.email,
@@ -667,7 +1474,6 @@
               idNumber: data.id_number || data.idNumber || "",
             };
 
-            // If fullname missing, fetch user detail using token
             if (
               (!userObj.fullname || userObj.fullname.trim() === "") &&
               data.token
@@ -706,14 +1512,15 @@
                 .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`)
                 .join(" | ") ||
               "Invalid credentials.";
+
             const loginErr = document.getElementById("loginError");
             if (loginErr) {
               loginErr.textContent = msg;
               loginErr.style.display = "block";
             }
-            document.getElementById("username").classList.add("input-error");
+            document.getElementById("login_email").classList.add("input-error");
             document
-              .getElementById("password_login")
+              .getElementById("login_password")
               .classList.add("input-error");
           }
         } catch (e) {
@@ -722,23 +1529,33 @@
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = "Login";
+            submitBtn.textContent = "Sign In";
           }
         }
       }
 
-      function checkAdminAccess() {
-        // kept for backward compatibility: open modal
-        openAdminModal();
-      }
+      // Clear login errors when user types
+      ["login_email", "login_password"].forEach((id) => {
+        document
+          .getElementById(id)
+          ?.addEventListener("input", clearLoginErrors);
+      });
 
-      // Admin modal helpers
+      // Enter key support
+      document
+        .getElementById("login_password")
+        ?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") handleLogin();
+        });
+
+      // ========== ADMIN MODAL ==========
       const ADMIN_KEY = "PhyL4b!2026";
+
       function openAdminModal() {
         const modal = document.getElementById("adminModal");
-        const err = document.getElementById("adminKeyError");
         const input = document.getElementById("adminKeyInput");
-        if (!modal) return;
+        const err = document.getElementById("adminKeyError");
+
         if (err) {
           err.textContent = "";
           err.style.display = "none";
@@ -747,16 +1564,20 @@
           input.classList.remove("input-error");
           input.value = "";
         }
-        modal.style.display = "flex";
-        setTimeout(() => {
-          if (input) input.focus();
-        }, 50);
+
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+
+        setTimeout(() => input?.focus(), 100);
       }
 
       function closeAdminModal() {
         const modal = document.getElementById("adminModal");
         const input = document.getElementById("adminKeyInput");
-        if (modal) modal.style.display = "none";
+
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+
         if (input) {
           input.value = "";
           input.classList.remove("input-error");
@@ -767,6 +1588,7 @@
         const input = document.getElementById("adminKeyInput");
         const err = document.getElementById("adminKeyError");
         const value = input ? input.value : "";
+
         if (value === ADMIN_KEY) {
           closeAdminModal();
           window.location.href = "PhyLab_admin_page.html";
@@ -778,10 +1600,18 @@
           if (input) input.classList.add("input-error");
         }
       }
-      // Toggle password visibility (used by login and register password fields)
+
+      document
+        .getElementById("adminKeyInput")
+        ?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submitAdminKey();
+        });
+
+      // ========== PASSWORD TOGGLE ==========
       function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
         if (!input || !btn) return;
+
         const eyeSvg =
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const eyeSlashSvg =
@@ -800,36 +1630,6 @@
           btn.innerHTML = eyeSvg;
         }
       }
-
-      // wire admin modal buttons and Enter key
-      (function attachAdminModalHandlers() {
-        const submitBtn = document.getElementById("adminSubmitBtn");
-        const cancelBtn = document.getElementById("adminCancelBtn");
-        const input = document.getElementById("adminKeyInput");
-        if (submitBtn) submitBtn.addEventListener("click", submitAdminKey);
-        if (cancelBtn) cancelBtn.addEventListener("click", closeAdminModal);
-        if (input)
-          input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") submitAdminKey();
-          });
-      })();
-
-      // Clear inline error when user edits inputs
-      (function attachLoginInputClear() {
-        const uname = document.getElementById("username");
-        const pwd = document.getElementById("password_login");
-        const clear = () => {
-          const err = document.getElementById("loginError");
-          if (err) {
-            err.textContent = "";
-            err.style.display = "none";
-          }
-          if (uname) uname.classList.remove("input-error");
-          if (pwd) pwd.classList.remove("input-error");
-        };
-        if (uname) uname.addEventListener("input", clear);
-        if (pwd) pwd.addEventListener("input", clear);
-      })();
     </script>
   </body>
 </html>

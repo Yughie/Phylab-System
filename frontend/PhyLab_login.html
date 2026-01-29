@@ -778,18 +778,17 @@
       <section class="hero-section">
         <div class="hero-container">
           <h1 class="hero-title">PhyLab</h1>
-          <p class="hero-subtitle">Physics Laboratory Inventory System</p>
+          <p class="hero-subtitle">Physics Laboratory Booking System</p>
           <p class="hero-description">
-            Streamline your laboratory equipment management with our
-            comprehensive digital solution. Track inventory, manage borrowing
-            requests, and monitor returns all in one intuitive platform.
+            Quickly find and reserve equipment, check availability, and submit
+            borrowing requests—making lab work easier and more efficient.
           </p>
           <div class="hero-cta">
             <button
               class="btn btn-light btn-hero"
               onclick="openAuthModal('register')"
             >
-              Start Managing Now
+              Browse Equipment
             </button>
             <button
               class="btn btn-outline btn-hero"
@@ -810,12 +809,10 @@
       <section class="features-section" id="features">
         <div class="features-container">
           <div class="section-header">
-            <h2 class="section-title">
-              Powerful Features for Efficient Management
-            </h2>
+            <h2 class="section-title">Make Lab Work Easier</h2>
             <p class="section-subtitle">
-              Everything you need to manage your physics laboratory equipment
-              effectively and efficiently
+              Tools to search, request, and track equipment loans for coursework
+              and lab activities
             </p>
           </div>
 
@@ -1009,7 +1006,7 @@
             <input type="checkbox" id="remember" class="remember-check" />
             <label for="remember" class="remember-label">Remember me</label>
           </div>
-          <a class="admin-link" onclick="openAdminModal()">Admin Login</a>
+          <a class="admin-link" onclick="openAdminModal()">Staff Login</a>
         </div>
 
         <p id="loginError" class="form-error" role="alert"></p>
@@ -1144,8 +1141,10 @@
     <!-- Admin Access Modal -->
     <div id="adminModal" class="phylab-modal" role="dialog" aria-live="polite">
       <div class="admin-modal-content phylab-modal-content">
-        <h3 class="admin-modal-title">Admin Access</h3>
-        <p class="admin-modal-desc">Enter the admin access key to continue.</p>
+        <h3 class="admin-modal-title">Staff Access</h3>
+        <p class="admin-modal-desc">
+          Enter the staff access key (for instructors/staff) to continue.
+        </p>
         <input
           id="adminKeyInput"
           type="password"

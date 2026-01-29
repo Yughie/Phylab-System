@@ -18,10 +18,36 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+from django.db import connections
+
+
+def health(request):
+    """Simple health check endpoint.
+
+    Returns JSON with overall status and database connectivity.
+    """
+    result = {"status": "ok"}
+    try:
+        conn = connections["default"]
+        # simple lightweight check
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+            cur.fetchone()
+        result["database"] = "ok"
+        status_code = 200
+    except Exception as e:
+        result["database"] = "error"
+        result["database_error"] = str(e)
+        result["status"] = "error"
+        status_code = 500
+
+    return JsonResponse(result, status=status_code)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('health/', health),
     
 ]
 

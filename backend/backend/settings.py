@@ -36,12 +36,32 @@ if load_dotenv:
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-l8jo*6xe*3wgw**u$x*#x65m$2uc*6sg6f53e!s17ijc9!if^o'
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'phylab-inventory-backend.onrender.com', # Your Render backend
+    'localhost', 
+    '127.0.0.1',
+]
+CORS_ALLOWED_ORIGINS = [
+    "https://phylab-system.onrender.com",  # Your frontend link
+    "http://localhost:5500",               # Common for Live Server
+    "http://127.0.0.1:5500",
+]
+
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # If you use HTTPS (Render does by default)
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# Static files for Render
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# If you don't use WhiteNoise yet, Render might not serve CSS/JS correctly.
 
 
 # Application definition
@@ -149,11 +169,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres.cmqfwdhcmvjicjkhxmrf",
-        "PASSWORD": "PhyL4b!2026",
-        "HOST": "aws-1-ap-south-1.pooler.supabase.com",
-        "PORT": "6543",
+        "NAME": os.environ.get("DB_NAME", "postgres"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST"),
+        "PORT": os.environ.get("DB_PORT", "6543"),
         'DISABLE_SERVER_SIDE_CURSORS': True,
         "OPTIONS": {
             'connect_timeout': 10,

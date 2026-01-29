@@ -35,7 +35,7 @@ function closeRemarkModal() {
   currentRemarkItemName = null;
 }
 
-function saveRemark() {
+async function saveRemark() {
   const remarkType = document.getElementById("remarkType").value;
   const remarkText = document.getElementById("remarkText").value.trim();
 
@@ -62,7 +62,8 @@ function saveRemark() {
   remarks[key] = remarkObj;
   localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
 
-  // Persist remark to backend per-item when possible
+  // Attempt to persist remark to backend per-item when possible
+  let backendSucceeded = false;
   if (currentRemarkItemId && currentRemarkRequestId) {
     const nowIso = new Date().toISOString();
     const payload = {
@@ -79,25 +80,37 @@ function saveRemark() {
       `http://127.0.0.1:8000/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
       `/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
     ];
-    (async () => {
-      for (const u of urls) {
-        try {
-          const r = await fetch(u, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            mode: "cors",
-          });
-          if (r.ok) break;
-        } catch (e) {
-          continue;
+
+    for (const u of urls) {
+      try {
+        const r = await fetch(u, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          mode: "cors",
+        });
+        if (r && r.ok) {
+          backendSucceeded = true;
+          break;
+        } else {
+          try {
+            const txt = await r.text();
+            console.warn("Remark PATCH failed:", r.status, txt);
+          } catch (e) {}
         }
+      } catch (e) {
+        console.warn("Remark PATCH error", e);
+        continue;
       }
-    })();
+    }
   }
 
   closeRemarkModal();
-  showNotification("Remark saved successfully!", "success");
+  if (backendSucceeded) {
+    showNotification("Remark saved to server successfully!", "success");
+  } else {
+    showNotification("Remark saved locally (server unreachable).", "warning");
+  }
 
   // Reload the loans view to show the remark badge
   if (typeof loadReturnWindow === "function") loadReturnWindow();

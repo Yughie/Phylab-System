@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
+import logging
 from rest_framework import status
 from django.conf import settings
 import requests
@@ -264,7 +265,14 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         Updates only the items provided by id. Items not included remain unchanged.
         After updating, if all items are approved/rejected, the request status is updated accordingly.
         """
+        logger = logging.getLogger(__name__)
         borrow_request = self.get_object()
+        try:
+            logger.debug("update_item_statuses called for request %s by %s: %s", pk or borrow_request.id, getattr(request, 'user', None), request.data)
+            # Also print to stdout for local dev visibility
+            print("[update_item_statuses] request", pk or borrow_request.id, "data:", request.data)
+        except Exception:
+            pass
         items_data = request.data.get('items', [])
         
         if not items_data:
@@ -278,6 +286,7 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                 continue
             try:
                 item_obj = borrow_request.items.get(id=item_id)
+                old_status = item_obj.status
                 if 'status' in item_update:
                     item_obj.status = item_update['status']
                 if 'quantity' in item_update:
@@ -292,8 +301,10 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
 
                 item_obj.save()
 
-                # If item was marked approved (or borrowed) create a loan entry for it
-                if item_obj.status in ('approved', 'borrowed'):
+                # Create loan entries only when item status transitions into approved/borrowed
+                prev_was_borrowed_or_approved = old_status in ('approved', 'borrowed')
+                now_is_borrowed_or_approved = item_obj.status in ('approved', 'borrowed')
+                if (not prev_was_borrowed_or_approved) and now_is_borrowed_or_approved:
                     approved_items_to_create.append(item_obj)
             except BorrowRequestItem.DoesNotExist:
                 continue
@@ -316,6 +327,7 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                 status='borrowed',
             )
             for it in approved_items_to_create:
+                # copy per-item fields (including admin remarks) into the new loan item
                 BorrowRequestItem.objects.create(
                     borrow_request=new_req,
                     item_name=it.item_name,
@@ -323,7 +335,16 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                     quantity=it.quantity,
                     status='borrowed',
                     item_image=it.item_image,
+                    admin_remark=getattr(it, 'admin_remark', None),
+                    remark_type=getattr(it, 'remark_type', None),
+                    remark_created_at=getattr(it, 'remark_created_at', None),
                 )
+                # remove the original item from the parent request to avoid duplicates
+                try:
+                    it.delete()
+                except Exception:
+                    # best-effort: if delete fails, continue
+                    pass
             # serialize created loan to include in response
             created_loans.append(BorrowRequestSerializer(new_req, context={'request': request}).data)
 

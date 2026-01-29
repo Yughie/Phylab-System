@@ -85,7 +85,7 @@ export function toggleModal(show) {
   if (show) {
     borrowModal.classList.add("show");
     borrowModal.style.display = "flex";
-    if (borrowToggleButton) borrowToggleButton.style.display = "none";
+    // keep the borrow toggle button visible while modal is open
 
     // Close mobile nav
     closeMobileNav();
@@ -108,7 +108,7 @@ export function toggleModal(show) {
   } else {
     borrowModal.classList.remove("show");
     borrowModal.style.display = "none";
-    if (borrowToggleButton) borrowToggleButton.style.display = "flex";
+    // leave borrow toggle button display unchanged
   }
 }
 
@@ -245,7 +245,9 @@ export function initCart() {
   // Borrow toggle button
   if (borrowToggleButton) {
     borrowToggleButton.addEventListener("click", () => {
-      toggleModal(true);
+      const borrowModal = document.getElementById("borrowModal");
+      const isOpen = borrowModal && borrowModal.classList.contains("show");
+      toggleModal(!isOpen);
     });
   }
 

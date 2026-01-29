@@ -61,12 +61,6 @@
               />
             </svg>
           </div>
-          <button
-            class="logout-button"
-            onclick="window.location.href = 'PhyLab_login.html'"
-          >
-            Logout
-          </button>
         </div>
       </div>
     </div>
@@ -186,15 +180,7 @@
         </div>
       </div>
 
-      <!-- ============================================
-           REQUEST HISTORY SIDEBAR
-           ============================================ -->
-      <aside class="my-requests content-right">
-        <h2 class="available-inventory-header">Request History</h2>
-        <div id="myRequestsContainer">
-          <div style="padding: 20px; color: #666">Loading requests...</div>
-        </div>
-      </aside>
+      <!-- Request history is now shown in a modal; trigger is a floating button -->
     </div>
 
     <!-- ============================================
@@ -208,6 +194,26 @@
       <span class="borrow-count-badge" id="borrow-count">0</span>
       Borrow
     </button>
+
+    <!-- Floating History Button (opens request history modal) -->
+    <button
+      id="historyToggleButton"
+      class="history-toggle-button"
+      aria-label="Open request history"
+    >
+      History
+    </button>
+
+    <!-- HISTORY MODAL -->
+    <div id="historyModal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <span class="close-btn" id="closeHistoryModal">&times;</span>
+        <h2>Request History</h2>
+        <div class="modal-body" id="myRequestsContainer">
+          <div style="padding: 20px; color: #666">Loading requests...</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ============================================
          BORROW MODAL / REQUEST FORM
@@ -419,5 +425,82 @@
          Load all component modules
          ============================================ -->
     <script type="module" src="js/user-main.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById("historyToggleButton");
+        const modal = document.getElementById("historyModal");
+        const closeBtn = document.getElementById("closeHistoryModal");
+        const borrowBtn = document.getElementById("borrowToggleButton");
+
+        function toggleModal(show) {
+          if (!modal) return;
+          if (show === undefined) modal.classList.toggle("show");
+          else if (show) modal.classList.add("show");
+          else modal.classList.remove("show");
+          modal.setAttribute(
+            "aria-hidden",
+            modal.classList.contains("show") ? "false" : "true",
+          );
+        }
+
+        if (btn && modal) {
+          btn.addEventListener("click", function () {
+            toggleModal();
+          });
+        }
+
+        if (closeBtn && modal) {
+          closeBtn.addEventListener("click", function () {
+            toggleModal(false);
+          });
+        }
+
+        if (modal) {
+          modal.addEventListener("click", function (e) {
+            if (e.target === modal) toggleModal(false);
+          });
+        }
+
+        // Position history button to the left of the borrow button when possible
+        function positionHistoryButton() {
+          if (!btn || !borrowBtn) return;
+          const gap = 16; // px gap between buttons (increased)
+          const bRect = borrowBtn.getBoundingClientRect();
+          // match width/height to borrow button for identical sizing
+          try {
+            const borrowWidth = Math.max(80, borrowBtn.offsetWidth || 100);
+            const borrowHeight = borrowBtn.offsetHeight || 40;
+            btn.style.width = borrowWidth + "px";
+            btn.style.height = borrowHeight + "px";
+            btn.style.lineHeight = borrowHeight + "px";
+            // compute left so history sits to the left of borrow with gap
+            const leftPos = Math.max(8, bRect.left - borrowWidth - gap);
+            const bottomPos = window.innerHeight - bRect.bottom; // keeps same bottom offset as borrow button
+            btn.style.left = leftPos + "px";
+            btn.style.bottom = bottomPos + "px";
+            btn.style.right = "auto";
+            btn.style.position = "fixed";
+            // visually ensure text centered
+            btn.style.display = "inline-flex";
+            btn.style.alignItems = "center";
+            btn.style.justifyContent = "center";
+          } catch (e) {
+            // fallback to default positioning
+            const btnWidth = btn.offsetWidth || 100;
+            const leftPos = Math.max(8, bRect.left - btnWidth - gap);
+            const bottomPos = window.innerHeight - bRect.bottom;
+            btn.style.left = leftPos + "px";
+            btn.style.bottom = bottomPos + "px";
+          }
+        }
+
+        // initial position and updates on resize/scroll
+        setTimeout(positionHistoryButton, 50);
+        window.addEventListener("resize", positionHistoryButton);
+        window.addEventListener("scroll", positionHistoryButton, {
+          passive: true,
+        });
+      });
+    </script>
   </body>
 </html>

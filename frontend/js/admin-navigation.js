@@ -23,6 +23,15 @@ function showPage(pageName) {
     loadReturnWindow();
   } else if (pageName === "reviews") {
     displayUserReviews();
+  } else if (pageName === "history") {
+    // Ensure history view loads from backend when selected
+    if (typeof loadAdminHistory === "function") {
+      try {
+        loadAdminHistory();
+      } catch (e) {
+        console.error("loadAdminHistory threw:", e);
+      }
+    }
   }
 }
 

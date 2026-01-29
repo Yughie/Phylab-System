@@ -76,9 +76,19 @@ async function saveRemark() {
         },
       ],
     };
+    // Resolve numeric DB id for the request (uses admin-utils.resolveRequestNumericId)
+    let resolvedReqId = currentRemarkRequestId;
+    try {
+      if (typeof resolveRequestNumericId === "function") {
+        resolvedReqId = await resolveRequestNumericId(currentRemarkRequestId);
+      }
+    } catch (e) {
+      console.warn("resolveRequestNumericId failed", e);
+    }
+
     const urls = [
-      `http://127.0.0.1:8000/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
-      `/api/borrow-requests/${currentRemarkRequestId}/update_item_statuses/`,
+      `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+      `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
     ];
 
     for (const u of urls) {

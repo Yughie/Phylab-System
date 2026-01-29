@@ -175,50 +175,89 @@ function formatRemarkTimestamp(val) {
 async function completeReturn(requestId, itemId) {
   showConfirm(
     "Confirm Return",
-    "Are you sure? This will restore the item to stock.",
+    "Are you sure? This will mark the item as returned and restore it to stock.",
     async function () {
+      console.log("completeReturn: marking item as returned", {
+        requestId,
+        itemId,
+      });
+
       // Try to mark returned in backend first
       let backendSuccess = false;
+      let backendResponse = null;
+
       try {
+        // Resolve numeric DB id if requestId might be a public request code
+        let resolvedReqId = requestId;
+        try {
+          if (typeof resolveRequestNumericId === "function") {
+            resolvedReqId = await resolveRequestNumericId(requestId);
+          }
+        } catch (e) {
+          console.warn("resolveRequestNumericId failed", e);
+        }
+
+        console.log("completeReturn: using resolvedReqId:", resolvedReqId);
+
+        // Use update_item_statuses endpoint to mark specific item as returned
         const urls = [
-          `http://127.0.0.1:8000/api/borrow-requests/${requestId}/update_item_statuses/`,
-          `/api/borrow-requests/${requestId}/update_item_statuses/`,
+          `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+          `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
         ];
 
         const payload = { items: [{ id: itemId, status: "returned" }] };
+        console.log("completeReturn: sending payload:", payload);
 
         let response = null;
         for (const url of urls) {
           try {
+            console.log("completeReturn: trying PATCH to", url);
             response = await fetch(url, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
               mode: "cors",
             });
+            console.log("completeReturn: response status:", response.status);
+
             if (response.ok) {
               backendSuccess = true;
+              try {
+                backendResponse = await response.json();
+                console.log(
+                  "completeReturn: backend response:",
+                  backendResponse,
+                );
+              } catch (e) {
+                console.warn(
+                  "completeReturn: could not parse response JSON",
+                  e,
+                );
+              }
               break;
             } else {
               const txt = await response.text().catch(() => "<no-body>");
-              console.warn("Return PATCH failed", url, response.status, txt);
+              console.warn(
+                "completeReturn: PATCH failed",
+                url,
+                response.status,
+                txt,
+              );
             }
           } catch (e) {
+            console.warn("completeReturn: fetch error for", url, e);
             continue;
           }
         }
 
-        let returnedPayload = null;
-        if (backendSuccess) {
-          console.log("Successfully marked as returned in backend");
-          try {
-            returnedPayload = await response.json();
-          } catch (e) {
-            returnedPayload = null;
-          }
+        if (!backendSuccess) {
+          console.error("completeReturn: all backend attempts failed");
         }
       } catch (error) {
-        console.error("Error marking return in backend:", error);
+        console.error(
+          "completeReturn: error marking return in backend:",
+          error,
+        );
       }
 
       // Also update localStorage for backwards compatibility
@@ -240,6 +279,12 @@ async function completeReturn(requestId, itemId) {
 
           let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
           localStorage.setItem(stockKey, currentStock + qtyToReturn);
+          console.log(
+            "completeReturn: restored stock for",
+            stockKey,
+            "new total:",
+            currentStock + qtyToReturn,
+          );
         }
 
         itemToArchive.actualReturnDate = new Date().toLocaleString();
@@ -250,15 +295,17 @@ async function completeReturn(requestId, itemId) {
 
         localStorage.setItem("phyLab_History", JSON.stringify(history));
         localStorage.setItem("phyLab_RequestQueue", JSON.stringify(queue));
-      } else if (backendSuccess) {
+        console.log("completeReturn: updated localStorage, moved to history");
+      } else if (backendSuccess && backendResponse) {
+        console.log(
+          "completeReturn: no local queue entry, creating from backend response",
+        );
         // Backend succeeded but we have no local queue entry. Create a minimal
         // archive entry from the backend response (if available) so the
         // dashboard history / frequent-items chart can include this return.
         try {
           const orig =
-            (returnedPayload && returnedPayload.original_request) ||
-            returnedPayload ||
-            null;
+            backendResponse.original_request || backendResponse || null;
           const archiveEntry = {
             id: (orig && (orig.id || orig.request_id)) || requestId,
             request_id:
@@ -277,9 +324,7 @@ async function completeReturn(requestId, itemId) {
 
           if (orig && Array.isArray(orig.items)) {
             const returnedItem = orig.items.find(
-              (it) =>
-                String(it.id) === String(itemId) ||
-                String(it.id) === String(itemId),
+              (it) => String(it.id) === String(itemId),
             );
             if (returnedItem) {
               const itemObj = {
@@ -297,29 +342,46 @@ async function completeReturn(requestId, itemId) {
               const qtyToReturn = parseInt(itemObj.quantity) || 1;
               let currentStock = parseInt(localStorage.getItem(stockKey)) || 0;
               localStorage.setItem(stockKey, currentStock + qtyToReturn);
+              console.log(
+                "completeReturn: restored stock from backend data for",
+                stockKey,
+              );
             }
           }
 
           history.push(archiveEntry);
           localStorage.setItem("phyLab_History", JSON.stringify(history));
+          console.log(
+            "completeReturn: created archive entry from backend data",
+          );
         } catch (e) {
           console.warn(
-            "Failed to archive returned item from backend payload",
+            "completeReturn: failed to archive returned item from backend payload",
             e,
           );
         }
       }
 
-      showNotification(
-        backendSuccess
-          ? "Item returned successfully!"
-          : "Item returned and archived successfully.",
-        "success",
-      );
+      if (backendSuccess) {
+        showNotification(
+          "Item returned successfully! Now visible in History page.",
+          "success",
+        );
+      } else {
+        showNotification(
+          "Item marked as returned locally. Backend update failed.",
+          "warning",
+        );
+      }
+
+      // Reload the active loans page to remove the returned item
+      console.log("completeReturn: reloading active loans display");
       loadReturnWindow();
       if (typeof loadStockFromMemory === "function") loadStockFromMemory();
-      loadDashboardStats();
+      if (typeof loadDashboardStats === "function") loadDashboardStats();
       if (typeof initLiveChart === "function") initLiveChart();
+
+      console.log("completeReturn: complete!");
     },
   );
 }
@@ -423,6 +485,9 @@ async function openBorrowingDetails(requestId) {
     item.description || "Physics Lab Equipment";
   document.getElementById("det-inv-id").innerText =
     request.id || request.requestId || "N/A";
+  const headerReqEl = document.getElementById("det-request-id-header");
+  if (headerReqEl)
+    headerReqEl.innerText = request.requestId || request.id || "—";
   document.getElementById("det-condition").innerText = "Good";
 
   document.getElementById("det-borrower-name").innerText =
@@ -431,31 +496,12 @@ async function openBorrowingDetails(requestId) {
     "ID: " +
     (request.studentID || request.studentId || request.student_id || "N/A");
   document.getElementById("det-email").innerText = request.email || "N/A";
-  const classEl = document.getElementById("det-class");
-  if (classEl)
-    classEl.innerText =
-      request.studentClass || request.class || request.course || "N/A";
-
-  // Extra borrower/teacher contact fields (may be absent from older payloads)
-  const borrowerPhoneEl = document.getElementById("det-borrower-phone");
-  if (borrowerPhoneEl)
-    borrowerPhoneEl.innerText = request.studentPhone || request.phone || "N/A";
-  const borrowerDeptEl = document.getElementById("det-borrower-department");
-  if (borrowerDeptEl)
-    borrowerDeptEl.innerText =
-      request.studentDepartment || request.department || "N/A";
   const requestIdEl = document.getElementById("det-request-id");
   if (requestIdEl)
     requestIdEl.innerText = request.requestId || request.id || "N/A";
 
   document.getElementById("det-teacher").innerText =
     request.teacherName || "N/A";
-  const teacherEmailEl = document.getElementById("det-teacher-email");
-  if (teacherEmailEl)
-    teacherEmailEl.innerText =
-      request.teacherEmail || request.teacher_email || "N/A";
-  const teacherPhoneEl = document.getElementById("det-teacher-phone");
-  if (teacherPhoneEl) teacherPhoneEl.innerText = request.teacherPhone || "N/A";
 
   document.getElementById("det-borrow-date").innerText =
     request.borrowDate || "N/A";
@@ -465,8 +511,9 @@ async function openBorrowingDetails(requestId) {
     request.purpose || "No purpose stated.";
 
   const statusEl = document.getElementById("det-status");
-  statusEl.innerText = (request.status || "Borrowed").toUpperCase();
-  statusEl.className = `status-tag ${request.status}`;
+  const currentStatus = (request.status || "borrowed").toString().toLowerCase();
+  statusEl.innerText = currentStatus.toUpperCase();
+  statusEl.className = `status-tag status-${currentStatus}`;
 
   // Show admin remark if exists
   const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};

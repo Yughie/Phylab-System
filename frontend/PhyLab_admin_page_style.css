@@ -851,6 +851,84 @@
 }
 
 /* ============================================
+   HISTORY PAGE
+   ============================================ */
+
+.history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.history-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.history-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.history-id {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.history-borrower {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.history-dates {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.history-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.history-items {
+  font-size: 13px;
+  color: #64748b;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .history-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .history-card-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* ============================================
    REVIEWS PAGE
    ============================================ */
 
@@ -860,118 +938,136 @@
   gap: 16px;
 }
 
+/* Card: use subtle surface color, soft shadow and a 3-column layout */
 .review-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 16px;
+  align-items: start;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--border-color-strong);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
-.review-card-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  object-fit: cover;
+.review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.reviewer-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-strong)
+  );
+  font-size: 20px;
   flex-shrink: 0;
 }
 
+.review-card-img {
+  width: 120px;
+  height: 88px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
 .review-card-content {
-  flex: 1;
-  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-card-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reviewer-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reviewer-info strong {
+  display: block;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.review-date {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
 .review-item-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 
 .review-meta {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   font-size: 13px;
-  color: #64748b;
-  margin-bottom: 12px;
+  color: #6b7280;
 }
 
 .review-comment {
   font-size: 14px;
   color: #334155;
   line-height: 1.6;
-  font-style: italic;
   margin: 0;
   background: var(--bg-surface-alt);
-  padding: 12px 16px;
-  border-radius: 10px;
-  border-left: 3px solid var(--color-primary);
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
   word-break: break-word;
   white-space: pre-wrap;
 }
 
-/* Mobile responsiveness for review cards */
-@media (max-width: 600px) {
-  .review-card {
-    flex-direction: column;
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .review-card-img {
-    width: 60px;
-    height: 60px;
-  }
-
-  .review-card-content {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .review-item-name {
-    font-size: 14px;
-  }
-
-  .review-meta {
-    font-size: 12px;
-    gap: 8px;
-  }
-
-  .review-comment {
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-
-  .review-card-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
+/* Actions column (right-most) */
+.review-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: start;
+  align-items: flex-end;
 }
 
 .delete-review-btn {
   background: transparent;
-  border: none;
+  border: 1px solid rgba(239, 68, 68, 0.1);
   color: #ef4444;
   cursor: pointer;
-  padding: 8px;
+  padding: 8px 10px;
   border-radius: 8px;
-  transition: background 0.2s;
+  transition:
+    background 0.12s,
+    transform 0.08s;
 }
 
 .delete-review-btn:hover {
-  background: #fee2e2;
-}
-
-/* Resolve button mirrors delete button but uses success tint */
-.review-card-actions {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
+  background: rgba(254, 226, 226, 0.6);
+  transform: translateY(-1px);
 }
 
 .resolve-review-btn {
@@ -982,22 +1078,54 @@
   background: var(--color-success);
   color: #fff;
   border: none;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
-  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.12);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.12);
   transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease,
-    background 0.12s ease;
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .resolve-review-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.16);
-  background: #0ea06a;
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.16);
+  background: color-mix(in srgb, var(--color-success) 80%, black 20%);
 }
+
+.resolve-review-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+/* Mobile responsiveness for review cards */
+@media (max-width: 720px) {
+  .review-card {
+    grid-template-columns: 48px 1fr;
+    grid-auto-rows: auto;
+    padding: 12px;
+  }
+
+  .review-card-img {
+    width: 100%;
+    height: 160px;
+    grid-column: 1 / -1;
+    border-radius: 8px;
+  }
+
+  .review-card-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    grid-column: 1 / -1;
+    gap: 10px;
+  }
+}
+
+/* removed conflicting duplicate hover rules above */
 
 /* ============================================
    EQUIPMENT PAGE
@@ -2225,6 +2353,8 @@ input::-webkit-inner-spin-button {
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   font-weight: 600;
   font-size: 14px;
   transition: all var(--transition-normal);
@@ -2234,6 +2364,66 @@ input::-webkit-inner-spin-button {
 .primary-btn:hover {
   background: var(--color-primary-strong);
   transform: translateY(-2px);
+}
+
+/* Small generic button used across views */
+.btn {
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn:hover {
+  background: rgba(136, 34, 34, 0.04);
+  transform: translateY(-1px);
+}
+
+.btn-small {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* History view toggle specific styling */
+.history-toggle {
+  display: inline-flex;
+  gap: 8px;
+  background: var(--bg-surface);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-toggle .btn {
+  background: transparent;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.history-toggle .btn.active,
+.history-toggle .btn[aria-pressed="true"] {
+  background: linear-gradient(
+    180deg,
+    var(--color-primary) 0%,
+    var(--color-primary-strong) 100%
+  );
+  color: white;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+}
+
+/* ensure small buttons don't shift when text changes */
+.history-toggle .btn.fixed-width {
+  min-width: 120px;
 }
 
 .secondary-btn {

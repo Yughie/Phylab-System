@@ -356,9 +356,19 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
     // Call the update_item_statuses endpoint
     let success = false;
     try {
+      // Resolve numeric DB id if reqId may be a public request code
+      let resolvedReqId = reqId;
+      try {
+        if (typeof resolveRequestNumericId === "function") {
+          resolvedReqId = await resolveRequestNumericId(reqId);
+        }
+      } catch (e) {
+        console.warn("resolveRequestNumericId failed", e);
+      }
+
       const urls = [
-        `http://127.0.0.1:8000/api/borrow-requests/${reqId}/update_item_statuses/`,
-        `/api/borrow-requests/${reqId}/update_item_statuses/`,
+        `http://127.0.0.1:8000/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+        `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
       ];
 
       for (const url of urls) {

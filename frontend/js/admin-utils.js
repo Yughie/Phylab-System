@@ -56,6 +56,40 @@ async function fetchReviewsFromBackend() {
   return null;
 }
 
+// Resolve a potentially public request identifier (e.g. 'LYOQNPL') to numeric DB id.
+// Looks in localStorage cache first, then queries backend list as a fallback.
+async function resolveRequestNumericId(identifier) {
+  if (!identifier && identifier !== 0) return identifier;
+  const asStr = String(identifier || "");
+  if (/^\d+$/.test(asStr)) return asStr; // already numeric
+
+  // try local cache
+  try {
+    const queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
+    const found = queue.find((r) => String(r.requestId) === asStr || String(r.request_id) === asStr || String(r.requestId || "") === asStr);
+    if (found && found.id) return String(found.id);
+  } catch (e) {}
+
+  // fallback: fetch list from backend and search
+  const urls = ["http://127.0.0.1:8000/api/borrow-requests/", "/api/borrow-requests/"];
+  for (const u of urls) {
+    try {
+      const resp = await fetch(u, { mode: "cors" });
+      if (!resp || !resp.ok) continue;
+      const data = await resp.json();
+      if (Array.isArray(data)) {
+        const found = data.find((r) => String(r.request_id) === asStr || String(r.requestId) === asStr);
+        if (found && found.id) return String(found.id);
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+
+  // nothing found; return original identifier so callers may still try
+  return identifier;
+}
+
 // Compute how many units of an item are currently borrowed (active loans)
 function computeActiveLoansForItem(itemKey) {
   if (!itemKey) return 0;

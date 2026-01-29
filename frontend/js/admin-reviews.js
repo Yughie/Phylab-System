@@ -62,10 +62,8 @@ async function displayUserReviews() {
           </button>
         </div>
         <div class="review-card-body">
-          <div class="review-card-body-content">
-            <h3>${itemName}</h3>
-            <p>${comment}</p>
-          </div>
+          <h3>${itemName}</h3>
+          <p>${comment}</p>
           ${imgUrl ? `<img src="${imgUrl}" alt="Review" class="review-card-img" onclick="openReviewImage('${imgUrl}', '${itemName}')">` : ""}
         </div>
       </div>

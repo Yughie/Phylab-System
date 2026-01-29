@@ -2438,6 +2438,30 @@ input::-webkit-inner-spin-button {
   transition: all var(--transition-normal);
 }
 
+/* History card: make details button more visible (red primary) */
+.history-card .details-btn {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.history-card .details-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.18);
+}
+
+.history-card .details-btn:active {
+  transform: translateY(0);
+}
+
 .secondary-btn:hover {
   background: rgba(21, 101, 192, 0.08);
 }

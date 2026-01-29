@@ -313,40 +313,97 @@ async function loadAdminHistory() {
       );
       if (container) {
         container.innerHTML = `
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-            <div style="font-weight:600">View:</div>
-            <button id="historyViewRequests" class="btn btn-small">Requests</button>
-            <button id="historyViewItems" class="btn btn-small">Returned Items</button>
+          <div class="history-controls" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="history-toggle" role="tablist" aria-label="History view">
+              <button id="historyViewRequests" class="btn btn-small fixed-width" aria-pressed="false">Requests</button>
+              <button id="historyViewItems" class="btn btn-small fixed-width" aria-pressed="false">Returned Items</button>
+            </div>
+            <div class="history-search" style="flex:1;min-width:220px;">
+              <input id="historySearchInput" type="search" placeholder="Search student, email, or request id" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-surface);" />
+            </div>
+            <div class="history-filter" style="display:flex;gap:8px;align-items:center">
+              <select id="historyDateRange" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-color);background:white;">
+                <option value="all">All dates</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </div>
           </div>
           <div id="historyViewContent"></div>
         `;
-        // attach view handlers
+
         const viewContent = document.getElementById("historyViewContent");
-        document.getElementById("historyViewRequests").onclick = () => {
-          // render under the content container
-          const parentHtml = viewContent;
-          parentHtml.innerHTML = "";
-          try {
-            renderHistoryList(normalizedSorted, parentHtml);
-          } catch (err) {
-            console.error("historyViewRequests render error", err);
-            parentHtml.innerHTML =
-              '<div class="empty-state"><p>Unable to render requests view</p></div>';
+        const reqBtn = document.getElementById("historyViewRequests");
+        const itemsBtn = document.getElementById("historyViewItems");
+        const searchInput = document.getElementById("historySearchInput");
+        const dateRange = document.getElementById("historyDateRange");
+
+        let currentView = "items"; // 'items' or 'requests'
+
+        function setActiveButton(view) {
+          currentView = view;
+          if (view === "requests") {
+            reqBtn.classList.add("active");
+            reqBtn.setAttribute("aria-pressed", "true");
+            itemsBtn.classList.remove("active");
+            itemsBtn.setAttribute("aria-pressed", "false");
+          } else {
+            itemsBtn.classList.add("active");
+            itemsBtn.setAttribute("aria-pressed", "true");
+            reqBtn.classList.remove("active");
+            reqBtn.setAttribute("aria-pressed", "false");
           }
-        };
-        document.getElementById("historyViewItems").onclick = () => {
-          const parentHtml = document.getElementById("historyViewContent");
+        }
+
+        function applyFiltersAndRender() {
+          const q = (searchInput.value || "").trim().toLowerCase();
+          const days = dateRange.value;
+          const now = new Date();
+
+          const filtered = normalizedSorted.filter((rec) => {
+            // date filter
+            if (days !== "all") {
+              const d = rec.timestamp ? new Date(rec.timestamp) : null;
+              if (!d) return false;
+              const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+              if (diffDays > Number(days)) return false;
+            }
+            if (!q) return true;
+            // search fields
+            const hay =
+              `${rec.studentName || ""} ${rec.email || ""} ${rec.id || ""}`.toLowerCase();
+            return hay.indexOf(q) !== -1;
+          });
+
+          // render according to current view
+          viewContent.innerHTML = "";
           try {
-            parentHtml.innerHTML = "";
-            renderReturnedItems(normalizedSorted, parentHtml);
+            if (currentView === "requests")
+              renderHistoryList(filtered, viewContent);
+            else renderReturnedItems(filtered, viewContent);
           } catch (err) {
-            console.error("historyViewItems render error", err);
-            parentHtml.innerHTML =
-              '<div class="empty-state"><p>Unable to render items view</p></div>';
+            console.error("applyFiltersAndRender error", err);
+            viewContent.innerHTML =
+              '<div class="empty-state"><p>Unable to render view</p></div>';
           }
-        };
-        // default to items view per request
-        document.getElementById("historyViewItems").click();
+        }
+
+        reqBtn.addEventListener("click", () => {
+          setActiveButton("requests");
+          applyFiltersAndRender();
+        });
+
+        itemsBtn.addEventListener("click", () => {
+          setActiveButton("items");
+          applyFiltersAndRender();
+        });
+
+        searchInput.addEventListener("input", () => applyFiltersAndRender());
+        dateRange.addEventListener("change", () => applyFiltersAndRender());
+
+        // default to items view
+        setActiveButton("items");
+        applyFiltersAndRender();
       } else {
         // fallback to original behavior
         renderHistoryList(normalizedSorted);

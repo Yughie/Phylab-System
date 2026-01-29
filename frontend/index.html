@@ -1173,6 +1173,7 @@
       </div>
     </div>
 
+    <script src="js/config.js"></script>
     <script>
       // ========== NAVIGATION SCROLL EFFECT ==========
       window.addEventListener("scroll", () => {
@@ -1369,7 +1370,7 @@
           };
 
           try {
-            const res = await fetch("http://127.0.0.1:8000/api/register/", {
+            const res = await fetch(window.PHYLAB_API("/api/register/"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
@@ -1456,7 +1457,7 @@
 
         try {
           const payload = { email: idInput, password: passInput };
-          const res = await fetch("http://127.0.0.1:8000/api/login/", {
+          const res = await fetch(window.PHYLAB_API("/api/login/"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -1479,7 +1480,7 @@
             ) {
               try {
                 const detailRes = await fetch(
-                  `http://127.0.0.1:8000/api/users/${data.id}/`,
+                  window.PHYLAB_API(`/api/users/${data.id}/`),
                   {
                     headers: { Authorization: "Token " + data.token },
                   },

@@ -135,7 +135,76 @@ function ensureRequestModal() {
 }
 
 function showRequestModal(req) {
+  // Ensure injected styles exist (idempotent)
   ensureRequestModal();
+
+  // If history modal exists on the page, render details into its top pane
+  const historyModal = document.getElementById("historyModal");
+  const detailPane = document.getElementById("historyDetailPane");
+  if (historyModal && detailPane) {
+    // Build professional detail layout
+    const statusClass = (req.status || "pending").toLowerCase();
+    const items = req.items || [];
+    const makeMeta = (label, val) =>
+      `<div class=\"meta-item\"><strong>${label}:</strong> ${val || "N/A"}</div>`;
+
+    let html = `
+      <div class="hd-top">
+        <div class="hd-left">
+          <div class="hd-title">Request ${req.id || ""}</div>
+          <div class="hd-sub">${req.studentName || req.email || "You"} • ${formatTimestamp(req.timestamp) || ""}</div>
+          <div class="hd-meta">
+            ${makeMeta("Teacher", req.teacher_name)}
+            ${makeMeta("Purpose", req.purpose)}
+            ${makeMeta("Email", req.email)}
+            ${makeMeta("Borrow", formatDateOnly(req.borrowDate || req.borrow_date))}
+            ${makeMeta("Return", formatDateOnly(req.returnDate || req.return_date))}
+            ${makeMeta("Admin remark", req.admin_remark)}
+          </div>
+        </div>
+        <div class="hd-right">
+          <div class="request-status ${statusClass}">${(req.status || "").toUpperCase()}</div>
+        </div>
+      </div>
+      <div class="hd-items">
+        ${items
+          .map(
+            (it) => `
+              <div class="hd-item">
+                <img src="${(it.item_image || it.image || it.image_url || "").replace(/"/g, "") || ""}" alt="" onerror="this.style.visibility='hidden'" />
+                <div>
+                  <div style="font-weight:700">${it.name || it.item_name || "Item"}</div>
+                  <div style="color:#64748b; font-size:13px">Qty: ${it.quantity || 1}</div>
+                </div>
+              </div>`,
+          )
+          .join("")}
+      </div>
+      <div class="hd-notes">${req.notes || req.comment || ""}</div>
+      <div class="hd-actions" style="margin-top:12px">
+        <button type="button" class="detail-close-btn detail-close-action">Close details</button>
+      </div>
+    `;
+
+    detailPane.innerHTML = html;
+    detailPane.style.display = "block";
+    // wire close button
+    const closeBtn = detailPane.querySelector(".detail-close-action");
+    if (closeBtn)
+      closeBtn.addEventListener("click", () => {
+        detailPane.style.display = "none";
+        const historyBtn = document.getElementById("historyToggleButton");
+        if (historyBtn) historyBtn.focus();
+      });
+    // show modal and scroll top of body
+    historyModal.classList.add("show");
+    historyModal.setAttribute("aria-hidden", "false");
+    const body = document.getElementById("myRequestsContainer");
+    if (body) body.scrollTop = 0;
+    return;
+  }
+
+  // Fallback: populate the standalone detail overlay
   const overlay = document.getElementById("requestDetailModalOverlay");
   if (!overlay) return;
   document.getElementById("requestModalTitle").textContent =
@@ -174,6 +243,7 @@ function showRequestModal(req) {
 
   // For each item render a row with thumbnail (if available) and details
   (req.items || []).forEach((it, index) => {
+    // If we rendered into history modal detail pane, items were already added above and we returned earlier.
     const li = document.createElement("li");
     li.className = "request-item-row";
 

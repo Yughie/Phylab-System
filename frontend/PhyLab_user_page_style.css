@@ -323,7 +323,7 @@
 .main-content {
   flex: 1;
   min-width: 0;
-  padding-right: 380px; /* space for fixed request panel */
+  padding-right: 0; /* history moved to modal, no reserved right space */
 }
 .body-navbar {
   display: flex;
@@ -801,27 +801,12 @@
   min-width: 0;
 }
 .content-right {
-  flex: 0 0 30%;
-  max-width: 420px;
-  position: relative;
-  padding-left: 12px;
+  display: none;
 }
 
 /* My Requests sidebar: fixed to the right as a dashboard panel */
 .my-requests {
-  box-sizing: border-box;
-  padding: 20px;
-  position: fixed;
-  right: 32px;
-  top: 94px; /* below header */
-  width: 340px;
-  height: calc(100vh - 118px);
-  overflow-y: auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  z-index: 1050;
+  display: none;
 }
 .my-requests h3 {
   color: rgb(128, 0, 32);
@@ -1267,6 +1252,130 @@
   overflow: hidden;
   border: 1px solid rgba(128, 0, 32, 0.1);
   z-index: 1410; /* ensure content sits above overlay children */
+}
+
+/* History detail pane inside history modal */
+.history-detail {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+.history-detail .hd-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.history-detail .hd-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.history-detail .hd-title {
+  font-weight: 700;
+  color: var(--color-primary, rgb(128, 0, 32));
+  font-size: 16px;
+}
+.history-detail .hd-sub {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.history-detail .hd-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.history-detail .hd-meta .meta-item {
+  font-size: 13px;
+  color: #334155;
+}
+.history-detail .hd-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.history-detail .request-status {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.request-status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+.request-status.borrowed {
+  background: #d1fae5;
+  color: #047857;
+}
+.request-status.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.request-status.returned {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+.history-detail .hd-items {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.history-detail .hd-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.history-detail .hd-item img {
+  width: 56px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+.history-detail .hd-notes {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 13px;
+}
+
+/* small close button for history detail pane */
+.detail-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: #475569;
+  border-radius: 6px;
+}
+.detail-close-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #111;
+}
+
+/* Action button style for bottom 'Close details' */
+.detail-close-action {
+  width: 100%;
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: none;
+  background: rgb(128, 0, 32);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(128, 0, 32, 0.18);
+}
+.detail-close-action:hover {
+  background: #600018;
 }
 
 /* Floating borrow toggle button */

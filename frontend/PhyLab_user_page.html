@@ -36,14 +36,6 @@
 
       <!-- Navigation items (collapsible on mobile) -->
       <div class="nav-items" id="navItems">
-        <div class="search-bar">
-          <input
-            type="text"
-            id="searchInput"
-            class="search-input"
-            placeholder="Search..."
-          />
-        </div>
         <div class="logout">
           <div
             class="user-profile"
@@ -80,7 +72,7 @@
               and materials.
             </p>
             <div class="welcome-hero-features">
-              <div class="hero-feature">
+              <div class="hero-feature" id="findEquipmentBtn">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -209,6 +201,12 @@
       <div class="modal-content">
         <span class="close-btn" id="closeHistoryModal">&times;</span>
         <h2>Request History</h2>
+        <!-- Details pane: populated when a request is clicked -->
+        <div
+          id="historyDetailPane"
+          class="history-detail"
+          style="display: none; margin-bottom: 12px"
+        ></div>
         <div class="modal-body" id="myRequestsContainer">
           <div style="padding: 20px; color: #666">Loading requests...</div>
         </div>
@@ -441,6 +439,10 @@
             "aria-hidden",
             modal.classList.contains("show") ? "false" : "true",
           );
+          // hide detail pane when modal is closed
+          const detail = document.getElementById("historyDetailPane");
+          if (detail && !modal.classList.contains("show"))
+            detail.style.display = "none";
         }
 
         if (btn && modal) {
@@ -498,6 +500,23 @@
         setTimeout(positionHistoryButton, 50);
         window.addEventListener("resize", positionHistoryButton);
         window.addEventListener("scroll", positionHistoryButton, {
+
+        // 'Find Equipment' hero button should jump to inventory search
+        const findBtn = document.getElementById('findEquipmentBtn');
+        const inventorySearch = document.getElementById('userInventorySearch');
+        if (findBtn && inventorySearch) {
+          findBtn.style.cursor = 'pointer';
+          findBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // ensure inventory is visible and scroll into view
+            try {
+              inventorySearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              inventorySearch.focus({ preventScroll: true });
+            } catch (err) {
+              inventorySearch.focus();
+            }
+          });
+        }
           passive: true,
         });
       });

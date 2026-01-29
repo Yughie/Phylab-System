@@ -465,8 +465,26 @@
 .admin-sidebar.collapsed .nav-item span {
   display: none;
 }
-.admin-sidebar.collapsed .nav-badge {
-  display: none;
+.admin-sidebar.collapsed .nav-item {
+  position: relative;
+}
+.admin-sidebar.collapsed .nav-item .nav-badge {
+  /* ensure badges remain visible and positioned when sidebar is collapsed */
+  display: inline-flex !important;
+  position: absolute;
+  right: 6px;
+  top: 8px;
+  transform: none;
+  min-width: 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-size: 10px;
+  line-height: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  z-index: 1300;
 }
 
 .admin-main {

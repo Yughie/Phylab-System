@@ -2916,6 +2916,19 @@
       })();
     </script>
 
+    <script src="js/admin-dashboard.js"></script>
     <script src="js/admin-borrow-requests.js"></script>
+    <script>
+      (async function () {
+        if (typeof refreshLocalQueueFromBackend === "function") {
+          try {
+            await refreshLocalQueueFromBackend();
+            console.debug("Prefetched borrow requests into localStorage");
+          } catch (e) {
+            console.warn("Prefetch borrow requests failed", e);
+          }
+        }
+      })();
+    </script>
   </body>
 </html>

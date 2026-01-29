@@ -34,7 +34,7 @@ export function toggleProfile(show) {
  */
 export function handleLogout() {
   sessionStorage.removeItem("current_user");
-  window.location.href = "PhyLab_login.html";
+  window.location.href = "index.html";
 }
 
 /**

@@ -51,7 +51,7 @@
       <div class="logout">
         <button
           class="logout-button"
-          onclick="window.location.href = 'PhyLab_login.html'"
+          onclick="window.location.href = 'index.html'"
         >
           Logout
         </button>

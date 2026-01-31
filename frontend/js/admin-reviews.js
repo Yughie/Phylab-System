@@ -48,23 +48,29 @@ async function displayUserReviews() {
 
     html += `
       <div class="review-card">
-        <div class="review-card-header">
-          <div class="reviewer-info">
-            <div class="reviewer-avatar">${displayName.charAt(0).toUpperCase()}</div>
-            <div>
-              <strong>${displayName}</strong>
-              <span class="review-date">${createdDate}</span>
+        ${
+          imgUrl
+            ? `<div class="review-card-left"><img src="${imgUrl}" alt="Review image for ${itemName}" class="review-card-img" onclick="openReviewImage('${imgUrl}', '${itemName}')"></div>`
+            : ""
+        }
+
+        <div class="review-card-body">
+          <div class="review-card-top">
+            <h3 class="review-item-name">${itemName}</h3>
+            <div class="review-date">${createdDate}</div>
+          </div>
+
+          <p class="review-comment">${comment}</p>
+
+          <div class="review-card-footer">
+            <div class="review-user">${displayName}</div>
+            <div class="review-card-actions">
+              <button class="resolve-review-btn" onclick="resolveReview(${rev.id})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Resolve
+              </button>
             </div>
           </div>
-          <button class="resolve-review-btn" onclick="resolveReview(${rev.id})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Resolve
-          </button>
-        </div>
-        <div class="review-card-body">
-          <h3>${itemName}</h3>
-          <p>${comment}</p>
-          ${imgUrl ? `<img src="${imgUrl}" alt="Review" class="review-card-img" onclick="openReviewImage('${imgUrl}', '${itemName}')">` : ""}
         </div>
       </div>
     `;
@@ -94,7 +100,7 @@ async function resolveReview(reviewId) {
     async function () {
       try {
         const urls = [
-          (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
+          window.PHYLAB_API && typeof window.PHYLAB_API === "function"
             ? window.PHYLAB_API(`/api/reviews/${reviewId}/resolve/`)
             : `/api/reviews/${reviewId}/resolve/`,
           `/api/reviews/${reviewId}/resolve/`,

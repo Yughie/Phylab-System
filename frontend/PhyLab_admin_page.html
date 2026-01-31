@@ -2580,18 +2580,26 @@
           // compute original index in the stored reviews array since we reversed for display
           const originalIndex = reviews.length - 1 - i;
           html += `
-        <div class="review-card">
-          <img class="review-card-img" src="${imgSrc}" alt="${rev.itemName || ""}">
-          <div class="review-card-content">
-            <h3 class="review-item-name">${rev.itemName || "Unnamed Item"}</h3>
-            <div class="review-meta">
-              <span class="review-user">${rev.userName || "Anonymous"}</span>
-              <span class="review-date">${rev.timestamp || ""}</span>
-            </div>
-            <p class="review-comment">"${rev.comment && rev.comment.trim() ? rev.comment : "No comment"}"</p>
+        <div class="review-card" data-idx="${originalIndex}">
+          <div class="review-card-left">
+            <img class="review-card-img" src="${imgSrc}" alt="${rev.itemName || ""}" onclick="openReviewImage('${escapeJs(imgSrc)}','${escapeJs(rev.itemName || "")}')">
           </div>
-          <div class="review-card-actions">
-            <button onclick="resolveReview(${originalIndex})" class="resolve-review-btn" aria-label="Resolve review">Resolve</button>
+
+          <div class="review-card-body">
+            <div class="review-card-top">
+              <h3 class="review-item-name">${escapeHtml(rev.itemName || "Unnamed Item")}</h3>
+              <div class="review-date">${escapeHtml(rev.timestamp || "")}</div>
+            </div>
+
+            <p class="review-comment">${escapeHtml(rev.comment && rev.comment.trim() ? rev.comment : "No comment")}</p>
+
+            <div class="review-card-footer">
+              <div class="review-user">${escapeHtml(rev.userName || "Anonymous")}</div>
+              <div class="review-card-actions">
+                <button onclick="resolveReview(${originalIndex})" class="resolve-review-btn" aria-label="Resolve review">Resolve</button>
+                <button onclick="deleteReview(${originalIndex})" class="delete-review-btn" aria-label="Delete review">Delete</button>
+              </div>
+            </div>
           </div>
         </div>
         `;
@@ -2624,6 +2632,22 @@
             localStorage.setItem("phyLab_UserReviews", JSON.stringify(reviews));
             displayUserReviews();
             showNotification("Review resolved.", "success");
+          },
+        );
+      }
+
+      function deleteReview(index) {
+        let reviews =
+          JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
+
+        showConfirm(
+          "Delete Review",
+          "Permanently delete this review? This cannot be undone.",
+          function () {
+            reviews.splice(index, 1);
+            localStorage.setItem("phyLab_UserReviews", JSON.stringify(reviews));
+            displayUserReviews();
+            showNotification("Review deleted.", "warning");
           },
         );
       }

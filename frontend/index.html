@@ -441,6 +441,11 @@
         color: var(--color-text);
       }
 
+      /* Ensure admin/staff modal appears above the auth/login modal */
+      #adminModal {
+        z-index: 10001;
+      }
+
       .auth-header {
         text-align: center;
         margin-bottom: 2rem;
@@ -1006,7 +1011,7 @@
             <input type="checkbox" id="remember" class="remember-check" />
             <label for="remember" class="remember-label">Remember me</label>
           </div>
-          <a class="admin-link" onclick="openAdminModal()">Staff Login</a>
+          <a class="admin-link" onclick="openAdminModal()">Admin Login</a>
         </div>
 
         <p id="loginError" class="form-error" role="alert"></p>

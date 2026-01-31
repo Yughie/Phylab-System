@@ -69,6 +69,10 @@ export function loadInventoryFromAdmin() {
       <div class="inventory-item-text">
         <span class="inventory-item-name">${item.name}</span>
         <p class="inventory-item-description">${shortDesc}</p>
+        <div class="inventory-item-cabinet">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><path d="M8 8h8"/></svg>
+          ${cabinetDisplay}
+        </div>
         <div class="inventory-item-footer">
           <span class="stock-info">Stock: <span class="stock-display" data-item="${item.itemKey}">${stockValue}</span></span>
           <button class="inventory-button-borrow" data-item="${item.itemKey}" type="button" ${isOutOfStock ? "disabled" : ""}>

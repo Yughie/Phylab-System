@@ -1030,7 +1030,12 @@
 }
 .inventory-item-text {
   box-sizing: border-box;
-  display: block;
+  /* make the card body a column flex container so the footer can
+     stick to the bottom uniformly across cards */
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 8px;
   line-height: 24px;
   padding: 16px;
   tab-size: 4;
@@ -1109,6 +1114,26 @@
   justify-content: space-between;
   line-height: 24px;
   tab-size: 4;
+}
+
+/* Footer container inside each card that holds stock + borrow action */
+.inventory-item-footer {
+  margin-top: auto; /* push footer to bottom */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inventory-item-footer .stock-info {
+  color: #475569;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.inventory-button-borrow {
+  min-width: 110px; /* consistent button width */
+  justify-content: center;
 }
 .inventory-item-stock {
   box-sizing: border-box;
@@ -1798,7 +1823,7 @@ textarea:focus {
   height: 32px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
-  border: none;
+  border: 1px solid rgba(128, 0, 32, 0.12);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1809,15 +1834,22 @@ textarea:focus {
 }
 
 .details-info-btn:hover {
-  background: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+  background: rgb(128, 0, 32);
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(128, 0, 32, 0.28);
 }
 
 .details-info-btn svg {
   width: 18px;
   height: 18px;
-  fill: rgb(128, 0, 32);
+  fill: currentColor;
+}
+
+/* Ensure text inside info button uses theme color when not hovered */
+.details-info-btn {
+  color: var(--color-primary, rgb(128, 0, 32));
+  font-weight: 700;
 }
 
 /* ===== CENTER POPUP MODAL ===== */

@@ -319,3 +319,114 @@ export function initReviewModal() {
 // Make functions available globally for onclick handlers
 window.openReviewModal = openReviewModal;
 window.closeReviewModal = closeReviewModal;
+
+// Page-level feedback submit (reuses same backend endpoint)
+// Wire up page feedback buttons if present
+document.addEventListener("DOMContentLoaded", () => {
+  const pageSubmit = document.getElementById("page-feedback-submit");
+  const pageClear = document.getElementById("page-feedback-clear");
+
+  if (pageSubmit) {
+    pageSubmit.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        await submitPageFeedback();
+      } catch (err) {
+        console.error("submitPageFeedback error", err);
+        hideSubmittingIndicator();
+        showPopup("Error submitting feedback. Please try again.");
+      }
+      return false;
+    });
+  }
+
+  if (pageClear) {
+    pageClear.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const subj = document.getElementById("page-feedback-subject");
+      const comment = document.getElementById("page-feedback-comment");
+      const img = document.getElementById("page-feedback-image");
+      if (subj) subj.value = "";
+      if (comment) comment.value = "";
+      if (img) img.value = "";
+    });
+  }
+});
+
+/**
+ * Submit page feedback using the same reviews endpoint.
+ * Appends `item_name` from subject and `comment`; includes optional image.
+ */
+async function submitPageFeedback() {
+  const subjEl = document.getElementById("page-feedback-subject");
+  const commentEl = document.getElementById("page-feedback-comment");
+  const imageEl = document.getElementById("page-feedback-image");
+
+  const subject = (subjEl && subjEl.value.trim()) || "Site Feedback";
+  const comment = (commentEl && commentEl.value.trim()) || "";
+  const imageFile = imageEl && imageEl.files && imageEl.files[0];
+  const userData = getSessionUser();
+
+  // Disable submit button immediately
+  const submitBtn = document.getElementById("page-feedback-submit");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.6";
+  }
+
+  showSubmittingIndicator();
+
+  try {
+    const form = new FormData();
+    form.append("item_name", subject);
+    form.append("comment", comment);
+    form.append("submitted_by_name", userData.fullname || "");
+    form.append("submitted_by_email", userData.email || "");
+
+    if (imageFile) {
+      try {
+        const compressed = await compressImage(imageFile, 800, 800, 0.7);
+        if (compressed) {
+          form.append("image", compressed, imageFile.name || "feedback_" + Date.now() + ".jpg");
+        } else {
+          form.append("image", imageFile, imageFile.name || "feedback_" + Date.now() + ".jpg");
+        }
+      } catch (e) {
+        console.warn("image compress failed, sending original", e);
+        form.append("image", imageFile, imageFile.name || "feedback_" + Date.now() + ".jpg");
+      }
+    }
+
+    const success = await postReviewFormData(form);
+    if (success) {
+      const title = "Feedback submitted";
+      const message = subject + (comment ? ": " + comment : "");
+      showPopup(message, {
+        title,
+        onClose: () => {
+          if (subjEl) subjEl.value = "";
+          if (commentEl) commentEl.value = "";
+          if (imageEl) imageEl.value = "";
+        },
+      });
+    } else {
+      showPopup("Failed to submit feedback to server. Please try again.");
+    }
+  } catch (err) {
+    console.error("submitPageFeedback error:", err);
+    showPopup("Error submitting feedback. Please try again later.");
+  } finally {
+    hideSubmittingIndicator();
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+    }
+  }
+
+  return false;
+}
+
+// Make page feedback function available globally if needed
+window.submitPageFeedback = submitPageFeedback;

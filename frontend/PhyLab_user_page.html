@@ -435,6 +435,95 @@
     </div>
 
     <!-- ============================================
+         PAGE FEEDBACK SECTION (reuses item feedback implementation)
+         ============================================ -->
+    <div class="page-feedback">
+      <div class="page-feedback-card">
+        <div class="page-feedback-inner">
+          <div class="page-feedback-info">
+            <h2 style="margin-top: 0">We value your feedback</h2>
+            <p style="color: #555; margin-top: 6px">
+              Share site experience or equipment issues — your input helps us
+              improve.
+            </p>
+
+            <h3 style="margin-top: 12px; color: var(--color-primary)">
+              What to include
+            </h3>
+            <ul style="margin-top: 8px; color: #444; line-height: 1.6">
+              <li>Where the issue happened (page or equipment)</li>
+              <li>Steps to reproduce (if site-related)</li>
+              <li>Condition of equipment and any identifying name/number</li>
+              <li>Attach a photo if available to help us assess</li>
+            </ul>
+
+            <div style="margin-top: 12px; color: #444">
+              <strong>Need urgent help?</strong>
+              <p style="margin: 6px 0 0 0">
+                Email
+                <a href="mailto:phylabsofficial@gmail.com"
+                  >phylabsofficial@gmail.com</a
+                >
+                or visit the lab office.
+              </p>
+            </div>
+          </div>
+
+          <div class="page-feedback-form">
+            <label style="font-weight: 600; display: block; margin-bottom: 6px"
+              >Subject</label
+            >
+            <input
+              id="page-feedback-subject"
+              type="text"
+              placeholder="e.g., Site feedback, Loan process"
+            />
+
+            <label style="font-weight: 600; display: block; margin: 12px 0 6px"
+              >Upload Photo (optional)</label
+            >
+            <input id="page-feedback-image" type="file" accept="image/*" />
+
+            <label style="font-weight: 600; display: block; margin: 12px 0 6px"
+              >Message</label
+            >
+            <textarea
+              id="page-feedback-comment"
+              rows="5"
+              placeholder="Describe your feedback..."
+            ></textarea>
+
+            <div style="display: flex; gap: 10px; margin-top: 12px">
+              <button
+                id="page-feedback-submit"
+                type="button"
+                class="btn-primary"
+              >
+                Send Feedback
+              </button>
+              <button
+                id="page-feedback-clear"
+                type="button"
+                class="btn"
+                style="background: #fff; border: 1px solid #ddd; color: #333"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="landing-footer">
+      <div class="footer-content">
+        <p class="footer-text">
+          &copy; 2026 PhyLab - Physics Laboratory Inventory System. All rights
+          reserved.
+        </p>
+      </div>
+    </footer>
+    <!-- ============================================
          MODULAR JAVASCRIPT COMPONENTS
          Load all component modules
          ============================================ -->

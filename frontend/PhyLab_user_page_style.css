@@ -1979,3 +1979,101 @@ textarea:focus {
 .center-popup-ok:active {
   transform: translateY(0);
 }
+
+/* Page feedback section: red themed background with centered white card */
+.page-feedback {
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-strong));
+  padding: 72px 32px; /* increased vertical padding for breathing room */
+  color: white;
+}
+
+.page-feedback-card {
+  max-width: 1200px; /* expanded to make better use of wide screens */
+  margin: 0 auto;
+  background: var(--bg-surface);
+  border-radius: 14px;
+  padding: 28px 32px; /* larger padding inside card */
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-strong);
+}
+
+/* Two-column layout inside the card */
+.page-feedback-inner {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.page-feedback-info {
+  flex: 0 0 38%;
+  padding-right: 12px;
+}
+
+.page-feedback-info h2, .page-feedback-info h3 { margin: 0; }
+
+.page-feedback-form {
+  flex: 1 1 62%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-feedback-form input[type="text"],
+.page-feedback-form input[type="file"],
+.page-feedback-form textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.page-feedback-form input[type="file"] {
+  padding: 6px 8px;
+}
+
+.page-feedback-form textarea { min-height: 120px; }
+
+.btn-primary { background: var(--color-primary); color: #fff; padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; }
+.btn-primary:hover { background: var(--color-primary-strong); }
+
+@media (max-width: 1000px) {
+  .page-feedback-inner { flex-direction: column; }
+  .page-feedback-info { flex: none; padding-right: 0; }
+  .page-feedback-card { padding: 20px; }
+  .page-feedback { padding: 40px 16px; }
+}
+
+/* Ensure form fields fill available width on small screens */
+@media (max-width: 600px) {
+  .page-feedback-info, .page-feedback-form { width: 100%; }
+  .page-feedback-form input[type="text"],
+  .page-feedback-form input[type="file"],
+  .page-feedback-form textarea { display: block; width: 100%; }
+  .page-feedback-form input[type="file"] { padding: 8px 6px; }
+}
+
+@media (max-width: 600px) {
+  .page-feedback {
+    padding: 24px 12px;
+  }
+  .page-feedback-card {
+    padding: 14px;
+  }
+}
+
+/* ========== FOOTER ========== */
+.landing-footer {
+  background: var(--color-text);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 0.95rem;
+}

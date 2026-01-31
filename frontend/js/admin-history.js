@@ -2,15 +2,33 @@
 console.log("admin-history.js loaded");
 
 async function fetchHistoryFromBackend() {
-  // Try a few possible backend endpoints (local first, then same-origin)
+  // Try explicit local HTTP endpoints first, then configured base, then same-origin
+  const explicitLocal = [
+    "http://127.0.0.1:8000/api/borrow-requests/history/",
+    "http://localhost:8000/api/borrow-requests/history/",
+    "http://127.0.0.1:8000/api/borrow-requests/?status=returned",
+    "http://localhost:8000/api/borrow-requests/?status=returned",
+  ];
+
+  // Log resolved API base for debugging
+  try {
+    console.log(
+      "admin-history: window.PHYLAB_API_BASE =",
+      window.PHYLAB_API_BASE,
+    );
+  } catch (e) {
+    /* ignore */
+  }
+
   const urls = [
-    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/history/')
-      : '/api/borrow-requests/history/',
+    ...explicitLocal,
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/borrow-requests/history/")
+      : "/api/borrow-requests/history/",
     "/api/borrow-requests/history/",
-    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/?status=returned')
-      : '/api/borrow-requests/?status=returned',
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/borrow-requests/?status=returned")
+      : "/api/borrow-requests/?status=returned",
     "/api/borrow-requests/?status=returned",
   ];
 
@@ -498,9 +516,9 @@ async function testBackendConnection() {
 
   // Test 1: Check if backend is reachable
   const testUrls = [
-    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/history/')
-      : '/api/borrow-requests/history/',
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/borrow-requests/history/")
+      : "/api/borrow-requests/history/",
     "/api/borrow-requests/history/",
   ];
 

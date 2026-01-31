@@ -1982,7 +1982,11 @@ textarea:focus {
 
 /* Page feedback section: red themed background with centered white card */
 .page-feedback {
-  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-strong));
+  background: linear-gradient(
+    180deg,
+    var(--color-primary),
+    var(--color-primary-strong)
+  );
   padding: 72px 32px; /* increased vertical padding for breathing room */
   color: white;
 }
@@ -2009,7 +2013,10 @@ textarea:focus {
   padding-right: 12px;
 }
 
-.page-feedback-info h2, .page-feedback-info h3 { margin: 0; }
+.page-feedback-info h2,
+.page-feedback-info h3 {
+  margin: 0;
+}
 
 .page-feedback-form {
   flex: 1 1 62%;
@@ -2031,25 +2038,53 @@ textarea:focus {
   padding: 6px 8px;
 }
 
-.page-feedback-form textarea { min-height: 120px; }
+.page-feedback-form textarea {
+  min-height: 120px;
+}
 
-.btn-primary { background: var(--color-primary); color: #fff; padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; }
-.btn-primary:hover { background: var(--color-primary-strong); }
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: var(--color-primary-strong);
+}
 
 @media (max-width: 1000px) {
-  .page-feedback-inner { flex-direction: column; }
-  .page-feedback-info { flex: none; padding-right: 0; }
-  .page-feedback-card { padding: 20px; }
-  .page-feedback { padding: 40px 16px; }
+  .page-feedback-inner {
+    flex-direction: column;
+  }
+  .page-feedback-info {
+    flex: none;
+    padding-right: 0;
+  }
+  .page-feedback-card {
+    padding: 20px;
+  }
+  .page-feedback {
+    padding: 40px 16px;
+  }
 }
 
 /* Ensure form fields fill available width on small screens */
 @media (max-width: 600px) {
-  .page-feedback-info, .page-feedback-form { width: 100%; }
+  .page-feedback-info,
+  .page-feedback-form {
+    width: 100%;
+  }
   .page-feedback-form input[type="text"],
   .page-feedback-form input[type="file"],
-  .page-feedback-form textarea { display: block; width: 100%; }
-  .page-feedback-form input[type="file"] { padding: 8px 6px; }
+  .page-feedback-form textarea {
+    display: block;
+    width: 100%;
+  }
+  .page-feedback-form input[type="file"] {
+    padding: 8px 6px;
+  }
 }
 
 @media (max-width: 600px) {

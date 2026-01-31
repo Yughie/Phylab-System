@@ -86,9 +86,10 @@ function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
  */
 async function postReviewFormData(form) {
   // Use configured backend base (supports production vs local)
-  const url = (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
-    ? window.PHYLAB_API("/api/reviews/")
-    : "/api/reviews/";
+  const url =
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/reviews/")
+      : "/api/reviews/";
 
   try {
     console.log("postReviewFormData: POST", url, form.get("item_name"));
@@ -389,13 +390,25 @@ async function submitPageFeedback() {
       try {
         const compressed = await compressImage(imageFile, 800, 800, 0.7);
         if (compressed) {
-          form.append("image", compressed, imageFile.name || "feedback_" + Date.now() + ".jpg");
+          form.append(
+            "image",
+            compressed,
+            imageFile.name || "feedback_" + Date.now() + ".jpg",
+          );
         } else {
-          form.append("image", imageFile, imageFile.name || "feedback_" + Date.now() + ".jpg");
+          form.append(
+            "image",
+            imageFile,
+            imageFile.name || "feedback_" + Date.now() + ".jpg",
+          );
         }
       } catch (e) {
         console.warn("image compress failed, sending original", e);
-        form.append("image", imageFile, imageFile.name || "feedback_" + Date.now() + ".jpg");
+        form.append(
+          "image",
+          imageFile,
+          imageFile.name || "feedback_" + Date.now() + ".jpg",
+        );
       }
     }
 

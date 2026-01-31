@@ -3110,6 +3110,13 @@ input::-webkit-inner-spin-button {
   z-index: 2;
 }
 
+/* When editing the original stock inline, show controls on a single row */
+.stock-footer.original-editing {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
 /* When the edit button is moved into the footer, make it full width and prominent */
 .stock-footer .edit-item-btn,
 .stock-footer .edit-details-btn {

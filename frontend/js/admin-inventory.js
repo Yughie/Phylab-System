@@ -178,9 +178,7 @@ async function saveStock(inputElement) {
     if (itemId) {
       const urls = [
         `/api/inventory/${itemId}/set_stock/`,
-        (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-          ? window.PHYLAB_API(`/api/inventory/${itemId}/set_stock/`)
-          : `/api/inventory/${itemId}/set_stock/`,
+        `http://127.0.0.1:8000/api/inventory/${itemId}/set_stock/`,
       ];
 
       for (let u of urls) {
@@ -325,6 +323,9 @@ function enableOriginalEdit(itemName, container) {
   const originalKey = "stock_original_" + itemName;
   const origValue = localStorage.getItem(originalKey) || stockInput.value;
 
+  // mark footer as editing so CSS can lay out controls inline
+  container.classList.add("original-editing");
+
   container.innerHTML = `
   <input type="number" class="original-edit-input" value="${origValue}" min="0">
   <div class="original-edit-actions">
@@ -343,10 +344,12 @@ function enableOriginalEdit(itemName, container) {
     localStorage.setItem(originalKey, newVal);
     showNotification("Original stock updated", "success");
     updateStockDisplay(stockInput);
+    container.classList.remove("original-editing");
   };
   container.querySelector(".original-cancel").onclick = function () {
     updateStockDisplay(stockInput);
     showNotification("Edit cancelled", "warning");
+    container.classList.remove("original-editing");
   };
 }
 
@@ -424,9 +427,7 @@ async function exportInventoryExcel() {
   try {
     const endpoints = [
       "/api/inventory/export_xlsx/",
-      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-        ? window.PHYLAB_API('/api/inventory/export_xlsx/')
-        : '/api/inventory/export_xlsx/',
+      "http://127.0.0.1:8000/api/inventory/export_xlsx/",
     ];
     let res = null;
     for (let u of endpoints) {

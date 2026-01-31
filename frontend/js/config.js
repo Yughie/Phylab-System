@@ -7,8 +7,14 @@
   let base = PROD;
   if (override) base = override;
   else {
-    const origin = (window.location && window.location.hostname) || "";
-    if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+    const locationObj = window.location || {};
+    const origin = locationObj.hostname || "";
+    const protocol = locationObj.protocol || "";
+    // If loaded from the filesystem (file://) or hostname empty, assume local dev
+    if (protocol === "file:" || origin === "") {
+      base = "http://127.0.0.1:8000";
+    } else if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      // Keep explicit local API URL to avoid accidentally using PROD
       base = "http://127.0.0.1:8000";
     }
   }

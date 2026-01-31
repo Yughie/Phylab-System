@@ -11,16 +11,48 @@
   async function refreshInventoryFromBackend() {
     try {
       const tried = [];
-      // try relative first (works when served from same origin)
-      let resp = await fetch("/api/inventory/").catch(() => null);
-      tried.push(window.location.origin + "/api/inventory/");
+      // Log resolved API base for debugging
+      try {
+        console.log(
+          "refreshInventoryFromBackend: window.PHYLAB_API_BASE =",
+          window.PHYLAB_API_BASE,
+        );
+      } catch (e) {}
+
+      // Try explicit local HTTP endpoints first to avoid accidental HTTPS production calls
+      const explicitLocal = [
+        "http://127.0.0.1:8000/api/inventory/",
+        "http://localhost:8000/api/inventory/",
+      ];
+      let resp = null;
+      for (const u of explicitLocal) {
+        try {
+          resp = await fetch(u, { mode: "cors" });
+          tried.push(u);
+          if (resp && resp.ok) break;
+        } catch (e) {
+          tried.push(u);
+          resp = null;
+        }
+      }
+
+      // try relative next (works when served from same origin)
+      if (!resp || !resp.ok) {
+        try {
+          resp = await fetch("/api/inventory/").catch(() => null);
+        } catch (e) {
+          resp = null;
+        }
+        tried.push(window.location.origin + "/api/inventory/");
+      }
 
       // If relative returned a 404 or failed, try configured backend base
       if (!resp || !resp.ok) {
         const fallback =
-          (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+          window.PHYLAB_API && typeof window.PHYLAB_API === "function"
             ? window.PHYLAB_API("/api/inventory/")
-            : (window.PHYLAB_API_BASE || window.location.origin) + "/api/inventory/";
+            : (window.PHYLAB_API_BASE || window.location.origin) +
+              "/api/inventory/";
         tried.push(fallback);
         try {
           const token = sessionStorage.getItem("auth_token");

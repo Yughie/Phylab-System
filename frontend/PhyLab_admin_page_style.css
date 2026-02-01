@@ -771,6 +771,19 @@
   gap: 20px;
 }
 
+/* When the loans grid is empty, make the empty-state span full width and center its contents */
+.loans-container .empty-state {
+  grid-column: 1 / -1;
+  justify-content: center;
+  text-align: center;
+}
+
+.loans-container .empty-state svg {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .loan-card {
   background: white;
   border-radius: 16px;

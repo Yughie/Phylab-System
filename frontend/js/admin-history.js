@@ -1,6 +1,9 @@
 // Admin: Request History page
 console.log("admin-history.js loaded");
 
+// Store history records globally so we can access them when showing details
+let cachedHistoryRecords = [];
+
 async function fetchHistoryFromBackend() {
   // Try explicit local HTTP endpoints first, then configured base, then same-origin
   const explicitLocal = [
@@ -117,6 +120,7 @@ function normalizeBackendRecord(r) {
       itemId: r.id || "",
       requestId: r.request_id || "",
       studentName: r.student_name || r.studentName || "",
+      studentID: r.student_id || r.studentId || r.id_number || "",
       email: r.email || "",
       borrowDate: r.borrow_date || r.borrowDate || "",
       returnDate: r.return_date || r.returnDate || "",
@@ -139,6 +143,7 @@ function normalizeBackendRecord(r) {
   return {
     id: r.id || r.request_id || r.requestId || "",
     studentName: r.student_name || r.studentName || r.full_name || "",
+    studentID: r.student_id || r.studentId || r.id_number || "",
     email: r.email || r.student_email || "",
     borrowDate: r.borrow_date || r.borrowDate || "",
     returnDate: r.return_date || r.returnDate || "",
@@ -220,16 +225,23 @@ function renderHistoryList(records, containerEl) {
   container.querySelectorAll(".details-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const rid = btn.getAttribute("data-req-id");
-      try {
-        if (typeof openBorrowingDetails === "function") {
-          openBorrowingDetails(rid);
-        } else if (typeof window.openBorrowingDetails === "function") {
-          window.openBorrowingDetails(rid);
-        } else {
-          alert("Details not available.");
+      // Find the record in our cached data
+      const record = records.find((r) => String(r.id) === String(rid));
+      if (record && typeof showHistoryDetails === "function") {
+        showHistoryDetails(record);
+      } else {
+        // Fallback to openBorrowingDetails if available
+        try {
+          if (typeof openBorrowingDetails === "function") {
+            openBorrowingDetails(rid);
+          } else if (typeof window.openBorrowingDetails === "function") {
+            window.openBorrowingDetails(rid);
+          } else {
+            alert("Details not available.");
+          }
+        } catch (err) {
+          console.warn("openBorrowingDetails failed", err);
         }
-      } catch (err) {
-        console.warn("openBorrowingDetails failed", err);
       }
     });
   });
@@ -329,19 +341,26 @@ function renderReturnedItems(records, containerEl) {
   });
 
   // attach handlers
-  container.querySelectorAll(".details-btn").forEach((btn) => {
+  container.querySelectorAll(".details-btn").forEach((btn, btnIdx) => {
     btn.addEventListener("click", (e) => {
       const rid = btn.getAttribute("data-req-id");
-      try {
-        if (typeof openBorrowingDetails === "function") {
-          openBorrowingDetails(rid);
-        } else if (typeof window.openBorrowingDetails === "function") {
-          window.openBorrowingDetails(rid);
-        } else {
-          alert("Details not available.");
+      // Find the item record from the items array
+      const item = items[btnIdx];
+      if (item && typeof showHistoryItemDetails === "function") {
+        showHistoryItemDetails(item);
+      } else {
+        // Fallback to openBorrowingDetails if available
+        try {
+          if (typeof openBorrowingDetails === "function") {
+            openBorrowingDetails(rid);
+          } else if (typeof window.openBorrowingDetails === "function") {
+            window.openBorrowingDetails(rid);
+          } else {
+            alert("Details not available.");
+          }
+        } catch (err) {
+          console.warn("openBorrowingDetails failed", err);
         }
-      } catch (err) {
-        console.warn("openBorrowingDetails failed", err);
       }
     });
   });
@@ -388,12 +407,9 @@ async function loadAdminHistory() {
         (a, b) => (b.timestamp || 0) - (a.timestamp || 0),
       );
       if (container) {
+        // Only show item-level (flattened) view for history — remove per-request layer
         container.innerHTML = `
           <div class="history-controls" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-            <div class="history-toggle" role="tablist" aria-label="History view">
-              <button id="historyViewRequests" class="btn btn-small fixed-width" aria-pressed="false">Requests</button>
-              <button id="historyViewItems" class="btn btn-small fixed-width" aria-pressed="false">Returned Items</button>
-            </div>
             <div class="history-search" style="flex:1;min-width:220px;">
               <input id="historySearchInput" type="search" placeholder="Search student, email, or request id" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-surface);" />
             </div>
@@ -409,27 +425,11 @@ async function loadAdminHistory() {
         `;
 
         const viewContent = document.getElementById("historyViewContent");
-        const reqBtn = document.getElementById("historyViewRequests");
-        const itemsBtn = document.getElementById("historyViewItems");
         const searchInput = document.getElementById("historySearchInput");
         const dateRange = document.getElementById("historyDateRange");
 
-        let currentView = "items"; // 'items' or 'requests'
-
-        function setActiveButton(view) {
-          currentView = view;
-          if (view === "requests") {
-            reqBtn.classList.add("active");
-            reqBtn.setAttribute("aria-pressed", "true");
-            itemsBtn.classList.remove("active");
-            itemsBtn.setAttribute("aria-pressed", "false");
-          } else {
-            itemsBtn.classList.add("active");
-            itemsBtn.setAttribute("aria-pressed", "true");
-            reqBtn.classList.remove("active");
-            reqBtn.setAttribute("aria-pressed", "false");
-          }
-        }
+        // Cache normalized records so item details can be shown without re-fetching
+        cachedHistoryRecords = normalizedSorted;
 
         function applyFiltersAndRender() {
           const q = (searchInput.value || "").trim().toLowerCase();
@@ -451,12 +451,10 @@ async function loadAdminHistory() {
             return hay.indexOf(q) !== -1;
           });
 
-          // render according to current view
           viewContent.innerHTML = "";
           try {
-            if (currentView === "requests")
-              renderHistoryList(filtered, viewContent);
-            else renderReturnedItems(filtered, viewContent);
+            // Always render flattened item-level view
+            renderReturnedItems(filtered, viewContent);
           } catch (err) {
             console.error("applyFiltersAndRender error", err);
             viewContent.innerHTML =
@@ -464,21 +462,10 @@ async function loadAdminHistory() {
           }
         }
 
-        reqBtn.addEventListener("click", () => {
-          setActiveButton("requests");
-          applyFiltersAndRender();
-        });
-
-        itemsBtn.addEventListener("click", () => {
-          setActiveButton("items");
-          applyFiltersAndRender();
-        });
-
         searchInput.addEventListener("input", () => applyFiltersAndRender());
         dateRange.addEventListener("change", () => applyFiltersAndRender());
 
-        // default to items view
-        setActiveButton("items");
+        // initial render
         applyFiltersAndRender();
       } else {
         // fallback to original behavior
@@ -611,6 +598,96 @@ async function testBackendConnection() {
 }
 
 window.testBackendConnection = testBackendConnection;
+
+// Function to display history item details in the modal
+function showHistoryItemDetails(item) {
+  console.log("showHistoryItemDetails called with:", item);
+
+  // Populate modal with item data
+  document.getElementById("det-item-name").innerText =
+    item.itemName || item.item_name || item.name || "N/A";
+  document.getElementById("det-item-img").src =
+    item.itemImage || item.item_image || item.image || "default.png";
+  document.getElementById("det-description").innerText =
+    item.description || "Physics Lab Equipment";
+  document.getElementById("det-inv-id").innerText =
+    item.itemId || item.id || "N/A";
+
+  const headerReqEl = document.getElementById("det-request-id-header");
+  if (headerReqEl)
+    headerReqEl.innerText = item.requestId || item.request_id || "—";
+
+  document.getElementById("det-condition").innerText = "Good";
+  document.getElementById("det-borrower-name").innerText =
+    item.studentName || item.student_name || "N/A";
+  document.getElementById("det-borrower-id").innerText =
+    "ID: " + (item.studentID || item.studentId || item.student_id || "N/A");
+  document.getElementById("det-email").innerText = item.email || "N/A";
+
+  const requestIdEl = document.getElementById("det-request-id");
+  if (requestIdEl)
+    requestIdEl.innerText = item.requestId || item.request_id || "N/A";
+
+  document.getElementById("det-teacher").innerText =
+    item.teacherName || item.teacher_name || "N/A";
+  document.getElementById("det-borrow-date").innerText =
+    item.borrowDate || item.borrow_date || "N/A";
+  document.getElementById("det-return-date").innerText =
+    item.returnDate || item.return_date || "N/A";
+  document.getElementById("det-purpose").innerText =
+    item.purpose || "No purpose stated.";
+
+  // Status
+  const statusEl = document.getElementById("det-status");
+  const currentStatus = (item.status || "unknown").toString().toLowerCase();
+  statusEl.innerText = currentStatus.toUpperCase();
+  statusEl.className = `status-tag status-${currentStatus}`;
+
+  // Show admin remark if exists
+  const remarkSection = document.getElementById("det-remark-section");
+  if (item.adminRemark || item.admin_remark) {
+    remarkSection.style.display = "block";
+    const remarkType = item.remarkType || item.remark_type || "";
+    const remarkText =
+      item.adminRemark || item.admin_remark || "No description provided.";
+    const remarkDate = item.remarkCreatedAt || item.remark_created_at || "";
+
+    document.getElementById("det-remark-type").textContent = getRemarkTypeLabel
+      ? getRemarkTypeLabel(remarkType)
+      : remarkType;
+    document.getElementById("det-remark-text").textContent = remarkText;
+    document.getElementById("det-remark-meta").textContent = remarkDate
+      ? `Added: ${new Date(remarkDate).toLocaleString()}`
+      : "";
+  } else {
+    remarkSection.style.display = "none";
+  }
+
+  // Show the modal
+  document.getElementById("Borrowing-Details-window").style.display = "flex";
+}
+
+// Function to display full request details (for request-level view)
+function showHistoryDetails(record) {
+  console.log("showHistoryDetails called with:", record);
+
+  // If it's an individual item record, use showHistoryItemDetails
+  if (record.itemName || record.item_name) {
+    showHistoryItemDetails(record);
+    return;
+  }
+
+  // Otherwise try to open using the standard function
+  if (typeof openBorrowingDetails === "function") {
+    openBorrowingDetails(record.id);
+  } else {
+    alert("Details not available for this request.");
+  }
+}
+
+// Expose functions to global scope
+window.showHistoryItemDetails = showHistoryItemDetails;
+window.showHistoryDetails = showHistoryDetails;
 
 // Auto-run if the history container is present on DOMContentLoaded and active
 document.addEventListener("DOMContentLoaded", () => {

@@ -566,6 +566,9 @@ async function openBorrowingDetails(requestId) {
   document.getElementById("Borrowing-Details-window").style.display = "flex";
 }
 
+// Expose to global scope so it can be called from admin-history.js
+window.openBorrowingDetails = openBorrowingDetails;
+
 // Send reminder email handler
 function initSendReminderHandler() {
   const btn = document.getElementById("sendReminderBtn");

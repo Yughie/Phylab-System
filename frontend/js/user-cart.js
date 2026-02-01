@@ -161,15 +161,21 @@ async function handleBorrowFormSubmit(e) {
   };
 
   try {
-    const url = (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/')
-      : '/api/borrow-requests/';
+    const url =
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+        ? window.PHYLAB_API("/api/borrow-requests/")
+        : "/api/borrow-requests/";
     let success = false;
-    const token = sessionStorage.getItem('auth_token');
+    const token = sessionStorage.getItem("auth_token");
     try {
-      const options = { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) };
-      if (token) options.headers.Authorization = 'Token ' + token;
-      else options.credentials = 'include';
+      const options = {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestData),
+      };
+      if (token) options.headers.Authorization = "Token " + token;
+      else options.credentials = "include";
 
       const resp = await fetch(url, options);
       if (resp && resp.ok) success = true;

@@ -12,12 +12,12 @@ async function loadReturnWindow() {
   try {
     // Build candidate URLs using configured API base so production/local resolve reliably
     const urls = [
-      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
         ? window.PHYLAB_API("/api/borrow-requests/?status=borrowed")
         : "/api/borrow-requests/?status=borrowed",
       "/api/borrow-requests/?status=borrowed",
       // fallback to custom action if present
-      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
         ? window.PHYLAB_API("/api/borrow-requests/currently_borrowed/")
         : "/api/borrow-requests/currently_borrowed/",
       "/api/borrow-requests/currently_borrowed/",
@@ -211,8 +211,10 @@ async function completeReturn(requestId, itemId) {
 
         // Use update_item_statuses endpoint to mark specific item as returned
         const urls = [
-          (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
-            ? window.PHYLAB_API(`/api/borrow-requests/${resolvedReqId}/update_item_statuses/`)
+          window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+            ? window.PHYLAB_API(
+                `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+              )
             : `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
           `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
         ];
@@ -409,7 +411,7 @@ async function openBorrowingDetails(requestId) {
 
   try {
     const urls = [
-      (window.PHYLAB_API && typeof window.PHYLAB_API === "function")
+      window.PHYLAB_API && typeof window.PHYLAB_API === "function"
         ? window.PHYLAB_API(`/api/borrow-requests/${requestId}/`)
         : `/api/borrow-requests/${requestId}/`,
       `/api/borrow-requests/${requestId}/`,

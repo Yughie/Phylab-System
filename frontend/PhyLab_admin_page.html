@@ -149,7 +149,7 @@
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
               <line x1="1" y1="10" x2="23" y2="10"></line>
             </svg>
-            <span>Active Loans</span>
+            <span>Transaction</span>
             <span class="nav-badge" id="loansCount">0</span>
           </button>
           <button class="nav-item" data-page="history">
@@ -349,7 +349,7 @@
         <!-- Active Loans Page -->
         <section class="page-section" data-page="loans">
           <div class="page-header">
-            <h2 class="page-title">Active Loans</h2>
+            <h2 class="page-title">Transaction</h2>
             <p class="page-subtitle">
               Currently borrowed items awaiting return
             </p>
@@ -727,25 +727,8 @@
                     <strong>Teacher:</strong> <span id="det-teacher">---</span>
                   </p>
                   <p>
-                    <strong>Teacher Email:</strong>
-                    <span id="det-teacher-email">---</span>
-                  </p>
-                  <p>
-                    <strong>Teacher Phone:</strong>
-                    <span id="det-teacher-phone">---</span>
-                  </p>
-                  <p><strong>Class:</strong> <span id="det-class">---</span></p>
-                  <p>
                     <strong>Contact (email):</strong>
                     <span id="det-email">---</span>
-                  </p>
-                  <p>
-                    <strong>Phone:</strong>
-                    <span id="det-borrower-phone">---</span>
-                  </p>
-                  <p>
-                    <strong>Department:</strong>
-                    <span id="det-borrower-department">---</span>
                   </p>
                   <p>
                     <strong>Request ID:</strong>
@@ -1385,7 +1368,7 @@
           inputElement.value = value;
           if (typeof showNotification === "function")
             showNotification(
-              "Current stock adjusted to match active loans.",
+              "Current stock adjusted to match transaction.",
               "warning",
             );
         }
@@ -1496,7 +1479,7 @@
         });
       }
 
-      // Compute how many units of an item are currently borrowed (active loans)
+      // Compute how many units of an item are currently borrowed (transaction)
       function computeActiveLoansForItem(itemKey) {
         if (!itemKey) return 0;
         const queue =
@@ -2308,7 +2291,7 @@
 
         if (activeLoans.length === 0) {
           container.innerHTML =
-            '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg><p>No active loans</p></div>';
+            '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg><p>No transaction</p></div>';
           return;
         }
 

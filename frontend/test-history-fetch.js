@@ -6,27 +6,29 @@ async function testHistoryFetch() {
 
   const urls = [
     "/api/borrow-requests/history/",
-    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/history/')
-      : (window.PHYLAB_API_BASE || window.location.origin) + '/api/borrow-requests/history/',
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/borrow-requests/history/")
+      : (window.PHYLAB_API_BASE || window.location.origin) +
+        "/api/borrow-requests/history/",
     "/api/borrow-requests/?status=returned",
-    (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-      ? window.PHYLAB_API('/api/borrow-requests/?status=returned')
-      : (window.PHYLAB_API_BASE || window.location.origin) + '/api/borrow-requests/?status=returned',
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API("/api/borrow-requests/?status=returned")
+      : (window.PHYLAB_API_BASE || window.location.origin) +
+        "/api/borrow-requests/?status=returned",
   ];
 
   for (const url of urls) {
     console.log("\n--- Testing:", url);
-      try {
-      const token = sessionStorage.getItem('auth_token');
-      const options = { mode: 'cors' };
-      if (token) options.headers = { Authorization: 'Token ' + token };
-      else options.credentials = 'include';
+    try {
+      const token = sessionStorage.getItem("auth_token");
+      const options = { mode: "cors" };
+      if (token) options.headers = { Authorization: "Token " + token };
+      else options.credentials = "include";
 
       const resp = await fetch(url, options);
-      console.log('  Status:', resp.status);
-      console.log('  OK:', resp.ok);
-      console.log('  Content-Type:', resp.headers.get('content-type'));
+      console.log("  Status:", resp.status);
+      console.log("  OK:", resp.ok);
+      console.log("  Content-Type:", resp.headers.get("content-type"));
 
       if (resp.ok) {
         const data = await resp.json();

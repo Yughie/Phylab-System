@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, InventoryItemSerializer
-from .serializers import UserReviewSerializer, BorrowRequestSerializer
+from .serializers import UserReviewSerializer, BorrowRequestSerializer, BorrowRequestItemDetailSerializer
 from .models import InventoryItem, UserReview, BorrowRequest, BorrowRequestItem
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -317,13 +317,30 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def history(self, request):
-        """Get borrow history (requests marked as returned).
+        """Get borrow history as individual items with all statuses.
 
         GET /api/borrow-requests/history/
-        Returns serialized borrow requests whose status is 'returned'.
+        GET /api/borrow-requests/history/?status=returned
+        GET /api/borrow-requests/history/?student_id=12345
+        
+        Returns individual BorrowRequestItem records with their parent request details.
+        Supports filtering by item status and/or student_id.
+        Shows all items with any status (pending, approved, rejected, borrowed, returned).
         """
-        returned_requests = BorrowRequest.objects.filter(status='returned').order_by('-created_at')
-        serializer = self.get_serializer(returned_requests, many=True)
+        # Get all items (not just parent requests)
+        items_queryset = BorrowRequestItem.objects.select_related('borrow_request').order_by('-borrow_request__created_at')
+        
+        # Apply filters
+        status_filter = request.query_params.get('status', None)
+        student_id_filter = request.query_params.get('student_id', None)
+        
+        if status_filter:
+            items_queryset = items_queryset.filter(status=status_filter)
+        if student_id_filter:
+            items_queryset = items_queryset.filter(borrow_request__student_id=student_id_filter)
+        
+        # Use detailed serializer to include parent request info
+        serializer = BorrowRequestItemDetailSerializer(items_queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=True, methods=['patch'])

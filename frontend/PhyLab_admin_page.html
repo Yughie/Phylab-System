@@ -255,7 +255,7 @@
               </div>
               <div class="stat-info">
                 <span class="stat-value" id="statLoans">0</span>
-                <span class="stat-label">Active Loans</span>
+                <span class="stat-label">Transaction</span>
               </div>
             </div>
             <div class="stat-card">
@@ -1142,7 +1142,18 @@
           JSON.parse(localStorage.getItem("phyLab_UserReviews")) || [];
 
         const pending = queue.filter((r) => r.status === "pending").length;
-        const loans = queue.filter((r) => r.status === "borrowed").length;
+
+        // Count total borrowed items (not requests) - calculate transaction count
+        const loans = queue.reduce((total, r) => {
+          try {
+            const items = Array.isArray(r.items) ? r.items : [];
+            const borrowedItems = items.filter((i) => i.status === "borrowed");
+            return total + borrowedItems.length;
+          } catch (e) {
+            return total;
+          }
+        }, 0);
+
         const equipment = document.querySelectorAll(".inventory-card").length;
 
         document.getElementById("statPending").textContent = pending;

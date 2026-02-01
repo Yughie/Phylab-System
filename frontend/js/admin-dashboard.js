@@ -55,15 +55,16 @@ async function loadDashboardStats() {
     }
   }).length;
 
-  // Count requests that have at least one borrowed item (match Active Loans page)
-  const loans = allRequests.filter((r) => {
+  // Count total borrowed items (not requests) - calculate transaction count
+  const loans = allRequests.reduce((total, r) => {
     try {
       const items = Array.isArray(r.items) ? r.items : [];
-      return items.filter((i) => i.status === "borrowed").length > 0;
+      const borrowedItems = items.filter((i) => i.status === "borrowed");
+      return total + borrowedItems.length;
     } catch (e) {
-      return false;
+      return total;
     }
-  }).length;
+  }, 0);
   const equipment = document.querySelectorAll(".inventory-card").length;
 
   document.getElementById("statPending").textContent = pending;

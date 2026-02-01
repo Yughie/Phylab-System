@@ -327,10 +327,12 @@ function processSelectedItems(newStatus) {
 async function executeBulkProcess(newStatus, selectedBoxes) {
   // Group actions by request id and collect item IDs
   const actionsByRequest = {};
+  const requestsData = {}; // Store request data for emails
+
   selectedBoxes.forEach((cb) => {
     const reqId = cb.getAttribute("data-req-id");
     const itemIndex = parseInt(cb.getAttribute("data-item-index"));
-    const itemId = cb.getAttribute("data-item-id"); // We'll need to add this attribute
+    const itemId = cb.getAttribute("data-item-id");
     const qtyInput = document.getElementById(
       `qty-action-${reqId}-${itemIndex}`,
     );
@@ -341,8 +343,38 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
       itemIndex,
       qty,
       itemName: cb.getAttribute("data-item-name"),
-      newStatus: newStatus === "borrowed" ? "approved" : newStatus,
+      newStatus: newStatus, // Keep the status as-is: "borrowed" when approved, "rejected" when rejected
     });
+
+    // Store request data for email
+    if (!requestsData[reqId]) {
+      const requestCard = cb.closest(".request-card");
+      if (requestCard) {
+        const studentName =
+          requestCard.querySelector(".borrower-name")?.textContent || "";
+        const studentEmail =
+          requestCard.querySelector(".borrower-email a")?.textContent ||
+          requestCard.querySelector(".borrower-email")?.textContent ||
+          "";
+        const returnDate =
+          requestCard
+            .querySelector(".request-dates span:last-child")
+            ?.textContent?.replace("Return: ", "") || "N/A";
+
+        requestsData[reqId] = {
+          studentName: studentName.trim(),
+          email: studentEmail.trim(),
+          returnDate: returnDate.trim(),
+          items: [],
+        };
+      }
+    }
+    if (requestsData[reqId]) {
+      requestsData[reqId].items.push({
+        name: cb.getAttribute("data-item-name"),
+        quantity: qty,
+      });
+    }
   });
 
   // Process each request using the new update_item_statuses endpoint
@@ -473,6 +505,90 @@ async function executeBulkProcess(newStatus, selectedBoxes) {
       await refreshLocalQueueFromBackend();
     } catch (e) {
       // ignore
+    }
+  }
+
+  // Send emails for each request
+  console.log("Email data collected:", requestsData);
+  console.log("EmailJS available:", typeof safeSendEmail !== "undefined");
+  console.log(
+    "Service ID:",
+    typeof EMAILJS_SERVICE_ID !== "undefined"
+      ? EMAILJS_SERVICE_ID
+      : "NOT DEFINED",
+  );
+  console.log(
+    "Template ID:",
+    typeof EMAILJS_SHARED_TEMPLATE !== "undefined"
+      ? EMAILJS_SHARED_TEMPLATE
+      : "NOT DEFINED",
+  );
+
+  for (const reqId of Object.keys(requestsData)) {
+    const reqData = requestsData[reqId];
+    console.log(`Processing email for request ${reqId}:`, reqData);
+
+    if (!reqData.email || !reqData.email.includes("@")) {
+      console.warn(
+        `Skipping email for request ${reqId}: invalid email "${reqData.email}"`,
+      );
+      continue;
+    }
+
+    const itemsList = reqData.items
+      .map((item) => `${item.name} (Qty: ${item.quantity})`)
+      .join(", ");
+    const statusText = newStatus === "borrowed" ? "approved" : "rejected";
+    const statusMessage =
+      newStatus === "borrowed"
+        ? `Your borrow request has been approved! Please collect the items.`
+        : `Your borrow request has been rejected. Please contact us for more information.`;
+
+    const templateParams = {
+      subject: `Borrow Request ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
+      to_email: reqData.email,
+      to_name: reqData.studentName,
+      student_name: reqData.studentName,
+      status: statusText.toUpperCase(),
+      item_details: itemsList,
+      item_name:
+        reqData.items.length === 1
+          ? reqData.items[0].name
+          : `${reqData.items.length} items`,
+      return_date: reqData.returnDate,
+      message_html: `<p>Hi ${reqData.studentName},</p>
+        <p>${statusMessage}</p>
+        <p><strong>Items:</strong> ${itemsList}</p>
+        ${newStatus === "borrowed" ? `<p><strong>Return Date:</strong> ${reqData.returnDate}</p>` : ""}
+        <p>Thanks,<br/>PhyLab Team</p>`,
+      logo_url: `${window.location.origin}/Phylab.png`,
+      company_url: window.location.origin,
+      company_email: "support@" + window.location.hostname,
+    };
+
+    console.log(
+      `Attempting to send email to ${reqData.email}:`,
+      templateParams,
+    );
+
+    if (typeof safeSendEmail === "function") {
+      safeSendEmail(EMAILJS_SERVICE_ID, EMAILJS_SHARED_TEMPLATE, templateParams)
+        .then(() => {
+          console.log(
+            `✅ ${statusText} email sent successfully to ${reqData.email}`,
+          );
+          showNotification(`Email sent to ${reqData.email}`, "success");
+        })
+        .catch((err) => {
+          console.error(
+            `❌ Failed to send ${statusText} email to ${reqData.email}:`,
+            err,
+          );
+          showNotification(`Failed to send email: ${err.message}`, "error");
+        });
+    } else {
+      console.error("safeSendEmail function not available");
+      showNotification("Email service not available", "error");
     }
   }
 

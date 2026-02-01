@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 from accounts.models import User
 
 
@@ -16,6 +18,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = User(**validated_data)
+        # Auto-generate username from email if not provided
+        if not user.username:
+            user.username = validated_data.get('email', '').split('@')[0]
         user.set_password(password)
         user.save()
         return user
@@ -53,10 +58,6 @@ class GetAllStudents(APIView):
         students = User.objects.filter(is_student=True)
         serializer = UserSerializer(students, many=True)
         return Response(serializer.data)
-
-
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
 
 
 class LoginView(APIView):

@@ -109,6 +109,33 @@ async function fetchHistoryFromBackend() {
 }
 
 function normalizeBackendRecord(r) {
+  // New format: individual items with parent request info embedded
+  if (r.request_id && r.item_name) {
+    // This is an individual item record
+    return {
+      id: r.id || "",
+      itemId: r.id || "",
+      requestId: r.request_id || "",
+      studentName: r.student_name || r.studentName || "",
+      email: r.email || "",
+      borrowDate: r.borrow_date || r.borrowDate || "",
+      returnDate: r.return_date || r.returnDate || "",
+      status: r.status || "pending",
+      itemName: r.item_name || r.itemName || "",
+      itemKey: r.item_key || r.itemKey || "",
+      quantity: r.quantity || 1,
+      itemImage: r.item_image || r.itemImage || "",
+      adminRemark: r.admin_remark || r.adminRemark || "",
+      remarkType: r.remark_type || r.remarkType || "",
+      remarkCreatedAt: r.remark_created_at || r.remarkCreatedAt || "",
+      purpose: r.purpose || "",
+      teacherName: r.teacher_name || r.teacherName || "",
+      timestamp: r.created_at || r.timestamp || null,
+      updated_at: r.updated_at || null,
+    };
+  }
+
+  // Old format: request with nested items
   return {
     id: r.id || r.request_id || r.requestId || "",
     studentName: r.student_name || r.studentName || r.full_name || "",
@@ -211,7 +238,7 @@ function renderHistoryList(records, containerEl) {
   );
 }
 
-// Render a flattened list of returned items (one card per item)
+// Render a flattened list of items (one card per item) - NEW FORMAT
 function renderReturnedItems(records, containerEl) {
   console.log(
     "renderReturnedItems called with",
@@ -226,48 +253,75 @@ function renderReturnedItems(records, containerEl) {
   }
   container.innerHTML = "";
 
-  // Build flattened items array with parent request metadata
-  const items = [];
-  (records || []).forEach((rec) => {
-    const parent = {
-      requestId: rec.id || rec.request_id || rec.requestId || "",
-      studentName: rec.studentName || rec.student_name || rec.email || "",
-      returnDate: rec.returnDate || rec.return_date || "",
-    };
-    if (Array.isArray(rec.items)) {
-      rec.items.forEach((it) => {
-        items.push(Object.assign({ parentRequest: parent }, it));
+  // Check if records are already individual items (new format) or request objects (old format)
+  let items = [];
+  if (records && records.length > 0) {
+    // New format: records are already individual items with embedded request info
+    if (records[0].itemName || records[0].item_name) {
+      items = records;
+    } else {
+      // Old format: extract items from nested requests
+      records.forEach((rec) => {
+        const parent = {
+          requestId: rec.id || rec.request_id || rec.requestId || "",
+          studentName: rec.studentName || rec.student_name || rec.email || "",
+          returnDate: rec.returnDate || rec.return_date || "",
+        };
+        if (Array.isArray(rec.items)) {
+          rec.items.forEach((it) => {
+            items.push(Object.assign({ parentRequest: parent }, it));
+          });
+        }
       });
     }
-  });
+  }
 
   if (items.length === 0) {
     container.innerHTML =
-      '<div class="empty-state"><p>No returned items found</p></div>';
+      '<div class="empty-state"><p>No items found</p></div>';
     return;
   }
 
   items.forEach((it, idx) => {
-    const id = it.id || "N/A";
+    const id = it.itemId || it.id || "N/A";
     const name = escapeHtml(
-      it.item_name || it.name || it.itemName || "Unknown",
+      it.itemName || it.item_name || it.name || "Unknown",
     );
-    const req = it.parentRequest || {};
-    const borrower = escapeHtml(req.studentName || req.email || "Unknown");
-    const dates = `Return: ${escapeHtml(req.returnDate || it.remark_created_at || "N/A")}`;
-    const img = it.item_image || it.image || "";
+    const status = it.status || "unknown";
+    const statusClass = status.toLowerCase();
+    const statusBadge = `<span class="status-badge status-${statusClass}">${escapeHtml(status)}</span>`;
+
+    // Handle both new format (direct fields) and old format (parentRequest)
+    const requestId =
+      it.requestId || (it.parentRequest && it.parentRequest.requestId) || "-";
+    const borrower = escapeHtml(
+      it.studentName ||
+        (it.parentRequest && it.parentRequest.studentName) ||
+        it.email ||
+        "Unknown",
+    );
+    const returnDate =
+      it.returnDate ||
+      (it.parentRequest && it.parentRequest.returnDate) ||
+      it.remarkCreatedAt ||
+      "N/A";
+    const borrowDate = it.borrowDate || "N/A";
+    const dates = `Borrow: ${escapeHtml(borrowDate)} • Return: ${escapeHtml(returnDate)}`;
+    const qty = it.quantity || 1;
 
     const html = `
-      <div class="history-card item-card">
+      <div class="history-card item-card" data-status="${statusClass}">
         <div class="history-card-main">
-          <div class="history-id">${escapeHtml(id)}</div>
-          <div class="history-borrower">${name}</div>
+          <div class="history-id">
+            <strong>${escapeHtml(name)}</strong> x${qty}
+            <div style="margin-top:4px;">${statusBadge}</div>
+          </div>
+          <div class="history-borrower">Student: ${borrower}</div>
           <div class="history-dates">${dates}</div>
         </div>
         <div class="history-card-actions">
-          <div class="history-items">Request: ${escapeHtml(req.requestId || req.request_id || "-")}</div>
-          <div class="history-borrower">Borrower: ${borrower}</div>
-          <button class="btn btn-small details-btn" data-req-id="${escapeHtml(req.requestId || req.request_id || "")}">Details</button>
+          <div class="history-items">Request: ${escapeHtml(requestId)}</div>
+          <button class="btn btn-small details-btn" data-req-id="${escapeHtml(requestId)}">Details</button>
         </div>
       </div>
     `;

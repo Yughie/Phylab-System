@@ -379,20 +379,20 @@ export async function loadUserRequests() {
   const userEmail = sessionUser.email || "";
   const userId = sessionUser.idNumber || sessionUser.id || "";
 
-  let userRequests = [];
+  let userItems = []; // Changed from userRequests to userItems
 
-  // Try to fetch from backend first
+  // Try to fetch from backend first - use history endpoint to get individual items
   try {
     const baseUrl =
       window.PHYLAB_API && typeof window.PHYLAB_API === "function"
         ? window.PHYLAB_API(
-            `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
+            `/api/borrow-requests/history/?student_id=${encodeURIComponent(userId)}`,
           )
-        : `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`;
+        : `/api/borrow-requests/history/?student_id=${encodeURIComponent(userId)}`;
 
     const urls = [
       baseUrl,
-      `/api/borrow-requests/?student_id=${encodeURIComponent(userId)}`,
+      `/api/borrow-requests/history/?student_id=${encodeURIComponent(userId)}`,
     ];
 
     const token = sessionStorage.getItem("auth_token");
@@ -408,24 +408,34 @@ export async function loadUserRequests() {
           const data = await resp.json();
           console.debug("loadUserRequests: response data", url, data);
           if (Array.isArray(data)) {
-            userRequests = data.map((r) => ({
-              id: r.request_id || r.id || "",
-              studentName: r.student_name || r.studentName || "",
-              email: r.email || r.email_address || "",
-              items: r.items || [],
-              borrowDate: r.borrow_date || r.borrowDate || "",
-              returnDate: r.return_date || r.returnDate || "",
-              status: r.status || "pending",
-              timestamp: r.created_at || r.timestamp || "",
-              teacher_name: r.teacher_name || r.teacherName || "",
-              purpose: r.purpose || "",
-              admin_remark: r.admin_remark || r.adminRemark || "",
-              remark_type: r.remark_type || r.remarkType || "",
+            // Now data is individual items with embedded request info
+            userItems = data.map((item) => ({
+              // Item-level fields
+              itemId: item.id || "",
+              itemName: item.item_name || item.itemName || "",
+              itemKey: item.item_key || item.itemKey || "",
+              quantity: item.quantity || 1,
+              itemImage: item.item_image || item.itemImage || "",
+              status: item.status || "pending",
+              adminRemark: item.admin_remark || item.adminRemark || "",
+              remarkType: item.remark_type || item.remarkType || "",
+              remarkCreatedAt:
+                item.remark_created_at || item.remarkCreatedAt || "",
+              // Parent request fields
+              requestId: item.request_id || "",
+              studentName: item.student_name || item.studentName || "",
+              email: item.email || "",
+              borrowDate: item.borrow_date || item.borrowDate || "",
+              returnDate: item.return_date || item.returnDate || "",
+              timestamp: item.created_at || item.timestamp || "",
+              teacherName: item.teacher_name || item.teacherName || "",
+              purpose: item.purpose || "",
+              updatedAt: item.updated_at || "",
             }));
             console.info(
               "loadUserRequests: loaded",
-              userRequests.length,
-              "requests from",
+              userItems.length,
+              "items from",
               url,
             );
             break;
@@ -451,7 +461,7 @@ export async function loadUserRequests() {
   }
 
   // Fallback to localStorage if backend unavailable
-  if (userRequests.length === 0) {
+  if (userItems.length === 0) {
     const queue = JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
     const history = JSON.parse(localStorage.getItem("phyLab_History")) || [];
 
@@ -459,7 +469,7 @@ export async function loadUserRequests() {
       .concat(history)
       .sort((a, b) => parseTime(b.timestamp) - parseTime(a.timestamp));
 
-    userRequests = all.filter((r) => {
+    const userRequests = all.filter((r) => {
       if (!r) return false;
       if (userEmail && r.email && r.email === userEmail) return true;
       if (userId && r.studentID && String(r.studentID) === String(userId))
@@ -473,45 +483,88 @@ export async function loadUserRequests() {
       return false;
     });
 
-    // Normalize possible camelCase keys from localStorage into expected snake_case
-    userRequests = userRequests.map((r) => ({
-      ...r,
-      teacher_name: r.teacher_name || r.teacherName || r.teacherName || "",
-      purpose: r.purpose || r.purpose || "",
-      admin_remark: r.admin_remark || r.adminRemark || "",
-      remark_type: r.remark_type || r.remarkType || "",
-    }));
+    // Flatten requests into individual items for localStorage fallback
+    userRequests.forEach((req) => {
+      const items = req.items || [];
+      items.forEach((item) => {
+        userItems.push({
+          itemId: item.id || "",
+          itemName: item.item_name || item.itemName || item.name || "",
+          itemKey: item.item_key || item.itemKey || "",
+          quantity: item.quantity || 1,
+          itemImage: item.item_image || item.itemImage || "",
+          status: item.status || req.status || "pending",
+          adminRemark:
+            item.admin_remark || item.adminRemark || req.admin_remark || "",
+          remarkType:
+            item.remark_type || item.remarkType || req.remark_type || "",
+          remarkCreatedAt: item.remark_created_at || item.remarkCreatedAt || "",
+          requestId: req.id || req.request_id || "",
+          studentName: req.studentName || req.student_name || "",
+          email: req.email || "",
+          borrowDate: req.borrowDate || req.borrow_date || "",
+          returnDate: req.returnDate || req.return_date || "",
+          timestamp: req.timestamp || req.created_at || "",
+          teacherName: req.teacher_name || req.teacherName || "",
+          purpose: req.purpose || "",
+        });
+      });
+    });
   }
 
-  if (userRequests.length === 0) {
+  if (userItems.length === 0) {
     container.innerHTML =
       '<div style="padding:20px; color:#666;">You have no requests yet.</div>';
     return;
   }
 
-  userRequests.forEach((req, idx) => {
+  userItems.forEach((item, idx) => {
     const card = document.createElement("div");
     card.className = "request-card";
-    const rid = req.id || `local-${idx}`;
-    requestsById.set(rid, req);
-    card.dataset.reqId = rid;
-    card.style.cursor = "pointer";
-    const status = (req.status || "pending").toLowerCase();
+    const rid = item.requestId || `local-${idx}`;
 
-    const items = req.items || [];
-    const visible = items
-      .slice(0, 3)
-      .map((it) => `${it.name || it.item_name} × ${it.quantity}`);
-    const moreCount = Math.max(0, items.length - visible.length);
-    const itemsHtml =
-      visible.join(", ") +
-      (moreCount ? ` <span class="more-items">+${moreCount} more</span>` : "");
+    // Store item data for modal viewing (convert back to request-like format for compatibility)
+    const reqForModal = {
+      id: item.requestId,
+      studentName: item.studentName,
+      email: item.email,
+      borrowDate: item.borrowDate,
+      returnDate: item.returnDate,
+      status: item.status,
+      timestamp: item.timestamp,
+      teacher_name: item.teacherName,
+      purpose: item.purpose,
+      admin_remark: item.adminRemark,
+      remark_type: item.remarkType,
+      items: [
+        {
+          id: item.itemId,
+          item_name: item.itemName,
+          item_key: item.itemKey,
+          quantity: item.quantity,
+          item_image: item.itemImage,
+          status: item.status,
+          admin_remark: item.adminRemark,
+          remark_type: item.remarkType,
+          remark_created_at: item.remarkCreatedAt,
+        },
+      ],
+    };
+    requestsById.set(rid + "-" + idx, reqForModal);
+    card.dataset.reqId = rid + "-" + idx;
+    card.style.cursor = "pointer";
+    const status = (item.status || "pending").toLowerCase();
+
+    // Display single item info instead of aggregating multiple items
+    const itemName = item.itemName || "Item";
+    const quantity = item.quantity || 1;
+    const itemsHtml = `${itemName} × ${quantity}`;
 
     const metaHtml = `
         <div class="request-meta">
           <div class="request-meta-left">
-            <div class="request-id">${req.id || ""}</div>
-            <div class="request-timestamp">${formatTimestamp(req.timestamp) || ""}</div>
+            <div class="request-id">${item.requestId || ""}</div>
+            <div class="request-timestamp">${formatTimestamp(item.timestamp) || ""}</div>
           </div>
           <span class="request-status ${status}">${status.toUpperCase()}</span>
         </div>`;
@@ -519,22 +572,22 @@ export async function loadUserRequests() {
     card.innerHTML = `
       <div class="request-info">
         <div class="request-top">
-          <div class="request-user">${req.studentName || req.email || "You"}</div>
-          <div class="request-dates">Borrow: ${formatDateOnly(req.borrowDate) || "N/A"} • Return: ${formatDateOnly(req.returnDate) || "N/A"}</div>
+          <div class="request-user">${item.studentName || item.email || "You"}</div>
+          <div class="request-dates">Borrow: ${formatDateOnly(item.borrowDate) || "N/A"} • Return: ${formatDateOnly(item.returnDate) || "N/A"}</div>
         </div>
         <div class="request-items">${itemsHtml}</div>
       </div>
       ${metaHtml}
     `;
     card.addEventListener("click", () => {
-      showRequestModal(Object.assign({}, req, { id: rid }));
+      showRequestModal(reqForModal);
     });
     container.appendChild(card);
   });
 
-  // Expose the loaded requests and index for debugging in the browser console
+  // Expose the loaded items and index for debugging in the browser console
   try {
-    window._userRequests = userRequests;
+    window._userItems = userItems;
     // convert Map to plain object for easier console inspection
     const mapObj = {};
     for (const [k, v] of requestsById.entries()) mapObj[k] = v;

@@ -56,6 +56,31 @@ class BorrowRequestItemSerializer(serializers.ModelSerializer):
         read_only_fields = []
 
 
+class BorrowRequestItemDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for individual item history with parent request info."""
+    request_id = serializers.CharField(source='borrow_request.request_id', read_only=True)
+    student_name = serializers.CharField(source='borrow_request.student_name', read_only=True)
+    student_id = serializers.CharField(source='borrow_request.student_id', read_only=True)
+    email = serializers.EmailField(source='borrow_request.email', read_only=True)
+    teacher_name = serializers.CharField(source='borrow_request.teacher_name', read_only=True)
+    purpose = serializers.CharField(source='borrow_request.purpose', read_only=True)
+    borrow_date = serializers.DateField(source='borrow_request.borrow_date', read_only=True)
+    return_date = serializers.DateField(source='borrow_request.return_date', read_only=True)
+    created_at = serializers.DateTimeField(source='borrow_request.created_at', read_only=True)
+    updated_at = serializers.DateTimeField(source='borrow_request.updated_at', read_only=True)
+    
+    class Meta:
+        model = BorrowRequestItem
+        fields = [
+            'id', 'item_name', 'item_key', 'quantity', 'item_image', 'status',
+            'admin_remark', 'remark_type', 'remark_created_at',
+            'request_id', 'student_name', 'student_id', 'email',
+            'teacher_name', 'purpose', 'borrow_date', 'return_date',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = fields
+
+
 class BorrowRequestSerializer(serializers.ModelSerializer):
     items = BorrowRequestItemSerializer(many=True)
     

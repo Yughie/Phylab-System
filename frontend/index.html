@@ -907,8 +907,8 @@
               </div>
               <h3 class="feature-title">Track Returns</h3>
               <p class="feature-description">
-                Monitor all your active loans and return schedules with ease.
-                Receive timely reminders and manage your borrowing history
+                Monitor all your active transaction and return schedules with
+                ease. Receive timely reminders and manage your borrowing history
                 comprehensively.
               </p>
               <ul class="feature-list">
@@ -1291,8 +1291,9 @@
         });
       }
 
-      const EMAILJS_SERVICE_ID = "your_service_id";
-      const EMAILJS_TEMPLATE_ID = "your_template_id";
+      const EMAILJS_SERVICE_ID = "service_t43eph7";
+      const EMAILJS_TEMPLATE_ID = "template_33ionwk";
+      const EMAILJS_REGISTRATION_TEMPLATE = "template_dvz13eg";
 
       // ========== NOTIFICATION MODAL ==========
       function showPhylabModal(message, isSuccess = true, callback) {
@@ -1416,9 +1417,17 @@
                 const params = {
                   to_email: email,
                   to_name: fullname,
-                  user_id: (data && data.id) || "",
+                  user_name: fullname,
+                  name: fullname,
+                  user_email: email,
+                  company_url: window.location.origin,
+                  company_email: "phylabsofficial@gmail.com",
                 };
-                safeSendEmail(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+                safeSendEmail(
+                  EMAILJS_SERVICE_ID,
+                  EMAILJS_REGISTRATION_TEMPLATE,
+                  params,
+                )
                   .then(() => console.log("Welcome email sent"))
                   .catch((e) => console.warn("Welcome email not sent", e));
               } catch (e) {

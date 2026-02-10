@@ -398,14 +398,27 @@ function initInventorySearch() {
 // Export inventory to Excel
 async function exportInventoryExcel() {
   try {
-    const endpoints = [
-      "/api/inventory/export_xlsx/",
-      "http://127.0.0.1:8000/api/inventory/export_xlsx/",
-    ];
+    const path = "/api/inventory/export_xlsx/";
+    // Build candidate URLs using the global API helper (handles prod vs local)
+    const urls = [];
+    if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+      urls.push(window.PHYLAB_API(path));
+    } else if (window.PHYLAB_API_BASE) {
+      urls.push(window.PHYLAB_API_BASE + path);
+    }
+    // Relative path as fallback (works when served from same origin)
+    urls.push(path);
+
+    const headers = {};
+    const token = sessionStorage.getItem("auth_token");
+    if (token) {
+      headers["Authorization"] = "Token " + token;
+    }
+
     let res = null;
-    for (let u of endpoints) {
+    for (let u of urls) {
       try {
-        res = await fetch(u, { method: "GET" });
+        res = await fetch(u, { method: "GET", headers, mode: "cors" });
         if (res && res.ok) break;
       } catch (e) {
         // try next

@@ -142,78 +142,8 @@ function moveEditButtonsToFooter() {
   });
 }
 
-async function saveStock(inputElement) {
-  const itemName = inputElement.getAttribute("data-item");
-  let value = parseInt(inputElement.value, 10);
-  if (isNaN(value) || value < 0) value = 0;
-
-  const originalKey = "stock_original_" + itemName;
-  let original = parseInt(localStorage.getItem(originalKey), 10);
-  if (isNaN(original)) original = value;
-
-  if (value > original) {
-    localStorage.setItem(originalKey, String(value));
-    original = value;
-  }
-
-  const loansQty = computeActiveLoansForItem(itemName);
-  if (value < loansQty) {
-    value = loansQty;
-    inputElement.value = value;
-    if (typeof showNotification === "function")
-      showNotification(
-        `Cannot set below active loans (${loansQty}).`,
-        "warning",
-      );
-  }
-
-  if (value > original) value = original;
-
-  // Try to persist to backend
-  let backendSucceeded = false;
-  try {
-    const card = inputElement.closest(".inventory-card");
-    const itemId = card ? card.getAttribute("data-id") : null;
-
-    if (itemId) {
-      const urls = [
-        `/api/inventory/${itemId}/set_stock/`,
-        `http://127.0.0.1:8000/api/inventory/${itemId}/set_stock/`,
-      ];
-
-      for (let u of urls) {
-        try {
-          const r = await fetch(u, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ stock: value }),
-            mode: "cors",
-          });
-          if (r.ok) {
-            backendSucceeded = true;
-            break;
-          }
-        } catch (e) {
-          continue;
-        }
-      }
-    }
-  } catch (e) {
-    // ignore
-  }
-
-  localStorage.setItem("stock_" + itemName, String(value));
-  updateStockDisplay(inputElement);
-  if (backendSucceeded) {
-    if (typeof showNotification === "function")
-      showNotification("Stock saved to server.", "approved");
-  } else {
-    if (typeof showNotification === "function")
-      showNotification("Stock saved locally (offline mode).", "warning");
-  }
-
-  saveInventoryToLocalStorage();
-}
+// saveStock is defined inline in PhyLab_admin_page.html to avoid duplication.
+// Do NOT define it here — it would override the authoritative inline version.
 
 function loadStockFromMemory() {
   document.querySelectorAll(".stock-input").forEach((input) => {
@@ -262,6 +192,10 @@ function updateStockDisplay(input) {
     card.appendChild(footer);
   }
 
+  // Preserve edit button before wiping footer contents
+  const editBtn = footer.querySelector(".edit-item-btn, .edit-details-btn");
+  if (editBtn) editBtn.remove();
+
   footer.innerHTML = `
   <div class="stock-header">
     <div class="stock-current-btm">Current: <strong>${current}</strong></div>
@@ -269,6 +203,9 @@ function updateStockDisplay(input) {
       Original: <strong>${original}</strong>
     </div>
   </div>`;
+
+  // Re-insert the preserved edit button at the top of the footer
+  if (editBtn) footer.insertBefore(editBtn, footer.firstChild);
 
   const datasetType =
     card && card.dataset && card.dataset.type ? card.dataset.type : "";
@@ -326,12 +263,19 @@ function enableOriginalEdit(itemName, container) {
   // mark footer as editing so CSS can lay out controls inline
   container.classList.add("original-editing");
 
+  // Preserve edit button before wiping container
+  const editBtn = container.querySelector(".edit-item-btn, .edit-details-btn");
+  if (editBtn) editBtn.remove();
+
   container.innerHTML = `
   <input type="number" class="original-edit-input" value="${origValue}" min="0">
   <div class="original-edit-actions">
     <button class="primary-btn original-save">Save</button>
     <button class="secondary-btn original-cancel">Cancel</button>
   </div>`;
+
+  // Re-insert the preserved edit button
+  if (editBtn) container.insertBefore(editBtn, container.firstChild);
 
   const inputEl = container.querySelector(".original-edit-input");
   container.querySelector(".original-save").onclick = function () {
@@ -341,10 +285,42 @@ function enableOriginalEdit(itemName, container) {
       return;
     }
     const newVal = String(parseInt(v));
-    localStorage.setItem(originalKey, newVal);
-    showNotification("Original stock updated", "success");
-    updateStockDisplay(stockInput);
-    container.classList.remove("original-editing");
+
+    // Persist to backend using backendFetch, then update localStorage
+    (async function () {
+      let backendSucceeded = false;
+      const itemId = card ? card.getAttribute("data-id") : null;
+
+      if (typeof backendFetch === "function") {
+        let result;
+        if (itemId) {
+          result = await backendFetch(`/api/inventory/${itemId}/set_stock/`, {
+            method: "POST",
+            body: { stock: parseInt(newVal) },
+          });
+        } else {
+          result = await backendFetch("/api/inventory/set_stock_by_key/", {
+            method: "POST",
+            body: { item_key: itemName, stock: parseInt(newVal) },
+          });
+        }
+        backendSucceeded = result.ok;
+      } else {
+        console.error("backendFetch not available");
+      }
+
+      localStorage.setItem(originalKey, newVal);
+      if (backendSucceeded) {
+        showNotification("Original stock updated on server", "approved");
+      } else {
+        showNotification(
+          "Failed to update on server. Saved locally only.",
+          "warning",
+        );
+      }
+      updateStockDisplay(stockInput);
+      container.classList.remove("original-editing");
+    })();
   };
   container.querySelector(".original-cancel").onclick = function () {
     updateStockDisplay(stockInput);

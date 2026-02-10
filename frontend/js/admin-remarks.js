@@ -64,18 +64,35 @@ async function saveRemark() {
 
   // Attempt to persist remark to backend per-item when possible
   let backendSucceeded = false;
-  if (currentRemarkItemId && currentRemarkRequestId) {
+  console.log(
+    "[saveRemark] currentRemarkItemId:",
+    currentRemarkItemId,
+    "currentRemarkRequestId:",
+    currentRemarkRequestId,
+    "backendFetch available:",
+    typeof backendFetch === "function",
+  );
+
+  if (
+    currentRemarkItemId &&
+    currentRemarkItemId !== "undefined" &&
+    currentRemarkRequestId &&
+    currentRemarkRequestId !== "undefined"
+  ) {
     const nowIso = new Date().toISOString();
-    const payload = {
+    // Ensure item id is a number for the backend
+    const numericItemId = parseInt(currentRemarkItemId, 10);
+    const remarkPayload = {
       items: [
         {
-          id: currentRemarkItemId,
+          id: isNaN(numericItemId) ? currentRemarkItemId : numericItemId,
           admin_remark: remarkText,
           remark_type: remarkType,
           remark_created_at: nowIso,
         },
       ],
     };
+
     // Resolve numeric DB id for the request (uses admin-utils.resolveRequestNumericId)
     let resolvedReqId = currentRemarkRequestId;
     try {
@@ -86,40 +103,54 @@ async function saveRemark() {
       console.warn("resolveRequestNumericId failed", e);
     }
 
-    const urls = [
-      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-        ? window.PHYLAB_API(`/api/borrow-requests/${resolvedReqId}/update_item_statuses/`)
-        : `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
-      `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
-    ];
+    console.log(
+      "[saveRemark] resolvedReqId:",
+      resolvedReqId,
+      "payload:",
+      JSON.stringify(remarkPayload),
+    );
 
-    for (const u of urls) {
-      try {
-        const r = await fetch(u, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          mode: "cors",
-        });
-        if (r && r.ok) {
-          backendSucceeded = true;
-          break;
-        } else {
-          try {
-            const txt = await r.text();
-            console.warn("Remark PATCH failed:", r.status, txt);
-          } catch (e) {}
-        }
-      } catch (e) {
-        console.warn("Remark PATCH error", e);
-        continue;
+    if (typeof backendFetch === "function") {
+      const result = await backendFetch(
+        `/api/borrow-requests/${resolvedReqId}/update_item_statuses/`,
+        { method: "PATCH", body: remarkPayload },
+      );
+      // Check both HTTP success AND that items were actually updated
+      if (result.ok && result.data && result.data.updated_count > 0) {
+        backendSucceeded = true;
+      } else if (result.ok && result.data && result.data.updated_count === 0) {
+        console.warn(
+          "[saveRemark] Backend returned 200 but updated_count=0. Item ID may not belong to this request.",
+          "skipped_ids:",
+          result.data.skipped_ids,
+        );
       }
+      console.log("[saveRemark] backendFetch result:", result);
+    } else {
+      console.error(
+        "[saveRemark] backendFetch is NOT available — admin-utils.js may not be loaded",
+      );
     }
+  } else {
+    console.warn(
+      "[saveRemark] Skipping backend save — itemId or requestId missing/undefined.",
+      "itemId:",
+      currentRemarkItemId,
+      "requestId:",
+      currentRemarkRequestId,
+    );
   }
 
   closeRemarkModal();
   if (backendSucceeded) {
     showNotification("Remark saved to server successfully!", "success");
+    // Also store under alternative localStorage keys so display code finds it
+    // immediately (openBorrowingDetails checks multiple key formats)
+    const altKey = `req_${currentRemarkRequestId}`;
+    if (!remarks[altKey]) {
+      remarks[altKey] = remarkObj;
+      localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
+    }
   } else {
     showNotification("Remark saved locally (server unreachable).", "warning");
   }
@@ -210,29 +241,11 @@ async function saveItemDetails() {
   // Try to persist to backend if we have an item id
   let backendSucceeded = false;
   if (itemId) {
-    const urls = [
-      `/api/inventory/${itemId}/`,
-      (window.PHYLAB_API && typeof window.PHYLAB_API === 'function')
-        ? window.PHYLAB_API(`/api/inventory/${itemId}/`)
-        : `/api/inventory/${itemId}/`,
-    ];
-
-    for (let u of urls) {
-      try {
-        const r = await fetch(u, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          mode: "cors",
-        });
-        if (r.ok) {
-          backendSucceeded = true;
-          break;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
+    const result = await backendFetch(`/api/inventory/${itemId}/`, {
+      method: "PATCH",
+      body: payload,
+    });
+    backendSucceeded = result.ok;
   }
 
   // Persist to localStorage

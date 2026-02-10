@@ -1257,11 +1257,16 @@
   min-width: 0;
 }
 .equipment-toolbar .equipment-filters {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+}
+.equipment-toolbar .equipment-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
 }
 
 /* Ensure search control and category buttons align visually */
@@ -1371,31 +1376,33 @@
 
 @media (max-width: 900px) {
   .equipment-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .equipment-toolbar .equipment-filters {
-    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
   }
   .equipment-toolbar .search-bar {
+    flex: 1 1 100%;
     order: -1;
+    max-width: 100%;
+  }
+  .equipment-toolbar .equipment-filters {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+  .equipment-toolbar .equipment-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
   }
 }
 
-/* Tighter mobile rules for the equipment toolbar */
 @media (max-width: 720px) {
   .equipment-toolbar {
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
     padding: 10px;
   }
-  .equipment-toolbar {
-    flex-direction: row;
-    align-items: center;
-  }
   .equipment-toolbar .search-bar {
-    flex: 1 1 180px;
-    min-width: 0;
-    order: 0;
+    flex: 1 1 100%;
+    order: -1;
   }
   .equipment-toolbar .search-input {
     height: 40px;
@@ -1407,16 +1414,22 @@
     height: 40px;
   }
   .equipment-toolbar .equipment-filters {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     gap: 8px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
   }
   .equipment-toolbar .category-button {
     min-width: 72px;
     height: 40px;
     padding: 0 12px;
     font-size: 13px;
+    flex: 0 0 auto;
+  }
+  .equipment-toolbar .equipment-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
   }
 }
 
@@ -1430,6 +1443,7 @@
   .equipment-toolbar .search-bar {
     order: -1;
     width: 100%;
+    flex: 1 1 100%;
   }
   .equipment-toolbar .search-input {
     width: 100%;
@@ -1438,12 +1452,24 @@
   .equipment-toolbar .equipment-filters {
     width: 100%;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: nowrap;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .equipment-toolbar .category-button {
     flex: 0 0 auto;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 12px;
+    height: 36px;
+  }
+  .equipment-toolbar .equipment-actions {
+    width: 100%;
+  }
+  .equipment-toolbar .equipment-actions .primary-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

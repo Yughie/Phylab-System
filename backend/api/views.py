@@ -380,6 +380,8 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         
         # Update each item by id and collect approved items to create loan entries
         approved_items_to_create = []
+        updated_count = 0
+        skipped_ids = []
         for item_update in items_data:
             item_id = item_update.get('id')
             if not item_id:
@@ -400,6 +402,7 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                     item_obj.remark_created_at = item_update.get('remark_created_at')
 
                 item_obj.save()
+                updated_count += 1
 
                 # Create loan entries only when item status transitions into approved/borrowed
                 prev_was_borrowed_or_approved = old_status in ('approved', 'borrowed')
@@ -407,7 +410,12 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                 if (not prev_was_borrowed_or_approved) and now_is_borrowed_or_approved:
                     approved_items_to_create.append(item_obj)
             except BorrowRequestItem.DoesNotExist:
+                skipped_ids.append(item_id)
                 continue
+        
+        if skipped_ids:
+            print(f"[update_item_statuses] WARNING: item ids not found in request {borrow_request.id}: {skipped_ids}")
+        print(f"[update_item_statuses] Updated {updated_count}/{len(items_data)} items")
 
         # For any approved items, create a new BorrowRequest representing the actual loan(s)
         # Group all approved items from this request into a single new BorrowRequest
@@ -458,7 +466,11 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
 
         # Return updated original request and any created loan entries
         serializer = self.get_serializer(borrow_request)
-        payload = {'original_request': serializer.data}
+        payload = {
+            'original_request': serializer.data,
+            'updated_count': updated_count,
+            'skipped_ids': skipped_ids,
+        }
         if created_loans:
             payload['created_loans'] = created_loans
         return Response(payload)

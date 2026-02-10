@@ -1,5 +1,80 @@
 // Utility functions for admin page
 
+/**
+ * Shared helper for backend API calls.
+ * Builds the correct URL for both local dev and production,
+ * includes auth headers, and provides consistent error logging.
+ *
+ * @param {string} path  - API path, e.g. '/api/inventory/5/'
+ * @param {object} opts  - { method, body (object), extraHeaders }
+ * @returns {Promise<{ok: boolean, status: number|null, data: any, error: string|null}>}
+ */
+async function backendFetch(path, opts = {}) {
+  const method = (opts.method || "GET").toUpperCase();
+  const bodyObj = opts.body || null;
+  const extraHeaders = opts.extraHeaders || {};
+
+  // Build candidate URLs: production API first, then relative
+  const urls = [];
+  if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+    urls.push(window.PHYLAB_API(path));
+  } else if (window.PHYLAB_API_BASE) {
+    const p = path.startsWith("/") ? path : "/" + path;
+    urls.push(window.PHYLAB_API_BASE + p);
+  }
+  // Always add relative as a fallback (works when served from same origin in dev)
+  urls.push(path);
+
+  // Prepare headers
+  const headers = Object.assign(
+    { "Content-Type": "application/json" },
+    extraHeaders,
+  );
+  const token = sessionStorage.getItem("auth_token");
+  if (token) {
+    headers["Authorization"] = "Token " + token;
+  }
+
+  console.log(`backendFetch [${method}] attempting URLs:`, urls);
+
+  for (const url of urls) {
+    try {
+      const fetchOpts = {
+        method,
+        headers,
+        mode: "cors",
+      };
+      if (bodyObj && method !== "GET") {
+        fetchOpts.body = JSON.stringify(bodyObj);
+      }
+
+      const resp = await fetch(url, fetchOpts);
+      console.log(`backendFetch [${method}] ${url} -> ${resp.status}`);
+
+      if (resp.ok) {
+        let data = null;
+        try {
+          data = await resp.json();
+        } catch (_) {}
+        return { ok: true, status: resp.status, data, error: null };
+      } else {
+        const errText = await resp.text().catch(() => "");
+        console.warn(
+          `backendFetch [${method}] ${url} failed:`,
+          resp.status,
+          errText,
+        );
+      }
+    } catch (e) {
+      console.error(
+        `backendFetch [${method}] ${url} network error:`,
+        e.message,
+      );
+    }
+  }
+  return { ok: false, status: null, data: null, error: "All URLs failed" };
+}
+
 // Escape HTML to prevent XSS
 function escapeHtml(s) {
   if (s === undefined || s === null) return "";

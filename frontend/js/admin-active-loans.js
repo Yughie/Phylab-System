@@ -541,9 +541,29 @@ async function openBorrowingDetails(requestId) {
   statusEl.innerText = currentStatus.toUpperCase();
   statusEl.className = `status-tag status-${currentStatus}`;
 
-  // Show admin remark if exists
+  // Show admin remark if exists — check per-item backend data first, then localStorage
   const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  const remark = remarks[requestId] || request.adminRemark;
+  // Build a remark object from the best available source:
+  // 1. Per-item backend fields (authoritative — saved in DB)
+  // 2. localStorage by item id
+  // 3. localStorage by request id
+  // 4. Request-level adminRemark
+  let remark = null;
+  if (item.admin_remark) {
+    remark = {
+      type: item.remark_type || "",
+      text: item.admin_remark,
+      createdAt: item.remark_created_at || null,
+    };
+  } else if (item.id && remarks[`item_${item.id}`]) {
+    remark = remarks[`item_${item.id}`];
+  } else if (remarks[`req_${requestId}`]) {
+    remark = remarks[`req_${requestId}`];
+  } else if (remarks[requestId]) {
+    remark = remarks[requestId];
+  } else if (request.adminRemark) {
+    remark = request.adminRemark;
+  }
   const remarkSection = document.getElementById("det-remark-section");
 
   if (remark && (remark.type || remark.text)) {

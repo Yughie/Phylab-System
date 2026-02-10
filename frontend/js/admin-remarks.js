@@ -4,6 +4,43 @@ let currentRemarkRequestId = null;
 let currentRemarkItemId = null;
 let currentRemarkItemName = null;
 
+async function fetchExistingRemark(requestId, itemId) {
+  if (!itemId || !requestId || typeof backendFetch !== "function") {
+    return null;
+  }
+
+  try {
+    // Resolve numeric DB id for the request
+    let resolvedReqId = requestId;
+    if (typeof resolveRequestNumericId === "function") {
+      resolvedReqId = await resolveRequestNumericId(requestId);
+    }
+
+    // Fetch the full request data to get item remarks
+    const result = await backendFetch(`/api/borrow-requests/${resolvedReqId}/`);
+    if (!result.ok || !result.data) {
+      return null;
+    }
+
+    const request = result.data;
+    // Find the specific item in the request
+    const item = request.items?.find((i) => String(i.id) === String(itemId));
+
+    if (item && (item.admin_remark || item.remark_type)) {
+      return {
+        type: item.remark_type || "",
+        text: item.admin_remark || "",
+        createdAt: item.remark_created_at || null,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error fetching existing remark:", error);
+    return null;
+  }
+}
+
 function openRemarkModal(requestId, itemId, itemName) {
   currentRemarkRequestId = requestId;
   currentRemarkItemId = itemId || null;
@@ -11,20 +48,25 @@ function openRemarkModal(requestId, itemId, itemName) {
 
   document.getElementById("remarkItemName").textContent = currentRemarkItemName;
 
-  // Check if there's an existing remark for this item (fallback to request-level key)
-  const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  const key = currentRemarkItemId
-    ? `item_${currentRemarkItemId}`
-    : `req_${requestId}`;
-  const existingRemark = remarks[key];
-
-  if (existingRemark) {
-    document.getElementById("remarkType").value = existingRemark.type || "";
-    document.getElementById("remarkText").value = existingRemark.text || "";
-  } else {
-    document.getElementById("remarkType").value = "";
-    document.getElementById("remarkText").value = "";
-  }
+  // Fetch existing remark from backend
+  fetchExistingRemark(requestId, itemId)
+    .then((backendRemark) => {
+      if (backendRemark) {
+        // Use backend data
+        document.getElementById("remarkType").value = backendRemark.type || "";
+        document.getElementById("remarkText").value = backendRemark.text || "";
+      } else {
+        // No existing remark
+        document.getElementById("remarkType").value = "";
+        document.getElementById("remarkText").value = "";
+      }
+    })
+    .catch((error) => {
+      console.warn("Failed to fetch existing remark from backend:", error);
+      // Clear fields on error
+      document.getElementById("remarkType").value = "";
+      document.getElementById("remarkText").value = "";
+    });
 
   document.getElementById("remarkModal").classList.add("show");
 }
@@ -47,22 +89,7 @@ async function saveRemark() {
     return;
   }
 
-  // Save to localStorage (fallback)
-  const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  const key = currentRemarkItemId
-    ? `item_${currentRemarkItemId}`
-    : `req_${currentRemarkRequestId}`;
-  const remarkObj = {
-    type: remarkType,
-    text: remarkText,
-    itemName: currentRemarkItemName,
-    createdAt: new Date().toISOString(),
-    createdBy: "Admin",
-  };
-  remarks[key] = remarkObj;
-  localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
-
-  // Attempt to persist remark to backend per-item when possible
+  // Save to backend only
   let backendSucceeded = false;
   console.log(
     "[saveRemark] currentRemarkItemId:",
@@ -144,15 +171,9 @@ async function saveRemark() {
   closeRemarkModal();
   if (backendSucceeded) {
     showNotification("Remark saved to server successfully!", "success");
-    // Also store under alternative localStorage keys so display code finds it
-    // immediately (openBorrowingDetails checks multiple key formats)
-    const altKey = `req_${currentRemarkRequestId}`;
-    if (!remarks[altKey]) {
-      remarks[altKey] = remarkObj;
-      localStorage.setItem("phyLab_Remarks", JSON.stringify(remarks));
-    }
   } else {
-    showNotification("Remark saved locally (server unreachable).", "warning");
+    showNotification("Failed to save remark to server.", "error");
+    return; // Don't reload if save failed
   }
 
   // Reload the loans view to show the remark badge

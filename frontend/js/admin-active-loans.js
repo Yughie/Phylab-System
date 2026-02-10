@@ -106,13 +106,8 @@ async function loadReturnWindow() {
     return;
   }
 
-  // Get remarks from localStorage
-  const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-
   activeLoans.forEach((request) => {
-    const reqKey = `req_${request.requestId || request.id}`;
-    const storedReqRemark = remarks[reqKey];
-    const hasRemark = storedReqRemark || request.adminRemark;
+    const hasRemark = request.adminRemark;
     const remarkBadgeHTML = hasRemark
       ? `
           <div class="remark-badge">
@@ -127,15 +122,11 @@ async function loadReturnWindow() {
     );
 
     activeItems.forEach((item) => {
-      const itemKey = `item_${item.id}`;
-      const storedItemRemark = remarks[itemKey];
-      const itemHasRemark =
-        storedItemRemark || item.admin_remark || request.adminRemark;
+      const itemHasRemark = item.admin_remark || request.adminRemark;
       const itemRemarkBadge = itemHasRemark
-        ? `<div class="remark-badge">${getRemarkTypeLabel(storedItemRemark?.type || item.remark_type || request.remarkType) || "Has Remark"}</div>`
+        ? `<div class="remark-badge">${getRemarkTypeLabel(item.remark_type || request.remarkType) || "Has Remark"}</div>`
         : "";
-      const remarkTimestamp =
-        storedItemRemark?.createdAt || item.remark_created_at || null;
+      const remarkTimestamp = item.remark_created_at || null;
       const remarkTimestampHtml = remarkTimestamp
         ? `<div class="remark-ts">${formatRemarkTimestamp(remarkTimestamp)}</div>`
         : "";
@@ -541,13 +532,7 @@ async function openBorrowingDetails(requestId) {
   statusEl.innerText = currentStatus.toUpperCase();
   statusEl.className = `status-tag status-${currentStatus}`;
 
-  // Show admin remark if exists — check per-item backend data first, then localStorage
-  const remarks = JSON.parse(localStorage.getItem("phyLab_Remarks")) || {};
-  // Build a remark object from the best available source:
-  // 1. Per-item backend fields (authoritative — saved in DB)
-  // 2. localStorage by item id
-  // 3. localStorage by request id
-  // 4. Request-level adminRemark
+  // Show admin remark if exists — use backend data only
   let remark = null;
   if (item.admin_remark) {
     remark = {
@@ -555,12 +540,6 @@ async function openBorrowingDetails(requestId) {
       text: item.admin_remark,
       createdAt: item.remark_created_at || null,
     };
-  } else if (item.id && remarks[`item_${item.id}`]) {
-    remark = remarks[`item_${item.id}`];
-  } else if (remarks[`req_${requestId}`]) {
-    remark = remarks[`req_${requestId}`];
-  } else if (remarks[requestId]) {
-    remark = remarks[requestId];
   } else if (request.adminRemark) {
     remark = request.adminRemark;
   }

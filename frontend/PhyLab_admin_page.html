@@ -1624,8 +1624,8 @@
         if (editBtn) editBtn.remove();
 
         container.innerHTML = `
-        <input type="number" class="original-edit-input" value="${origValue}" min="0">
-        <div class="original-edit-actions">
+        <div class="original-edit-row">
+          <input type="number" class="original-edit-input" value="${origValue}" min="0">
           <button class="primary-btn original-save">Save</button>
           <button class="secondary-btn original-cancel">Cancel</button>
         </div>`;

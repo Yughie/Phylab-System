@@ -3140,30 +3140,24 @@ input::-webkit-inner-spin-button {
 
 /* Inline original edit controls */
 .original-edit-input {
-  width: 80px;
+  flex: 1 1 60px;
+  min-width: 60px;
+  max-width: 120px;
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #ddd;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
-.original-edit-actions {
-  display: inline-flex;
-  gap: 8px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-/* keep edit buttons from shrinking or wrapping over other elements */
-.original-edit-actions {
+/* Buttons in the original edit row */
+.original-edit-row .original-save,
+.original-edit-row .original-cancel {
   flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-.original-save,
-.original-cancel {
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 /* hide the numeric input (text bar) since original/current are now badges */
@@ -3186,11 +3180,14 @@ input::-webkit-inner-spin-button {
   z-index: 2;
 }
 
-/* When editing the original stock inline, show controls on a single row */
-.stock-footer.original-editing {
+/* Row container for original-stock edit input + save/cancel buttons */
+.original-edit-row {
+  display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
 }
 
 /* When the edit button is moved into the footer, make it full width and prominent */

@@ -655,6 +655,27 @@
       }
     </style>
 
+    <!-- Floating Add Item Button -->
+    <button
+      id="fabAddItem"
+      class="fab-add-item"
+      onclick="openAddItemModal()"
+      title="Add Item"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="white"
+        stroke-width="2"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      <span class="fab-label">Add Item</span>
+    </button>
+
     <div id="Borrowing-Details-window" class="Borrowing-Details-modal">
       <div class="Borrow-Details-content">
         <div class="Borrow-Details-header">
@@ -886,6 +907,114 @@
           <button class="primary-btn" onclick="saveRemark()">
             Save Remark
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Item Modal -->
+    <div id="addItemModal" class="remark-modal">
+      <div class="remark-modal-content">
+        <div class="remark-modal-header">
+          <h3>Add New Item</h3>
+          <span class="close-remark-btn" onclick="closeAddItemModal()"
+            >&times;</span
+          >
+        </div>
+        <div class="remark-modal-body">
+          <div class="add-item-grid">
+            <div class="field">
+              <label for="addItemName">Item Name *</label>
+              <input
+                id="addItemName"
+                class="remark-select"
+                type="text"
+                placeholder="e.g., Digital Multimeter"
+                required
+              />
+            </div>
+
+            <!-- item_key is auto-generated; keep hidden input for form submission -->
+            <input id="addItemKey" type="hidden" />
+
+            <div class="field">
+              <label for="addItemCategory">Category</label>
+              <select id="addItemCategory" class="remark-select">
+                <option value="">Select Category</option>
+                <option value="apparatus">Apparatus</option>
+                <option value="tools">Tools</option>
+                <option value="equipment">Equipment</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="addItemStock">Initial Stock</label>
+              <input
+                id="addItemStock"
+                class="remark-select"
+                type="number"
+                min="0"
+                value="0"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="field">
+              <label for="addItemCabinet">Cabinet</label>
+              <input
+                id="addItemCabinet"
+                class="remark-select"
+                type="text"
+                placeholder="e.g., Cabinet 1"
+              />
+            </div>
+
+            <div class="field">
+              <label for="addItemType">Type</label>
+              <input
+                id="addItemType"
+                class="remark-select"
+                type="text"
+                placeholder="e.g., Measuring Instrument"
+              />
+            </div>
+
+            <div class="field">
+              <label for="addItemUse">Use</label>
+              <input
+                id="addItemUse"
+                class="remark-select"
+                type="text"
+                placeholder="e.g., Measure voltage, current, resistance"
+              />
+            </div>
+
+            <div class="field field-full">
+              <label for="addItemDescription">Description</label>
+              <textarea
+                id="addItemDescription"
+                class="remark-textarea"
+                rows="3"
+                placeholder="Describe the item..."
+              ></textarea>
+            </div>
+
+            <div class="field field-full">
+              <label for="addItemImage">Image</label>
+              <input
+                id="addItemImage"
+                class="remark-select"
+                type="file"
+                accept="image/*"
+              />
+              <div id="addItemImagePreview" class="image-preview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="remark-modal-footer">
+          <button class="secondary-btn" onclick="closeAddItemModal()">
+            Cancel
+          </button>
+          <button class="primary-btn" onclick="saveNewItem()">Add Item</button>
         </div>
       </div>
     </div>

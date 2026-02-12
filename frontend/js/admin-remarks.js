@@ -302,3 +302,263 @@ async function saveItemDetails() {
   if (typeof saveInventoryToLocalStorage === "function")
     saveInventoryToLocalStorage();
 }
+
+// ================== Add New Item Functions ==================
+
+function openAddItemModal() {
+  const modal = document.getElementById("addItemModal");
+  if (!modal) return;
+
+  // Clear all form fields
+  document.getElementById("addItemName").value = "";
+  document.getElementById("addItemKey").value = "";
+  document.getElementById("addItemCategory").value = "";
+  document.getElementById("addItemStock").value = "0";
+  document.getElementById("addItemCabinet").value = "";
+  document.getElementById("addItemType").value = "";
+  document.getElementById("addItemUse").value = "";
+  document.getElementById("addItemDescription").value = "";
+  document.getElementById("addItemImage").value = "";
+  document.getElementById("addItemImagePreview").innerHTML = "";
+
+  // No visible item_key field: item_key will be auto-generated on save if empty
+  const nameInput = document.getElementById("addItemName");
+
+  // Image preview
+  const imageInput = document.getElementById("addItemImage");
+  const imagePreview = document.getElementById("addItemImagePreview");
+  imageInput.onchange = function () {
+    imagePreview.innerHTML = "";
+    if (imageInput.files && imageInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.maxWidth = "150px";
+        img.style.maxHeight = "150px";
+        img.style.borderRadius = "8px";
+        imagePreview.appendChild(img);
+      };
+      reader.readAsDataURL(imageInput.files[0]);
+    }
+  };
+
+  modal.classList.add("show");
+}
+
+function closeAddItemModal() {
+  const modal = document.getElementById("addItemModal");
+  if (!modal) return;
+  modal.classList.remove("show");
+}
+
+async function saveNewItem() {
+  const name = document.getElementById("addItemName").value.trim();
+  let itemKey = document.getElementById("addItemKey").value.trim();
+  const category = document.getElementById("addItemCategory").value;
+  const stock = parseInt(document.getElementById("addItemStock").value) || 0;
+  const cabinet = document.getElementById("addItemCabinet").value.trim();
+  const type = document.getElementById("addItemType").value.trim();
+  const use = document.getElementById("addItemUse").value.trim();
+  const description = document
+    .getElementById("addItemDescription")
+    .value.trim();
+  const imageInput = document.getElementById("addItemImage");
+
+  // Validation
+  if (!name) {
+    if (typeof showNotification === "function")
+      showNotification("Item name is required.", "error");
+    return;
+  }
+
+  // Auto-generate item_key if not provided
+  if (!itemKey) {
+    itemKey = name
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+  }
+
+  // Prepare form data (for file upload support)
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("item_key", itemKey);
+  formData.append("category", category);
+  formData.append("stock", stock);
+  formData.append("cabinet", cabinet);
+  formData.append("type", type);
+  formData.append("use", use);
+  formData.append("description", description);
+
+  if (imageInput.files && imageInput.files[0]) {
+    formData.append("image", imageInput.files[0]);
+  }
+
+  // Send to backend
+  try {
+    const urls = [];
+    if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+      urls.push(window.PHYLAB_API("/api/inventory/"));
+    } else if (window.PHYLAB_API_BASE) {
+      urls.push(window.PHYLAB_API_BASE + "/api/inventory/");
+    }
+    urls.push("/api/inventory/");
+
+    const headers = {};
+    const token = sessionStorage.getItem("auth_token");
+    if (token) {
+      headers["Authorization"] = "Token " + token;
+    }
+
+    let success = false;
+    let responseData = null;
+
+    for (const url of urls) {
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: headers,
+          body: formData,
+          mode: "cors",
+        });
+
+        if (resp.ok) {
+          responseData = await resp.json();
+          success = true;
+          break;
+        } else {
+          const errText = await resp.text();
+          console.warn("Add item failed:", resp.status, errText);
+          // Check for duplicate key error
+          if (resp.status === 400 && errText.includes("item_key")) {
+            if (typeof showNotification === "function")
+              showNotification(
+                "Item key already exists. Please use a different name or key.",
+                "error",
+              );
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Add item network error:", e);
+      }
+    }
+
+    if (success) {
+      closeAddItemModal();
+      if (typeof showNotification === "function")
+        showNotification("Item added successfully!", "approved");
+
+      // Refresh the inventory grid
+      if (typeof refreshInventoryFromBackend === "function") {
+        await refreshInventoryFromBackend();
+      }
+      if (typeof renderInventoryGrid === "function") {
+        renderInventoryGrid();
+      }
+    } else {
+      if (typeof showNotification === "function")
+        showNotification("Failed to add item. Please try again.", "error");
+    }
+  } catch (e) {
+    console.error("Error adding item:", e);
+    if (typeof showNotification === "function")
+      showNotification("Error adding item: " + e.message, "error");
+  }
+}
+
+// ================== Delete Item Functions ==================
+
+function confirmDeleteItem(itemId, itemName) {
+  if (!itemId) {
+    if (typeof showNotification === "function")
+      showNotification("Cannot delete: Item ID not found.", "error");
+    return;
+  }
+
+  if (typeof showConfirm === "function") {
+    showConfirm(
+      "Delete Item",
+      `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+      function () {
+        deleteItem(itemId, itemName);
+      },
+    );
+  } else if (
+    confirm(
+      `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+    )
+  ) {
+    deleteItem(itemId, itemName);
+  }
+}
+
+async function deleteItem(itemId, itemName) {
+  try {
+    const urls = [];
+    if (window.PHYLAB_API && typeof window.PHYLAB_API === "function") {
+      urls.push(window.PHYLAB_API(`/api/inventory/${itemId}/`));
+    } else if (window.PHYLAB_API_BASE) {
+      urls.push(window.PHYLAB_API_BASE + `/api/inventory/${itemId}/`);
+    }
+    urls.push(`/api/inventory/${itemId}/`);
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const token = sessionStorage.getItem("auth_token");
+    if (token) {
+      headers["Authorization"] = "Token " + token;
+    }
+
+    let success = false;
+
+    for (const url of urls) {
+      try {
+        const resp = await fetch(url, {
+          method: "DELETE",
+          headers: headers,
+          mode: "cors",
+        });
+
+        if (resp.ok || resp.status === 204) {
+          success = true;
+          break;
+        } else {
+          console.warn("Delete item failed:", resp.status);
+        }
+      } catch (e) {
+        console.error("Delete item network error:", e);
+      }
+    }
+
+    if (success) {
+      if (typeof showNotification === "function")
+        showNotification(`"${itemName}" deleted successfully.`, "approved");
+
+      // Remove the card from DOM immediately
+      const card = document.querySelector(
+        `.inventory-card[data-id="${itemId}"]`,
+      );
+      if (card) {
+        card.remove();
+      }
+
+      // Refresh the inventory grid from backend
+      if (typeof refreshInventoryFromBackend === "function") {
+        await refreshInventoryFromBackend();
+      }
+      if (typeof renderInventoryGrid === "function") {
+        renderInventoryGrid();
+      }
+    } else {
+      if (typeof showNotification === "function")
+        showNotification("Failed to delete item. Please try again.", "error");
+    }
+  } catch (e) {
+    console.error("Error deleting item:", e);
+    if (typeof showNotification === "function")
+      showNotification("Error deleting item: " + e.message, "error");
+  }
+}

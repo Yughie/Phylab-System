@@ -1761,6 +1761,44 @@
   box-shadow: 0 18px 40px rgba(2, 6, 23, 0.12);
 }
 
+/* Delete button positioned at top-right corner of card */
+.delete-item-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+  z-index: 10;
+}
+
+.inventory-card:hover .delete-item-btn {
+  opacity: 1;
+}
+
+.delete-item-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+
+.delete-item-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .inventory-card img,
 .inventory-img {
   width: 100%;
@@ -2437,11 +2475,16 @@ input::-webkit-inner-spin-button {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   text-align: center;
   font-weight: 600;
   font-size: 14px;
   transition: all var(--transition-normal);
   box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+}
+
+.primary-btn svg {
+  flex-shrink: 0;
 }
 
 .primary-btn:hover {
@@ -3212,17 +3255,27 @@ input::-webkit-inner-spin-button {
 }
 
 .stock-current-btm,
+.stock-borrowed,
 .stock-original {
   font-size: 13px;
   color: var(--color-text-light);
 }
 
 .stock-current-btm strong,
+.stock-borrowed strong,
 .stock-original strong {
   display: inline-block;
   min-width: 28px;
   text-align: right;
   color: var(--color-text);
+}
+
+.stock-borrowed {
+  color: #f59e0b;
+}
+
+.stock-borrowed strong {
+  color: #d97706;
 }
 
 /* ============================================
@@ -3491,6 +3544,109 @@ input::-webkit-inner-spin-button {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Add Item modal: responsive grid and scrollable body */
+#addItemModal .remark-modal-content {
+  width: 820px;
+  max-width: 96%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#addItemModal .remark-modal-body {
+  padding: 16px 20px;
+  /* allow body to scroll when content tall */
+  overflow: auto;
+  max-height: calc(92vh - 120px);
+}
+
+.add-item-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  align-items: start;
+}
+
+.add-item-grid .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-item-grid .field-full {
+  grid-column: 1 / -1;
+}
+
+.add-item-grid .field label {
+  margin-bottom: 6px;
+}
+
+.add-item-grid .field .hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.image-preview img {
+  max-width: 160px;
+  max-height: 120px;
+  border-radius: 8px;
+  display: block;
+}
+
+/* On narrow screens, stack into one column */
+@media (max-width: 720px) {
+  .add-item-grid {
+    grid-template-columns: 1fr;
+  }
+  #addItemModal .remark-modal-content {
+    width: 96%;
+  }
+}
+
+/* Floating Add Item Button (prominent and always visible) */
+.fab-add-item {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 12000;
+  background: var(--color-primary-strong);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.18);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.fab-add-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(16, 24, 40, 0.22);
+}
+.fab-add-item svg {
+  display: block;
+}
+.fab-add-item .fab-label {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@media (max-width: 520px) {
+  .fab-add-item {
+    padding: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .fab-add-item .fab-label {
+    display: none;
+  }
 }
 
 .remark-item-label {

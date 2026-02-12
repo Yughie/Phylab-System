@@ -41,6 +41,9 @@ function renderInventoryGrid() {
 
     const cardHtml = `
     <div class="inventory-card" data-id="${escapeHtml(item.id || "")}" data-category="${escapeHtml(category)}" data-cabinet="${escapeHtml(cabinet)}" data-type="${escapeHtml(type)}" data-use="${escapeHtml(use)}" data-description="${escapeHtml(description)}">
+      <button class="delete-item-btn" onclick="confirmDeleteItem('${escapeJs(item.id || "")}', '${escapeJs(name)}')" title="Delete item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+      </button>
       <img src="${imgSrc || "default.png"}" alt="${name}" class="inventory-img">
       <div class="inventory-details">
         <h3 class="item-name">${name}</h3>

@@ -1058,9 +1058,15 @@
           </div>
 
           <div class="input-group">
-            <label for="id_number" class="input-label"
-              >Student / Employee ID</label
-            >
+            <label for="user_role" class="input-label">Role</label>
+            <select id="user_role" class="form-input">
+              <option value="Student" selected>Student</option>
+              <option value="Teacher">Teacher</option>
+            </select>
+          </div>
+
+          <div class="input-group" id="id_group">
+            <label for="id_number" class="input-label">Student ID</label>
             <input
               type="text"
               id="id_number"
@@ -1334,6 +1340,29 @@
         });
       })();
 
+      // ========== ROLE TOGGLE (Student / Teacher) ==========
+      (function attachRoleToggle() {
+        const roleSelect = document.getElementById("user_role");
+        const idGroup = document.getElementById("id_group");
+        const idInput = document.getElementById("id_number");
+        if (!roleSelect || !idGroup || !idInput) return;
+
+        function updateRole() {
+          const role = roleSelect.value;
+          if (role === "Teacher") {
+            idGroup.style.display = "none";
+            idInput.required = false;
+          } else {
+            idGroup.style.display = "";
+            idInput.required = true;
+          }
+        }
+
+        roleSelect.addEventListener("change", updateRole);
+        // initialize
+        updateRole();
+      })();
+
       // ========== REGISTRATION ==========
       document
         .getElementById("registerForm")
@@ -1341,17 +1370,27 @@
           e.preventDefault();
 
           const fullname = document.getElementById("fullname").value.trim();
-          const idNumber = document.getElementById("id_number").value.trim();
+          const role = document.getElementById("user_role")
+            ? document.getElementById("user_role").value
+            : "Student";
+          let idNumber = document.getElementById("id_number")
+            ? document.getElementById("id_number").value.trim()
+            : "";
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password_reg").value;
 
           const idRegex = /^[A-Za-z0-9\-\s]{4,20}$/;
-          if (!idRegex.test(idNumber)) {
-            showPhylabModal(
-              "ID must be 4–20 characters (letters, digits, spaces, dashes allowed)",
-              false,
-            );
-            return;
+          if (role === "Student") {
+            if (!idRegex.test(idNumber)) {
+              showPhylabModal(
+                "ID must be 4–20 characters (letters, digits, spaces, dashes allowed)",
+                false,
+              );
+              return;
+            }
+          } else {
+            // Teacher - no ID required
+            idNumber = "";
           }
 
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1371,6 +1410,7 @@
             id_number: idNumber,
             email: email,
             password: password,
+            role: role,
           };
 
           try {
@@ -1389,6 +1429,8 @@
                   email: data.email,
                   fullname: data.full_name || data.fullname || "",
                   idNumber: data.id_number || data.idNumber || "",
+                  is_student: data.is_student,
+                  role: data.role,
                 };
                 sessionStorage.setItem("auth_token", data.token);
                 sessionStorage.setItem("current_user", JSON.stringify(userObj));
@@ -1485,6 +1527,8 @@
               email: data.email,
               fullname: data.full_name || data.fullname || "",
               idNumber: data.id_number || data.idNumber || "",
+              is_student: data.is_student,
+              role: data.role,
             };
 
             if (

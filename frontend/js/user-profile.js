@@ -21,7 +21,11 @@ export function toggleProfile(show) {
       if (idEl)
         idEl.innerText = userData.idNumber || userData.id_number || "N/A";
       if (emailEl) emailEl.innerText = userData.email || "N/A";
-      if (roleEl) roleEl.innerText = userData.role || "Student";
+      if (roleEl) {
+        // Check is_student field to determine role
+        const role = userData.is_student === false ? "Teacher" : "Student";
+        roleEl.innerText = role;
+      }
     }
     modal.style.display = "flex";
   } else {

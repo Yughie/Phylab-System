@@ -10,14 +10,34 @@ from accounts.models import User
 # Serializer used for registration
 class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    role = serializers.CharField(required=False, default='Student')
 
     class Meta:
         model = User
-        fields = ['full_name', 'id_number', 'email', 'password']
+        fields = ['full_name', 'id_number', 'email', 'password', 'role']
+
+    def validate(self, data):
+        role = data.get('role', 'Student')
+        id_number = data.get('id_number', '')
+        
+        # For students, id_number is required
+        if role == 'Student' and not id_number:
+            raise serializers.ValidationError({'id_number': 'Student ID is required for students.'})
+        
+        # For teachers, id_number should be None to avoid unique constraint issues
+        if role == 'Teacher':
+            data['id_number'] = None
+        
+        return data
 
     def create(self, validated_data):
+        role = validated_data.pop('role', 'Student')
         password = validated_data.pop('password')
+        
         user = User(**validated_data)
+        # Set is_student based on role
+        user.is_student = (role == 'Student')
+        
         # Auto-generate username from email if not provided
         if not user.username:
             user.username = validated_data.get('email', '').split('@')[0]
@@ -28,9 +48,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 # A quick way to turn User objects into JSON
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'full_name', 'id_number', 'email', 'is_student']
+        fields = ['id', 'full_name', 'id_number', 'email', 'is_student', 'role']
+    
+    def get_role(self, obj):
+        return 'Student' if obj.is_student else 'Teacher'
 
 
 class RegisterView(APIView):
@@ -47,7 +72,9 @@ class RegisterView(APIView):
                 'id': user.id,
                 'email': user.email,
                 'full_name': getattr(user, 'full_name', '') or user.get_full_name(),
-                'id_number': getattr(user, 'id_number', ''),
+                'id_number': getattr(user, 'id_number', '') or '',
+                'is_student': user.is_student,
+                'role': 'Student' if user.is_student else 'Teacher',
                 'token': token.key,
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -95,5 +122,7 @@ class LoginView(APIView):
             'id': user.id,
             'email': user.email,
             'full_name': getattr(user, 'full_name', '') or user.get_full_name(),
-            'id_number': getattr(user, 'id_number', '')
+            'id_number': getattr(user, 'id_number', '') or '',
+            'is_student': user.is_student,
+            'role': 'Student' if user.is_student else 'Teacher'
         })

@@ -105,17 +105,76 @@ export function toggleModal(show) {
     // Close mobile nav
     closeMobileNav();
 
-    // Prefill user info
+    // Prefill user info and adapt form based on role
     try {
       const sessionUser = getSessionUser();
       const nameEl = document.getElementById("user-fullname");
       const idEl = document.getElementById("user-id");
+      const teacherEl = document.getElementById("teacher-name");
+      const studentIdLabel = document.querySelector(
+        'label[for="user-id"], label:has(+ #user-id)',
+      );
+      const teacherLabel = document.querySelector(
+        'label[for="teacher-name"], label:has(+ #teacher-name)',
+      );
+
+      // Check if user is a teacher
+      const isTeacher = sessionUser.is_student === false;
+
       if (nameEl) {
         nameEl.value =
           sessionUser.fullname || sessionUser.name || nameEl.value || "";
       }
-      if (idEl) {
-        idEl.value = sessionUser.idNumber || sessionUser.id || idEl.value || "";
+
+      if (isTeacher) {
+        // Update form title for teachers
+        const formTitle = document.querySelector("#borrowModal h2");
+        if (formTitle) {
+          formTitle.textContent = "Equipment Request Form";
+        }
+
+        // Hide Student ID field for teachers
+        if (idEl) {
+          idEl.style.display = "none";
+          idEl.removeAttribute("required");
+        }
+        if (studentIdLabel) {
+          studentIdLabel.style.display = "none";
+        }
+
+        // Hide Teacher's Name field for teachers
+        if (teacherEl) {
+          teacherEl.style.display = "none";
+          teacherEl.removeAttribute("required");
+        }
+        if (teacherLabel) {
+          teacherLabel.style.display = "none";
+        }
+      } else {
+        // Reset form title for students
+        const formTitle = document.querySelector("#borrowModal h2");
+        if (formTitle) {
+          formTitle.textContent = "Borrow Request Form";
+        }
+
+        // Show fields for students
+        if (idEl) {
+          idEl.style.display = "block";
+          idEl.setAttribute("required", "");
+          idEl.value =
+            sessionUser.idNumber || sessionUser.id || idEl.value || "";
+        }
+        if (studentIdLabel) {
+          studentIdLabel.style.display = "block";
+        }
+
+        if (teacherEl) {
+          teacherEl.style.display = "block";
+          teacherEl.setAttribute("required", "");
+        }
+        if (teacherLabel) {
+          teacherLabel.style.display = "block";
+        }
       }
     } catch (e) {
       console.warn("Error prefilling user info:", e);
@@ -141,13 +200,14 @@ async function handleBorrowFormSubmit(e) {
   const inputID = document.getElementById("user-id").value;
 
   const sessionUser = getSessionUser();
+  const isTeacher = sessionUser.is_student === false;
 
   const requestData = {
     request_id: generateShortId(),
     student_name: sessionUser.fullname || inputName,
-    student_id: sessionUser.idNumber || inputID,
+    student_id: isTeacher ? "N/A" : sessionUser.idNumber || inputID,
     email: sessionUser.email || "no-email@univ.edu",
-    teacher_name: teacherName,
+    teacher_name: isTeacher ? sessionUser.fullname || inputName : teacherName,
     purpose: purpose,
     borrow_date: borrowDate,
     return_date: returnDate,
@@ -199,12 +259,16 @@ async function handleBorrowFormSubmit(e) {
         items: requestData.items,
         status: "pending",
         timestamp: new Date().toLocaleString(),
+        userRole: isTeacher ? "Teacher" : "Student",
       });
       localStorage.setItem("phyLab_RequestQueue", JSON.stringify(allRequests));
     }
 
     const itemsCopy = JSON.parse(JSON.stringify(cartItems || []));
-    showPopup("Request Submitted Successfully!", {
+    const successMessage = isTeacher
+      ? "Equipment Request Submitted Successfully!"
+      : "Borrow Request Submitted Successfully!";
+    showPopup(successMessage, {
       items: itemsCopy,
       logoSrc: "Phylab.png",
       onClose: () => {},
@@ -254,6 +318,18 @@ export function initCart() {
   const selectedItemsContainer = document.getElementById(
     "selectedItemsContainer",
   );
+
+  // Update button text based on user role
+  const sessionUser = getSessionUser();
+  const isTeacher = sessionUser.is_student === false;
+
+  if (borrowToggleButton) {
+    const buttonText =
+      borrowToggleButton.childNodes[borrowToggleButton.childNodes.length - 1];
+    if (buttonText && buttonText.nodeType === Node.TEXT_NODE) {
+      buttonText.textContent = isTeacher ? " Request" : " Borrow";
+    }
+  }
 
   // Borrow toggle button
   if (borrowToggleButton) {

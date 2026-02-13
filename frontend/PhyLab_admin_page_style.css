@@ -3255,27 +3255,17 @@ input::-webkit-inner-spin-button {
 }
 
 .stock-current-btm,
-.stock-borrowed,
 .stock-original {
   font-size: 13px;
   color: var(--color-text-light);
 }
 
 .stock-current-btm strong,
-.stock-borrowed strong,
 .stock-original strong {
   display: inline-block;
   min-width: 28px;
   text-align: right;
   color: var(--color-text);
-}
-
-.stock-borrowed {
-  color: #f59e0b;
-}
-
-.stock-borrowed strong {
-  color: #d97706;
 }
 
 /* ============================================

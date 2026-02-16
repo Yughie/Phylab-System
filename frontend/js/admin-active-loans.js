@@ -250,7 +250,15 @@ async function performReturnPatch(resolvedReqId, itemId, actualReturnedAtIso) {
       : [{ id: itemId, status: "returned" }],
   };
 
+  console.log("[performReturnPatch] Attempting to mark item returned:", {
+    resolvedReqId,
+    itemId,
+    payload,
+    urls
+  });
+
   let response = null;
+  let lastError = null;
   const token = sessionStorage.getItem("auth_token");
   for (const url of urls) {
     try {
@@ -263,20 +271,37 @@ async function performReturnPatch(resolvedReqId, itemId, actualReturnedAtIso) {
       if (token) options.headers.Authorization = "Token " + token;
       else options.credentials = "include";
 
+      console.log("[performReturnPatch] Trying URL:", url, "with options:", options);
       response = await fetch(url, options);
+      console.log("[performReturnPatch] Response status:", response.status, response.statusText);
+      
       if (response && response.ok) {
         try {
           const json = await response.json();
+          console.log("[performReturnPatch] Success! Response:", json);
           return { backendSuccess: true, backendResponse: json };
         } catch (e) {
+          console.log("[performReturnPatch] Success but failed to parse JSON:", e);
           return { backendSuccess: true, backendResponse: null };
+        }
+      } else {
+        // Log error response body for debugging
+        try {
+          const errorText = await response.text();
+          console.error("[performReturnPatch] HTTP error response:", response.status, errorText);
+          lastError = { status: response.status, body: errorText };
+        } catch (e) {
+          console.error("[performReturnPatch] Could not read error response:", e);
         }
       }
     } catch (e) {
+      console.error("[performReturnPatch] Fetch error for URL:", url, e);
+      lastError = e;
       continue;
     }
   }
-  return { backendSuccess: false, backendResponse: null };
+  console.error("[performReturnPatch] All attempts failed. Last error:", lastError);
+  return { backendSuccess: false, backendResponse: null, error: lastError };
 }
 
 function finalizeReturn(backendSuccess, backendResponse, requestId, itemId) {
@@ -364,8 +389,10 @@ function finalizeReturn(backendSuccess, backendResponse, requestId, itemId) {
       "success",
     );
   } else {
+    console.error("[finalizeReturn] Backend update failed for requestId:", requestId, "itemId:", itemId);
+    console.error("[finalizeReturn] Check the browser console above for detailed error logs from performReturnPatch");
     showNotification(
-      "Item marked as returned locally. Backend update failed.",
+      "Item marked as returned locally. Backend update failed - check browser console for details.",
       "warning",
     );
   }

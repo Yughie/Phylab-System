@@ -698,4 +698,150 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
     loadAdminHistory();
   }
+
+  // Initialize date inputs with current month
+  initializeExportDates();
 });
+
+// Initialize export date filters with current month range
+function initializeExportDates() {
+  const fromDateInput = document.getElementById("exportFromDate");
+  const toDateInput = document.getElementById("exportToDate");
+
+  if (fromDateInput && toDateInput) {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    // Format as YYYY-MM-DD
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    fromDateInput.value = formatDate(firstDayOfMonth);
+    toDateInput.value = formatDate(today);
+  }
+}
+
+// Export borrower report to Excel with date filtering
+async function exportBorrowerReport() {
+  // Get filter values
+  const fromDate = document.getElementById("exportFromDate")?.value || "";
+  const toDate = document.getElementById("exportToDate")?.value || "";
+  const status = document.getElementById("exportStatus")?.value || "";
+
+  // Build query parameters
+  const params = new URLSearchParams();
+  if (fromDate) params.append("from_date", fromDate);
+  if (toDate) params.append("to_date", toDate);
+  if (status) params.append("status", status);
+
+  // Build URL with all possible endpoints
+  const queryString = params.toString();
+  const path = `/api/borrow-requests/export_borrowers_xlsx/${queryString ? "?" + queryString : ""}`;
+
+  const urls = [
+    "http://127.0.0.1:8000" + path,
+    "http://localhost:8000" + path,
+    window.PHYLAB_API && typeof window.PHYLAB_API === "function"
+      ? window.PHYLAB_API(path)
+      : path,
+    path,
+  ];
+
+  console.log("exportBorrowerReport: trying URLs", urls);
+
+  // Update button to show loading state
+  const exportBtn = document.querySelector(".export-btn");
+  const originalBtnContent = exportBtn ? exportBtn.innerHTML : "";
+  if (exportBtn) {
+    exportBtn.disabled = true;
+    exportBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-animation">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+      Exporting...
+    `;
+  }
+
+  let success = false;
+  for (const url of urls) {
+    try {
+      console.log("exportBorrowerReport: trying", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        mode: "cors",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        console.warn(`Export failed from ${url}: ${response.status}`);
+        continue;
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Create download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "borrower_report.xlsx";
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+          contentDisposition,
+        );
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, "");
+        }
+      }
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      success = true;
+      console.log("Export successful from", url);
+
+      // Show success notification
+      if (typeof showNotification === "function") {
+        showNotification("Report exported successfully!", "success");
+      }
+
+      break;
+    } catch (error) {
+      console.error(`Error exporting from ${url}:`, error);
+      continue;
+    }
+  }
+
+  // Restore button state
+  if (exportBtn) {
+    exportBtn.disabled = false;
+    exportBtn.innerHTML = originalBtnContent;
+  }
+
+  if (!success) {
+    if (typeof showNotification === "function") {
+      showNotification(
+        "Failed to export report. Please check your connection and try again.",
+        "error",
+      );
+    } else {
+      alert(
+        "Failed to export report. Please check your connection and try again.",
+      );
+    }
+  }
+}
+
+// Expose export function globally
+window.exportBorrowerReport = exportBorrowerReport;

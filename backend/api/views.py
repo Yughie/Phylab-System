@@ -371,6 +371,142 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
         serializer = BorrowRequestItemDetailSerializer(items_queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'])
+    def export_borrowers_xlsx(self, request):
+        """Export borrower details with date filtering for monthly reports.
+        
+        GET /api/borrow-requests/export_borrowers_xlsx/
+        GET /api/borrow-requests/export_borrowers_xlsx/?from_date=2024-01-01&to_date=2024-01-31
+        GET /api/borrow-requests/export_borrowers_xlsx/?status=returned
+        
+        Returns an Excel file with borrower and item information.
+        """
+        from datetime import datetime
+        
+        # Get base queryset
+        queryset = BorrowRequest.objects.all().order_by('-created_at')
+        
+        # Apply filters
+        from_date = request.query_params.get('from_date', None)
+        to_date = request.query_params.get('to_date', None)
+        status_filter = request.query_params.get('status', None)
+        student_id_filter = request.query_params.get('student_id', None)
+        
+        if from_date:
+            try:
+                from_dt = datetime.strptime(from_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__gte=from_dt)
+            except ValueError:
+                pass
+        
+        if to_date:
+            try:
+                to_dt = datetime.strptime(to_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__lte=to_dt)
+            except ValueError:
+                pass
+        
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        if student_id_filter:
+            queryset = queryset.filter(student_id=student_id_filter)
+        
+        # Create workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Borrower Report"
+        
+        # Headers
+        headers = [
+            'Request ID',
+            'Date Requested',
+            'Student Name',
+            'Student ID',
+            'Email',
+            'Teacher Name',
+            'Item Name',
+            'Quantity',
+            'Purpose',
+            'Borrow Date',
+            'Return Date',
+            'Actual Return Date',
+            'Status',
+            'Admin Remark',
+        ]
+        ws.append(headers)
+        
+        # Add data rows
+        for req in queryset:
+            # Get all items for this request
+            items = req.items.all()
+            
+            if items.exists():
+                for item in items:
+                    actual_return_date = ''
+                    if hasattr(item, 'actual_returned_at') and item.actual_returned_at:
+                        actual_return_date = item.actual_returned_at.strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    row = [
+                        req.request_id,
+                        req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        req.student_name,
+                        req.student_id,
+                        req.email,
+                        req.teacher_name,
+                        item.item_name,
+                        item.quantity,
+                        req.purpose,
+                        req.borrow_date.strftime('%Y-%m-%d') if req.borrow_date else '',
+                        req.return_date.strftime('%Y-%m-%d') if req.return_date else '',
+                        actual_return_date,
+                        item.status,
+                        item.admin_remark or req.admin_remark or '',
+                    ]
+                    ws.append(row)
+            else:
+                # If no items, still show the request
+                row = [
+                    req.request_id,
+                    req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    req.student_name,
+                    req.student_id,
+                    req.email,
+                    req.teacher_name,
+                    '',
+                    0,
+                    req.purpose,
+                    req.borrow_date.strftime('%Y-%m-%d') if req.borrow_date else '',
+                    req.return_date.strftime('%Y-%m-%d') if req.return_date else '',
+                    '',
+                    req.status,
+                    req.admin_remark or '',
+                ]
+                ws.append(row)
+        
+        # Prepare response
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+        # Create filename with date range if provided
+        filename = 'borrower_report'
+        if from_date and to_date:
+            filename += f'_{from_date}_to_{to_date}'
+        elif from_date:
+            filename += f'_from_{from_date}'
+        elif to_date:
+            filename += f'_to_{to_date}'
+        filename += '.xlsx'
+        
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
     @action(detail=True, methods=['patch'])
     def update_item_statuses(self, request, pk=None):
         """Update statuses of individual items within a borrow request.

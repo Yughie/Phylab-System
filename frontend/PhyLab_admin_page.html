@@ -1100,6 +1100,42 @@
       </div>
     </div>
 
+    <!-- Return Date Modal -->
+    <div id="returnDateModal" class="remark-modal" style="display: none">
+      <div class="remark-modal-content">
+        <div class="remark-modal-header">
+          <h3>Confirm Return Date</h3>
+          <span class="close-remark-btn" onclick="closeReturnDateModal()"
+            >&times;</span
+          >
+        </div>
+        <div
+          class="remark-modal-body"
+          style="display: flex; flex-direction: column; gap: 8px"
+        >
+          <p>Please confirm the actual return date and time for the item.</p>
+          <label for="returnDateInput">Return date & time</label>
+          <input
+            id="returnDateInput"
+            type="datetime-local"
+            style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 6px;
+            "
+          />
+        </div>
+        <div class="remark-modal-footer">
+          <button class="secondary-btn" onclick="closeReturnDateModal()">
+            Cancel
+          </button>
+          <button class="primary-btn" id="confirmReturnDateBtn">
+            Confirm Return
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Image lightbox for review images -->
     <div id="reviewImageModal" class="image-modal" style="display: none">
       <div class="image-modal-content">
@@ -2448,59 +2484,25 @@
         });
       }
 
-      function completeReturn(requestId) {
-        showConfirm(
-          "Confirm Return",
-          "Are you sure? This will restore the item to stock.",
-          function () {
-            let queue =
-              JSON.parse(localStorage.getItem("phyLab_RequestQueue")) || [];
-            let history =
-              JSON.parse(localStorage.getItem("phyLab_History")) || [];
-
-            const itemIndex = queue.findIndex(
-              (req) => String(req.id) === String(requestId),
-            );
-
-            if (itemIndex !== -1) {
-              let itemToArchive = queue[itemIndex];
-
-              if (itemToArchive.items && itemToArchive.items.length > 0) {
-                const itemData = itemToArchive.items[0];
-                const stockKey = "stock_" + (itemData.itemKey || itemData.name);
-
-                const qtyToReturn = parseInt(itemData.quantity) || 1;
-
-                let currentStock =
-                  parseInt(localStorage.getItem(stockKey)) || 0;
-                localStorage.setItem(stockKey, currentStock + qtyToReturn);
-              }
-
-              itemToArchive.actualReturnDate = new Date().toLocaleString();
-              itemToArchive.status = "returned";
-
-              history.push(itemToArchive);
-              queue.splice(itemIndex, 1);
-
-              localStorage.setItem("phyLab_History", JSON.stringify(history));
-              localStorage.setItem(
-                "phyLab_RequestQueue",
-                JSON.stringify(queue),
-              );
-
-              showNotification(
-                "Item returned and archived successfully.",
-                "success",
-              );
-              loadReturnWindow();
-              loadStockFromMemory();
-              loadDashboardStats();
-              initLiveChart();
+      function completeReturn(requestId, itemId) {
+        try {
+          let resolvedReqId = requestId;
+          if (typeof resolveRequestNumericId === "function") {
+            const maybe = resolveRequestNumericId(requestId);
+            if (maybe && typeof maybe.then === "function") {
+              maybe
+                .then((r) => openReturnDateModal(r, itemId))
+                .catch(() => openReturnDateModal(requestId, itemId));
+              return;
             } else {
-              showNotification("Transaction not found.", "error");
+              resolvedReqId = maybe || requestId;
             }
-          },
-        );
+          }
+          openReturnDateModal(resolvedReqId, itemId);
+        } catch (e) {
+          console.warn("completeReturn wrapper failed", e);
+          openReturnDateModal(requestId, itemId);
+        }
       }
 
       function openBorrowingDetails(requestId) {

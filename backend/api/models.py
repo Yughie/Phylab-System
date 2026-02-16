@@ -103,6 +103,9 @@ class BorrowRequestItem(models.Model):
 	admin_remark = models.TextField(blank=True, null=True)
 	remark_type = models.CharField(max_length=50, blank=True, null=True)
 	remark_created_at = models.DateTimeField(null=True, blank=True)
+
+	# Timestamp when this specific item was actually returned
+	actual_returned_at = models.DateTimeField(null=True, blank=True)
 	
 	def __str__(self):
 		return f"{self.item_name} x{self.quantity} ({self.status}) (Request {self.borrow_request.request_id})"

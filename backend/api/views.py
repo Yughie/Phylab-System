@@ -17,6 +17,8 @@ from rest_framework import status
 from django.conf import settings
 import requests
 import os
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 User = get_user_model()
 
@@ -304,9 +306,35 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
     def mark_returned(self, request, pk=None):
         """Mark a borrowed item as returned."""
         borrow_request = self.get_object()
+        # Accept optional actual return timestamp (ISO format) from client
+        actual_returned_at = request.data.get('actual_returned_at') or request.data.get('actualReturnedAt')
+        parsed_dt = None
+        if actual_returned_at:
+            try:
+                parsed_dt = parse_datetime(actual_returned_at)
+                if parsed_dt is None:
+                    # fallback: treat as date string (YYYY-MM-DD)
+                    try:
+                        from datetime import datetime
+                        d = datetime.fromisoformat(actual_returned_at)
+                        parsed_dt = timezone.make_aware(d) if d.tzinfo is None else d
+                    except Exception:
+                        parsed_dt = None
+            except Exception:
+                parsed_dt = None
+
+        # mark parent request returned
         borrow_request.status = 'returned'
         borrow_request.save()
-        return Response({'status': 'returned', 'request_id': borrow_request.request_id})
+
+        # update each item to returned and set actual_returned_at
+        items = borrow_request.items.all()
+        for it in items:
+            it.status = 'returned'
+            it.actual_returned_at = parsed_dt or timezone.now()
+            it.save()
+
+        return Response({'status': 'returned', 'request_id': borrow_request.request_id, 'actual_returned_at': (parsed_dt or timezone.now()).isoformat()})
     
     @action(detail=False, methods=['get'])
     def currently_borrowed(self, request):
@@ -391,6 +419,23 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                 old_status = item_obj.status
                 if 'status' in item_update:
                     item_obj.status = item_update['status']
+                    # If item is being marked returned, record actual_returned_at if provided
+                    if str(item_obj.status).lower() == 'returned':
+                        actual_val = item_update.get('actual_returned_at') or item_update.get('actualReturnedAt')
+                        parsed_actual = None
+                        if actual_val:
+                            try:
+                                parsed_actual = parse_datetime(actual_val)
+                                if parsed_actual is None:
+                                    from datetime import datetime
+                                    try:
+                                        d = datetime.fromisoformat(actual_val)
+                                        parsed_actual = timezone.make_aware(d) if d.tzinfo is None else d
+                                    except Exception:
+                                        parsed_actual = None
+                            except Exception:
+                                parsed_actual = None
+                        item_obj.actual_returned_at = parsed_actual or timezone.now()
                 if 'quantity' in item_update:
                     item_obj.quantity = item_update['quantity']
                 # support per-item admin remark fields
@@ -400,6 +445,10 @@ class BorrowRequestViewSet(viewsets.ModelViewSet):
                     item_obj.remark_type = item_update.get('remark_type')
                 if 'remark_created_at' in item_update:
                     item_obj.remark_created_at = item_update.get('remark_created_at')
+
+                # Ensure items that already are returned have a timestamp
+                if str(item_obj.status).lower() == 'returned' and not getattr(item_obj, 'actual_returned_at', None):
+                    item_obj.actual_returned_at = timezone.now()
 
                 item_obj.save()
                 updated_count += 1
